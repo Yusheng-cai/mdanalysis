@@ -9,6 +9,8 @@ class XdrWrapper
     public:
         XdrWrapper();    
         ~XdrWrapper();
+
+        int getNumAtoms() const {return natoms_;}
     private:
         XDRFILE* file;
         int natoms_;
