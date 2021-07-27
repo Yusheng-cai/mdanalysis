@@ -1,5 +1,5 @@
 # Prefer to keep flags private)
-add_library(xdr)
+add_library(xdr SHARED)
 
 target_sources(xdr PRIVATE 
                 "trr_seek.c"
