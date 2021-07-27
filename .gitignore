@@ -34,3 +34,4 @@
 # build folders
 build/
 debug/
+build.sh
