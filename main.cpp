@@ -7,6 +7,7 @@
 
 int main(int argc, char** argv)
 {
+    std::cout << "Hello world." << std::endl;
     InputParser ip;
     std::string fname = argv[1];
 
