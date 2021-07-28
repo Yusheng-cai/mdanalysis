@@ -1,12 +1,12 @@
 #include "tools/InputParser.h"
-#include "tools/XdrWrapper.h"
+#include "xdr/XdrWrapper.h"
 
 #include <iostream>
 #include <string>
 
 int main(int argc, char** argv)
 {
-    std::cout << "type" << std::endl;
+    std::cout << "Welcome to main." << std::endl;
     InputParser ip;
     std::string fname = argv[1];
 
@@ -19,6 +19,8 @@ int main(int argc, char** argv)
     std::string type;
     xtcpp->ReadString("type", ParameterPack::KeyType::Required,type);
     xtcpp->ReadString("name", ParameterPack::KeyType::Required, xtcstr);
+
+    XdrWrapper* xx = XdrFiles::factory::instance().create(type);
 
     return 0;
 };
