@@ -1,3 +1,4 @@
 xtc_file = {
+	type = trr
 	name = test.xtc
 }
