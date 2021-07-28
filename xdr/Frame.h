@@ -1,7 +1,7 @@
 #pragma once
 
 #include "tools/CommonTypes.h"
-#include "Assert.h"
+#include "tools/Assert.h"
 #include "tools/GenericFactory.h"
 
 #include <array>
