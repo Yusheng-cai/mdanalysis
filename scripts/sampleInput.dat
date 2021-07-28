@@ -1,4 +1,3 @@
-xtc_file = {
-	type = trr
+xdrfile = {
 	name = test.xtc
 }
