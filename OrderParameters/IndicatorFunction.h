@@ -1,4 +1,6 @@
+#pragma once
 #include "tools/CommonTypes.h"
+#include "tools/Constants.h"
 
 #include <cmath>
 
@@ -8,9 +10,17 @@ class IndicatorFunction
         using Real = CommonTypes::Real;
         using Real3 = CommonTypes::Real3;
 
-        IndicatorFunction();
+        IndicatorFunction(){};
+        IndicatorFunction(Real sigma_, Real ac_);
         virtual ~IndicatorFunction(){};
-        virtual void calculate(const Real3& x, Real& h_x, Real& htilde_x, Real3& dhtilde_dx) = 0;
+
+        // h_a of a single dimension in INDUS indicator function
+        virtual void calculate(const Real& x, Real& h_x, Real& htilde_x, Real& dhtilde_dx) = 0;
+        virtual void setLimits() = 0;
+        virtual void calculateFactors();
+
+        // truncated Gaussian phi function, this is a zero centered truncated Gaussian 
+        Real truncatedGaussian(Real alpha);
 
         // getters
         Real getSigma() const{return sigma_;}
@@ -22,5 +32,11 @@ class IndicatorFunction
     
     protected:
         Real sigma_;
+        Real sigma2_;
         Real ac_;
+        Real ac2_;
+
+        Real k_;
+        Real k1_;
+        Real k2_;
 };

@@ -1,5 +1,7 @@
+#pragma once
 #include "tools/CommonTypes.h"
 #include "IndicatorFunction.h"
+#include "tools/Constants.h"
 
 #include <vector>
 #include <cmath>
@@ -10,14 +12,20 @@ class IndicatorFunction2d:public IndicatorFunction
         using Real = CommonTypes::Real;
         using Real3= CommonTypes::Real3;
 
-        IndicatorFunction2d();
-        IndicatorFunction2d(Real sigma, Real ac);
-    
-    private:
-        Real sigma_=0.01;
-        Real ac_=0.02;
+        IndicatorFunction2d(){};
+        IndicatorFunction2d(Real sigma, Real ac, Real min, Real max);
+        virtual ~IndicatorFunction2d(){};
 
-        Real k_;
-        Real k1_;
-        Real k2_;
+        virtual void calculate(const Real& x, Real& h_x, Real& htilde_x, Real& dhtilde_dx) override;
+        virtual void setLimits() override;
+
+ 
+    private:
+        Real min_;
+        Real max_;
+
+        Real lowlow_;
+        Real lowhigh_;
+        Real highlow_;
+        Real highhigh_;
 };
