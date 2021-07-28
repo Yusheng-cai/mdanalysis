@@ -8,10 +8,13 @@ void XdrWrapper::open(std::string fname, Mode mode)
     {
         case Mode::Read:
             operation_mode_="r";
+            break;
         case Mode::Write:
             operation_mode_="w";
+            break;
         case Mode::Append:
             operation_mode_="a";
+            break;
     };
 
     file_ = xdrfile_open(fname.c_str(), operation_mode_.c_str());

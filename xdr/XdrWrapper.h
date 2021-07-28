@@ -12,15 +12,15 @@
 #include <vector>
 #include <iostream>
 
-enum Mode
-{
-    Read, Write, Append
-};
-
 
 class XdrWrapper
 {
     public:
+        enum Mode
+        {
+            Read, Write, Append
+        };
+
         XdrWrapper(){};    
         void open(std::string name, Mode);
         virtual ~XdrWrapper();
@@ -31,13 +31,16 @@ class XdrWrapper
         // Check if the xdr file is opened
         bool isOpen();
 
-        // int getNumAtoms() const {return natoms_;}
+        int getNumAtoms() const {return natoms_;}
 
         virtual void readNextFrame() = 0;
         virtual void readNumAtoms()  = 0;
+        const Frame::VectorReal3& getPositions() const{return frame_.getPositions();}
+        const Frame::VectorReal3& getVelocities() const{return frame_.getVelocities();}
+        const Frame::VectorReal3& getFroces() const{return frame_.getForces();}
 
     protected:
-        XDRFILE* file_;
+        XDRFILE* file_=nullptr;
         int natoms_;
         std::string name_;
         std::string operation_mode_;
