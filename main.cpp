@@ -3,24 +3,40 @@
 
 #include <iostream>
 #include <string>
+#include <sstream>
 
 int main(int argc, char** argv)
 {
-    std::cout << "Welcome to main." << std::endl;
     InputParser ip;
     std::string fname = argv[1];
 
+    // Parse the input file
     ParameterPack pp;
     ip.ParseFile(fname,pp);
 
-    auto xtcpp = pp.findParamPack("xtc_file", ParameterPack::KeyType::Required);
-
-    std::string xtcstr;
+    // Read the xdr files
+    auto xdrpp = pp.findParamPack("xdrfile", ParameterPack::KeyType::Required);
+    std::string xdrstr;
     std::string type;
-    xtcpp->ReadString("type", ParameterPack::KeyType::Required,type);
-    xtcpp->ReadString("name", ParameterPack::KeyType::Required, xtcstr);
+    xdrpp->ReadString("name", ParameterPack::KeyType::Required, xdrstr);
+    int found_pos = xdrstr.find_first_of(".");
+    type = xdrstr.substr(found_pos + 1);
+
 
     XdrWrapper* xx = XdrFiles::factory::instance().create(type);
+    xx->open(xdrstr, XdrWrapper::Mode::Read);
+    xx->readNextFrame();
+    auto& pos = xx->getPositions();
+
+    for (int i=0;i<xx->getNumAtoms();i++)
+    {
+        for(int j=0;j<3;j++)
+        {
+            std::cout << pos[i][j] << "\t";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "Read sucessful." << std::endl;
 
     return 0;
 };
