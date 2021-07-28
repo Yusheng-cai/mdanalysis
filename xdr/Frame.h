@@ -26,9 +26,9 @@ class Frame
 
         const VectorReal3& getPositions() const{return positions_;}
         const VectorInt& getGlobalIndex() const{return global_index_;}
-        const VectorReal3& getVelocities(){return velocities_;}
-        const VectorReal3& getForces(){return forces_;}
-        const Matrix& getBoxMatrix(){return box_;}
+        const VectorReal3& getVelocities()const {return velocities_;}
+        const VectorReal3& getForces()const{return forces_;}
+        const Matrix& getBoxMatrix()const{return box_;}
 
         Real getTime(){return time_;}
         void setTime(Real time){time_ = time;}
@@ -50,9 +50,9 @@ class Frame
     private:
         VectorReal3 positions_, velocities_, forces_;
         VectorInt global_index_;
-        Real time_;
+        Real time_=0;
         Matrix box_;
 
-        int step_;
+        int step_ = 0;
         int num_atoms_;
 };

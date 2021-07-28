@@ -48,5 +48,5 @@ void TrrFile::readNumAtoms()
     ASSERT((isOpen()), "The file is not open.");
 
     int sucess = read_trr_natoms(const_cast<char*>(name_.c_str()),&natoms_);
-    ASSERT((sucess == 1), "Reading natoms failed.");
+    ASSERT((sucess == exdrOK), "Reading natoms failed.");
 }
