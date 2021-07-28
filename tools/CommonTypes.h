@@ -14,6 +14,7 @@ namespace CommonTypes{
     using VecofVecReal2 = std::vector<std::vector<Real2>>;
     using index2        = std::array<int,2>;
     using index3        = std::array<int,3>;
+    using VectorReal3   = std::vector<Real3>;
 
     template<typename T>
     using VectorofVector= std::vector<std::vector<T>>;

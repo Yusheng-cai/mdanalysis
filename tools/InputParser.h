@@ -10,6 +10,7 @@
 #include <sstream>
 #include <utility>
 #include <functional>
+#include <array>
 
 namespace StringTools
 {
@@ -66,6 +67,9 @@ class ParameterPack
         template <typename T>
         bool ReadVectorNumber(const std::string& key, const KeyType, std::vector<T>& vecval) const;
         bool ReadVectorString(const std::string& key, const KeyType, std::vector<std::string>& vecstr) const;
+
+        template<typename T, std::size_t dim>
+        bool ReadArrayNumber(const std::string& key, const KeyType, std::array<T,dim>& arrval) const;
  
     private:
         std::multimap<std::string, std::string> value_;
@@ -170,4 +174,27 @@ bool ParameterPack::ReadVectorNumber(const std::string& key, const ParameterPack
 
         
     return false;
+}
+
+template <typename T, std::size_t dim>
+bool ParameterPack::ReadArrayNumber(const std::string& key, const ParameterPack::KeyType keytype, std::array<T,dim>& arrval) const
+{
+    std::vector<T> vecval;
+    bool vecNum = ReadVectorNumber<T>(key,keytype, vecval);
+
+    ASSERT((vecval.size() == dim), "In readArrayNumber, the read vector for key= " << key << " is " << vecval.size() << " while the required size is " << dim);
+
+    if (vecNum == true)
+    {
+        for (int i=0;i<dim;i++)
+        {
+            arrval[i] = vecval[i];
+        }
+
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
