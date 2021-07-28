@@ -22,6 +22,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
 
 add_subdirectory(xdr)
 add_subdirectory(tools)
+add_subdirectory(OrderParameters)
 
 add_executable(mdanalysis main.cpp)
 
