@@ -10,6 +10,6 @@ class TrrFile:public XdrWrapper
         TrrFile();
         virtual ~TrrFile(){};
 
-        virtual void readNextFrame() override;
+        virtual bool readNextFrame() override;
         virtual void readNumAtoms() override;    
 };

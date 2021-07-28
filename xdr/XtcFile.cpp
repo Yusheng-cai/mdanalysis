@@ -17,7 +17,7 @@ void XtcFile::readNumAtoms()
     ASSERT((success == exdrOK), "The process to read xtc natoms is not sucessful.");
 }
 
-void XtcFile::readNextFrame()
+bool XtcFile::readNextFrame()
 {
     ASSERT((isOpen()), "The file is not opened.");
 
@@ -30,8 +30,8 @@ void XtcFile::readNextFrame()
     Frame::Matrix matrix_box_;
 
     auto positions_ptr_ = (rvec*)positions_.data();
-    int success = read_xtc(file_, natoms_, &step, &time, box_, positions_ptr_, &precision_);
-    ASSERT((success == exdrOK), "The reading operation in xtc file is not sucessful.");
+    int ret = read_xtc(file_, natoms_, &step, &time, box_, positions_ptr_, &precision_);
+    ASSERT((ret == exdrOK), "The reading operation in xtc file is not sucessful.");
 
     for(int i=0;i<3;i++)
     {
@@ -43,4 +43,13 @@ void XtcFile::readNextFrame()
     frame_.setBox(matrix_box_);
     frame_.setTime(time);
     frame_.setStep(step);
+
+    if (ret == exdrENDOFFILE)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }

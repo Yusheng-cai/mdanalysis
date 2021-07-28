@@ -6,7 +6,7 @@ class XtcFile:public XdrWrapper
         XtcFile();
         virtual ~XtcFile(){};
 
-        virtual void readNextFrame() override;
+        virtual bool readNextFrame() override;
         virtual void readNumAtoms() override;
     private:
         Frame::Real precision_;

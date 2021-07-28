@@ -9,7 +9,7 @@ TrrFile::TrrFile()
 :XdrWrapper()
 {};
 
-void TrrFile::readNextFrame()
+bool TrrFile::readNextFrame()
 {
     ASSERT((isOpen()), "The file is not opened.");
 
@@ -28,7 +28,7 @@ void TrrFile::readNextFrame()
     int step;
     Frame::Real time, lambda; 
     int has_prop;
-    read_trr(file_, natoms_, &step, &time, &lambda, box, position_ptr, velocities_ptr, forces_ptr, &has_prop);
+    int ret = read_trr(file_, natoms_, &step, &time, &lambda, box, position_ptr, velocities_ptr, forces_ptr, &has_prop);
 
     frame_.setTime(time);
     frame_.setStep(step);
@@ -41,6 +41,15 @@ void TrrFile::readNextFrame()
         }
     }
     frame_.setBox(box_);
+
+    if (ret == exdrENDOFFILE)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 void TrrFile::readNumAtoms()
