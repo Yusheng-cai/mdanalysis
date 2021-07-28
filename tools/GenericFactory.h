@@ -17,7 +17,7 @@ class GenericFactory
         using createfunc = std::function<Base*(Derived_Args...)>;
         using FnRegistry   = std::map<Key, createfunc>;
 
-        static GenericFactory& instance() {return _instance;};
+        static GenericFactory& instance() {static GenericFactory _instance;return _instance;};
         void RegisterInFactory(const Key& key, createfunc func);
         Base* create(const Key& key, Derived_Args... args);
         const FnRegistry& get_registry(){return registry;}
@@ -52,9 +52,6 @@ Base* GenericFactory<Base,Key,Derived_Args...>::create(const Key& key, Derived_A
 
     return registry.find(key)->second(args...);
 }
-
-template <class Base, typename Key, typename... Derived_Args>
-GenericFactory<Base,Key,Derived_Args...> GenericFactory<Base,Key,Derived_Args...>::_instance;
 
 template<class Base, class Derived, typename Key=std::string, typename... Derived_Args>
 class RegisterInFactory
