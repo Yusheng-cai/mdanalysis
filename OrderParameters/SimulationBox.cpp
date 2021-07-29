@@ -33,7 +33,7 @@ SimulationBox::SimulationBox(Real3& length)
     }
 }
 
-void SimulationBox::calculateDistance(Real3& x1, Real3& x2, Real3& distance, Real& sq_dist)
+void SimulationBox::calculateDistance(const Real3& x1, const Real3& x2, Real3& distance, Real& sq_dist)
 {
     for (int i=0;i<3;i++)
     {
@@ -47,7 +47,7 @@ void SimulationBox::calculateDistance(Real3& x1, Real3& x2, Real3& distance, Rea
     }
 }
 
-SimulationBox::Real3 SimulationBox::calculateShift(Real3& x1, Real3& ref)
+SimulationBox::Real3 SimulationBox::calculateShift(const Real3& x1, const Real3& ref)
 {
     Real3 shift;
     for (int i=0;i<3;i++)
