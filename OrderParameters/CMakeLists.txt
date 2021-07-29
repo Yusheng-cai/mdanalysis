@@ -9,6 +9,7 @@ target_sources(OrderParameters PRIVATE
     "ProbeVolumeBox.cpp"
     "SimulationBox.cpp"
     "SimulationState.cpp"
+    "AtomGroup.cpp"
 )
 
 set(OrderParameters_HEADER
@@ -19,6 +20,7 @@ set(OrderParameters_HEADER
     "ProbeVolume.h"
     "ProbeVolumeBox.h"
     "SimulationState.h"
+    "AtomGroup.h"
 )
 
 target_include_directories(OrderParameters
