@@ -10,6 +10,9 @@ target_sources(OrderParameters PRIVATE
     "SimulationBox.cpp"
     "SimulationState.cpp"
     "AtomGroup.cpp"
+    "Output_values.cpp"
+    "Indus.cpp"
+    "ProbeVolumeRegistry.cpp"
 )
 
 set(OrderParameters_HEADER
@@ -21,6 +24,9 @@ set(OrderParameters_HEADER
     "ProbeVolumeBox.h"
     "SimulationState.h"
     "AtomGroup.h"
+    "Output_values.h"
+    "Indus.h"
+    "ProbeVolumeRegistry.h"
 )
 
 target_include_directories(OrderParameters
@@ -35,4 +41,3 @@ include(InstallLibraryWithStandardSetup)
 InstallLibraryWithStandardSetup(OrderParameters 
     INCLUDE_SUBDIR OrderParameters
     INCLUDES ${OrderParameters_HEADER})
-
