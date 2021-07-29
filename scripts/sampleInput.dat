@@ -1,3 +1,8 @@
 xdrfile = {
 	name = traj_comp.xtc
 }
+
+atomgroup = {
+	name = a
+	selection = [ atom_index 1-20:3 , 2-30:4 ]
+}
