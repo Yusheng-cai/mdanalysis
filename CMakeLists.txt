@@ -23,12 +23,11 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
 add_subdirectory(xdr)
 add_subdirectory(tools)
 add_subdirectory(OrderParameters)
-add_subdirectory(Driver)
 
 add_executable(mdanalysis main.cpp)
 
 target_include_directories(mdanalysis PUBLIC ${CMAKE_SOURCE_DIR})
 
-target_link_libraries(mdanalysis PUBLIC OrderParameters xdr tools Driver)
+target_link_libraries(mdanalysis PUBLIC OrderParameters xdr tools)
 
 install(TARGETS mdanalysis DESTINATION bin)
