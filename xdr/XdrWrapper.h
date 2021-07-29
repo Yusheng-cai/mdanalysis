@@ -7,6 +7,7 @@
 #include "tools/Assert.h"
 #include "Frame.h"
 #include "tools/GenericFactory.h"
+#include "tools/CommonTypes.h"
 
 #include <string>
 #include <vector>
@@ -16,6 +17,7 @@
 class XdrWrapper
 {
     public:
+        using Real = CommonTypes::Real;
         enum Mode
         {
             Read, Write, Append
@@ -38,6 +40,9 @@ class XdrWrapper
         const Frame::VectorReal3& getPositions() const{return frame_.getPositions();}
         const Frame::VectorReal3& getVelocities() const{return frame_.getVelocities();}
         const Frame::VectorReal3& getFroces() const{return frame_.getForces();}
+        Real getTime() const {return frame_.getTime();}
+        int getStep() const {return frame_.getStep();}
+        
 
     protected:
         XDRFILE* file_=nullptr;

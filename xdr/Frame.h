@@ -30,9 +30,9 @@ class Frame
         const VectorReal3& getForces()const{return forces_;}
         const Matrix& getBoxMatrix()const{return box_;}
 
-        Real getTime(){return time_;}
+        Real getTime() const{return time_;}
         void setTime(Real time){time_ = time;}
-        int getStep(){return step_;}
+        int getStep() const{return step_;}
         void setStep(int step){step_ = step;}
         void setBox(const Matrix& box)
         {
