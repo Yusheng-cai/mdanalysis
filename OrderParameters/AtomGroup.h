@@ -16,6 +16,11 @@ class AtomGroup
 
         void ParseSelectionString();
 
+        // getters
+        std::string getName() const{return name_;}
+        const std::vector<int>& getAtomGroupIndices() const {return AtomGroupIndices_;} 
+
+
     private:
         // Indices of the AtomGroup
         std::vector<int> AtomGroupIndices_;
