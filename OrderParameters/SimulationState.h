@@ -1,6 +1,10 @@
 #pragma once
 #include "tools/CommonTypes.h"
 #include "SimulationBox.h"
+#include "AtomGroup.h"
+
+#include <string>
+#include <map>
 
 // This is a class that keeps track of the simulation progression
 class SimulationState
@@ -11,6 +15,7 @@ class SimulationState
         using Matrix=CommonTypes::Matrix;
 
         SimulationState(){};
+        ~SimulationState(){};
 
         void setBox(Matrix boxMat){box_.setBoxMatirx(boxMat);}
         void setTime(Real time){time_ = time;}
@@ -22,9 +27,16 @@ class SimulationState
         Real getTime() const{return time_;}
         int getStep() const {return step_;}
 
+        // registers AtomGroups
+        void registerAtomGroup(std::string name, AtomGroup& ag);
+
+        // get AtomGroup reference by name
+        const AtomGroup& getAtomGroup(std::string name) const;
+
     private:
         Real time_;
         int step_;
 
         SimulationBox box_;
+        std::map<std::string, AtomGroup> MapName2AtomGroup;
 };

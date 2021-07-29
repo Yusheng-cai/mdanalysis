@@ -9,10 +9,11 @@ class SimulationBox
         using Real3  = CommonTypes::Real3;
         using Matrix = CommonTypes::Matrix;
 
-        SimulationBox();
+        SimulationBox(){};
         SimulationBox(Matrix& box);
         SimulationBox(Real3& length);
         SimulationBox(Real lx, Real ly, Real lz);
+        ~SimulationBox(){};
 
         // setter 
         void setBoxMatirx(const Matrix& box);
