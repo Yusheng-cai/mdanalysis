@@ -16,16 +16,13 @@ class SimulationBox
         ~SimulationBox(){};
 
         // setter 
-        void setBoxMatirx(const Matrix& box);
+        void setBoxMatrix(const Matrix& box);
 
         // calculate pbc corrected distance between x1 and x2
-        void calculateDistance(const Real3& x1, const Real3& x2, Real3& distance, Real& sq_dist);
+        void calculateDistance(const Real3& x1, const Real3& x2, Real3& distance, Real& sq_dist) const;
 
         // calculate the shift between x1 and x2
-        Real3 calculateShift(const Real3& x1, const Real3& ref);
-
-        // setters
-        void setSimulationBox(const Matrix& box){box_ = box;}
+        Real3 calculateShift(const Real3& x1, const Real3& ref) const;
 
     private:
         Matrix box_;
