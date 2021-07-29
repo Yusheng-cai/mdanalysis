@@ -5,7 +5,6 @@ class IndicatorFunction1d:public IndicatorFunction
 {
     public:
         IndicatorFunction1d(){};
-        IndicatorFunction1d(Real max);
         IndicatorFunction1d(Real sigma, Real ac, Real max);
         virtual ~IndicatorFunction1d(){};
 
