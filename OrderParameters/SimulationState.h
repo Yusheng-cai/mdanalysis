@@ -5,6 +5,7 @@
 
 #include <string>
 #include <map>
+#include <memory>
 
 // This is a class that keeps track of the simulation progression
 class SimulationState
@@ -17,7 +18,7 @@ class SimulationState
         SimulationState(){};
         ~SimulationState(){};
 
-        void setBox(Matrix boxMat){box_.setBoxMatirx(boxMat);}
+        void setBox(Matrix boxMat){box_.setBoxMatrix(boxMat);}
         void setTime(Real time){time_ = time;}
         void setStep(int step){step_ = step;}
 
@@ -38,5 +39,5 @@ class SimulationState
         int step_;
 
         SimulationBox box_;
-        std::map<std::string, AtomGroup> MapName2AtomGroup;
+        std::map<std::string, AtomGroup> MapName2AtomGroup_;
 };
