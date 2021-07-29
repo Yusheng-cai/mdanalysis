@@ -3,67 +3,56 @@
 Driver::Driver(std::string filename)
 {
     InputParser ip;
-    ip.ParseFile(filename, pack);
+    ip.ParseFile(filename, pack_);
 
-    auto pv_pack = pack.findParamPacks("probevolume", ParameterPack::KeyType::Optional);
-    auto op_pack = pack.findParamPacks("orderparameter", ParameterPack::KeyType::Optional);
-    auto xdr_pack= pack.findParamPacks("xdrfiles", ParameterPack::KeyType::Optional);
+    auto pv_pack = pack_.findParamPacks("probevolume", ParameterPack::KeyType::Optional);
+    auto op_pack = pack_.findParamPacks("orderparameter", ParameterPack::KeyType::Optional);
+    auto xdr_pack= pack_.findParamPack("xdrfiles", ParameterPack::KeyType::Optional);
 
-    initializeXdr(xdr_pack);
+    if (xdr_pack != nullptr)
+        initializeXdr(xdr_pack);
 }
 
-void Driver::initializeXdr(std::vector<const ParameterPack*> xdrpack)
+void Driver::initializeXdr(const ParameterPack* xdrpack)
 {
-    std::vector<std::string> names;
-    for (int i=0;i<xdrpack.size();i++)
+    std::vector<std::string> paths;
+
+    std::string path;
+    std::string name;
+    std::string mode;
+    xdrpack->ReadString("path", ParameterPack::KeyType::Required, path);
+    xdrpack->ReadString("name", ParameterPack::KeyType::Required, name);
+    bool read = xdrpack->ReadString("mode", ParameterPack::KeyType::Optional, mode);
+
+    // split the path to obtain the type of xdr file we are working with, i.e test.xtc
+    int found = path.find_first_of(".");
+    std::string type = path.substr(found+1);
+
+    Xdr_ = XdrPtr(XdrFiles::factory::instance().create(type));
+    SimState_ = statePtr(new SimulationState());
+
+    // default is reading mode
+    if (read == false)
     {
-        auto pack = xdrpack[i];
-
-        std::string name;
-        pack->ReadString("name", ParameterPack::KeyType::Required, name);
-        names.push_back(name);
-
-        int found = name.find_first_of(".");
-        std::string type = name.substr(found+1);
-
-        XdrPtr x = XdrPtr(XdrFiles::factory::instance().create(type));
-        Xdr.push_back(x);
-
-        // For each xdr file we have a corresponding simulation state
-        statePtr sim_ptr(new SimulationState());
-        sim_state_.push_back(sim_ptr);
+        Xdr_->open(path, XdrWrapper::Mode::Read);
     }
-
-    for (int i=0;i<Xdr.size();i++)
+    else
     {
-        auto pack = xdrpack[i];
-
-        std::string mode;
-        std::string name = names[i];
-        bool read = pack->ReadString("mode", ParameterPack::KeyType::Optional, mode);
-
-        if (read == false)
+        if (mode == "read")
         {
-            Xdr[i]->open(name, XdrWrapper::Mode::Read);
+            Xdr_ ->open(path, XdrWrapper::Mode::Read);
         }
-        else
+        else if (mode == "append")
         {
-            if (mode == "read")
-            {
-                Xdr[i] ->open(name, XdrWrapper::Mode::Read);
-            }
-            else if (mode == "append")
-            {
-                Xdr[i]->open(name, XdrWrapper::Mode::Append);
-            }   
-            else if (mode == "write")
-            {
-                Xdr[i]->open(name, XdrWrapper::Mode::Write);
-            }
-            else 
-            {
-                ASSERT((true == false), "Provided option " << mode << " is not in write/append/read.");
-            }
+            Xdr_->open(path, XdrWrapper::Mode::Append);
+        }   
+        else if (mode == "write")
+        {
+            Xdr_->open(path, XdrWrapper::Mode::Write);
+        }
+        else 
+        {
+            ASSERT((true == false), "Provided option " << mode << " is not in write/append/read.");
         }
     }
 }
