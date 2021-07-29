@@ -8,6 +8,9 @@ class Indus:public OrderParameters
         virtual ~Indus(){};
 
         virtual void calculate() override{};
+
+        Real getN() const {return N_;}
+        Real getNtilde() const {return Ntilde_;}
     
     private:
         Real N_;

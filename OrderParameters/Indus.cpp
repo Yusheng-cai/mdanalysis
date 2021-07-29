@@ -13,4 +13,7 @@ Indus::Indus(const OrderParametersInput& input)
 
     auto& pv = input.pv_registry_.getProbeVolume(pv_name);
     pv.setGeometry();
+
+    registerOutput("n", [this](void)->Real {return this->getN();});
+    registerOutput("ntilde", [this](void)->Real {return this->getNtilde();});
 }
