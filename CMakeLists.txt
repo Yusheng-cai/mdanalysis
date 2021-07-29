@@ -29,6 +29,6 @@ add_executable(mdanalysis main.cpp)
 
 target_include_directories(mdanalysis PUBLIC ${CMAKE_SOURCE_DIR})
 
-target_link_libraries(mdanalysis PUBLIC OrderParameters xdr tools)
+target_link_libraries(mdanalysis PUBLIC OrderParameters xdr tools Driver)
 
 install(TARGETS mdanalysis DESTINATION bin)
