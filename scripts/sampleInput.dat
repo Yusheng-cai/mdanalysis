@@ -1,8 +1,21 @@
 xdrfile = {
-	name = traj_comp.xtc
+	path = traj_comp.xtc
 }
 
 atomgroup = {
 	name = a
 	selection = [ atom_index 1-20:3 , 2-30:4 ]
+}
+
+probevolume = {
+	name = v
+	type = box
+	xrange =  [ 1 2 ]
+	yrange =  [ 2 3 ]
+	zrange =  [ 3 4 ]
+}
+
+orderparameter = {
+	type = indus
+	probevolume = v
 }
