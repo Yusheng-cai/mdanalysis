@@ -4,9 +4,9 @@
 class OrderParameters
 {
     public:
-        OrderParameters();
-        ~OrderParameters();
+        OrderParameters(){};
+        ~OrderParameters(){};
 
-        virtual void calculate();
+        virtual void calculate(){};
     private:
 };
