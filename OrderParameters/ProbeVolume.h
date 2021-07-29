@@ -44,7 +44,11 @@ class ProbeVolume
 
         bool isDynamic(){return isDynamic_;}
 
-    private:
+        // Obtain the simulation state reference
+        const SimulationState& getSimulationState() const{return simstate_;}
+        const SimulationBox& getSimulationBox() const{return simbox_;}
+
+    protected:
         // default Dynamic to be false
         bool isDynamic_=false;
         SimulationState& simstate_;
