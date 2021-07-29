@@ -19,12 +19,10 @@ class ProbeVolumeBox:public ProbeVolume
 
         // This calculates per atom basis of indicator function
         virtual ProbeVolumeOutput calculate(const Real3& x) override; 
-        void setGeometry();
+        virtual void setGeometry() override;
+
 
     private:
-        Real sigma_=0.01;
-        Real ac_=0.02;
-
         Real2 xrange_;
         Real2 yrange_;
         Real2 zrange_;
@@ -32,6 +30,4 @@ class ProbeVolumeBox:public ProbeVolume
         Real dx_,dy_,dz_;
         Real3 center_;
         std::array<IndicatorFunction2d,3> func_;
-
-        SimulationState& state;
 };

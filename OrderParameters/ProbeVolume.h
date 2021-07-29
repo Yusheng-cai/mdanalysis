@@ -8,6 +8,7 @@
 
 #include <vector>
 #include <array>
+#include <iostream>
 #include <string>
 
 struct ProbeVolumeOutput
@@ -24,7 +25,7 @@ struct ProbeVolumeOutput
 
 struct ProbeVolumeInput
 {
-    ParameterPack& ParamPack;
+    const ParameterPack& ParamPack;
     SimulationState& simstate;
 };
 
@@ -41,6 +42,7 @@ class ProbeVolume
         // Update the ProbeVolume as needed -> usually used for Dynamic Probe Volumes
         virtual void update(){};
         virtual ProbeVolumeOutput calculate(const Real3& x) = 0;
+        virtual void setGeometry(){};
 
         bool isDynamic(){return isDynamic_;}
 
@@ -48,14 +50,27 @@ class ProbeVolume
         const SimulationState& getSimulationState() const{return simstate_;}
         const SimulationBox& getSimulationBox() const{return simbox_;}
 
+        // getters
+        Real getSigma() const {return sigma_;}
+        Real getAlphaC() const {return ac_;}
+
+        // setters
+        void setSigma(Real sigma) {sigma_ = sigma;}
+        void setAlphaC(Real alphaC) {ac_ = alphaC;}
+
     protected:
+        Real sigma_;
+        Real ac_;
+
         // default Dynamic to be false
         bool isDynamic_=false;
         SimulationState& simstate_;
         SimulationBox& simbox_;
+
+        std::string name_;
 };
 
-namespace ProbeVolumeRegistry
+namespace ProbeVolumes
 {
     using Base    = ProbeVolume;
     using Key     = std::string;

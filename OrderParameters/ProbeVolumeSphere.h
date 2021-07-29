@@ -7,7 +7,7 @@ class ProbeVolumeSphere: public ProbeVolume
         ProbeVolumeSphere(ProbeVolumeInput& input);
         virtual ~ProbeVolumeSphere(){};
 
-        void setGeometry();
+        virtual void setGeometry() override;
 
         virtual ProbeVolumeOutput calculate(const Real3& x) override;
 

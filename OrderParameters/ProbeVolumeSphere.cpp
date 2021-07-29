@@ -1,6 +1,6 @@
 #include "ProbeVolumeSphere.h"
 
-namespace ProbeVolumeRegistry
+namespace ProbeVolumes
 {
     static const registry_<ProbeVolumeSphere> registerSphere("sphere");
 }

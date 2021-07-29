@@ -1,12 +1,12 @@
 #include "ProbeVolumeBox.h"
 
-namespace ProbeVolumeRegistry
+namespace ProbeVolumes
 {
     static const registry_<ProbeVolumeBox> register_box("box");
 }
 
 ProbeVolumeBox::ProbeVolumeBox(ProbeVolumeInput& input)
-:ProbeVolume(input), state(input.simstate)
+:ProbeVolume(input)
 {
     input.ParamPack.ReadArrayNumber("xrange", ParameterPack::KeyType::Required, xrange_);
     input.ParamPack.ReadArrayNumber("yrange", ParameterPack::KeyType::Required, yrange_);
@@ -14,7 +14,7 @@ ProbeVolumeBox::ProbeVolumeBox(ProbeVolumeInput& input)
     input.ParamPack.ReadNumber("sigma", ParameterPack::KeyType::Optional, sigma_);
     input.ParamPack.ReadNumber("alphac", ParameterPack::KeyType::Optional, ac_);
 
-    setGeometry();
+    setGeometry(); 
 }
 
 void ProbeVolumeBox::setGeometry()
