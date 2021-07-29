@@ -43,7 +43,7 @@ void XdrWrapper::close()
     ASSERT((isOpen()), "You are trying to close the file while it wasn't opened in the first place.");
     int ret = xdrfile_close(file_);
 
-    ASSERT((ret == 1), "The xdr file was closed incorrectly.");
+    ASSERT((ret == 0), "The xdr file was closed incorrectly.");
 }
 
 XdrWrapper::~XdrWrapper()
