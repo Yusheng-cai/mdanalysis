@@ -9,6 +9,8 @@ int main(int argc, char** argv)
     std::string fname = argv[1];
 
     Driver d(fname);
+
+    d.update();
  
     return 0;
 };
