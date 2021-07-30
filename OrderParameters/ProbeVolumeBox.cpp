@@ -34,7 +34,7 @@ void ProbeVolumeBox::setGeometry()
     func_[2] = IndicatorFunction2d(sigma_, ac_, -dz_/2, dz_/2);
 }
 
-ProbeVolumeOutput ProbeVolumeBox::calculate(const Real3& x)
+ProbeVolumeOutput ProbeVolumeBox::calculate(const Real3& x) const
 {
     // First calculate the pbc corrected distance of x with respect to the center of the Box PV
     Real3 dist;
@@ -51,7 +51,7 @@ ProbeVolumeOutput ProbeVolumeBox::calculate(const Real3& x)
     for (int i=0;i<3;i++)
     {
         Real htilde_x, h_x, dhtilde_dx;
-        func_[i].calculate(x[i],h_x, htilde_x, dhtilde_dx);        
+        func_[i].calculate(dist[i],h_x, htilde_x, dhtilde_dx);        
         htilde[i] = htilde_x;
         dhtilde[i] = dhtilde_dx;
         h[i] = h_x;
