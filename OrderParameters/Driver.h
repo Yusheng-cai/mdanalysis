@@ -11,6 +11,7 @@
 #include <memory>
 #include <vector>
 #include <map>
+#include <chrono>
 
 class Driver
 {
@@ -34,6 +35,8 @@ class Driver
         int getStep() const {return Xdr_->getStep();}
 
         void update();
+
+        void calculate();
 
     private:
         ParameterPack pack_;

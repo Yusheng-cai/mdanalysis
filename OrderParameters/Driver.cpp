@@ -127,11 +127,48 @@ void Driver::update()
     bool read = Xdr_->readNextFrame();
 
     const auto& total_atom_positions_ = Xdr_->getPositions();
-    // VectorReal3 total_atom_positions_cast(total_atom_positions_.begin(), total_atom_positions_.end());
 
-    // for (int i=0;i<VectorAgNames_.size();i++)
-    // {
-    //     auto& ag = simstate_.getAtomGroup(VectorAgNames_[i]);
-    //     ag.update(total_atom_positions_cast);
-    // }
+    for (int i=0;i<VectorAgNames_.size();i++)
+    {
+        auto start = std::chrono::high_resolution_clock::now();
+        auto& ag = simstate_.getAtomGroup(VectorAgNames_[i]);
+        ag.update(total_atom_positions_);
+
+        auto stop = std::chrono::high_resolution_clock::now();
+
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+        std::cout << "Time it took for ag update is " << duration.count() << " microseconds" << std::endl;
+    }
+
+
+    // update the simulation box
+    auto& box = simstate_.getSimulationBox();
+    simstate_.setSimulationBox(Xdr_->getSimulationBox());
+
+    // update the Order Parameters
+    for (int i=0;i<OP_.size();i++)
+    {
+        auto& op = OP_[i];
+        auto start = std::chrono::high_resolution_clock::now();
+        op->update();
+        auto stop = std::chrono::high_resolution_clock::now();
+
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+        std::cout << "Time it took for op update is " << duration.count() << " microseconds" << std::endl;
+    }
+}
+
+void Driver::calculate()
+{
+    for (int i = 0;i<OP_.size();i++)
+    {
+        auto& op = OP_[i];
+        auto start = std::chrono::high_resolution_clock::now();
+        op ->calculate();
+        auto stop = std::chrono::high_resolution_clock::now();
+
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+        std::cout << "Time it took was " << duration.count() << " microseconds" << std::endl;
+    }
+
 }
