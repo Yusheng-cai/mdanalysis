@@ -9,7 +9,7 @@ class ProbeVolumeSphere: public ProbeVolume
 
         virtual void setGeometry() override;
 
-        virtual ProbeVolumeOutput calculate(const Real3& x) override;
+        virtual ProbeVolumeOutput calculate(const Real3& x) const override;
 
     private:   
         Real sigma_=0.01;

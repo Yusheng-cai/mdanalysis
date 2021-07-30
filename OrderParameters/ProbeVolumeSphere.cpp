@@ -23,7 +23,7 @@ void ProbeVolumeSphere::setGeometry()
     rmax_ = r_ + ac_;
 }
 
-ProbeVolumeOutput ProbeVolumeSphere::calculate(const Real3& x)
+ProbeVolumeOutput ProbeVolumeSphere::calculate(const Real3& x) const
 {
     ProbeVolumeOutput output;
 
