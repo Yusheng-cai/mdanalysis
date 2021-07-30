@@ -13,3 +13,12 @@ const AtomGroup& SimulationState::getAtomGroup(std::string name) const
 
     return it -> second;
 }
+
+AtomGroup& SimulationState::getAtomGroup(std::string name)
+{
+    auto it = MapName2AtomGroup_.find(name);
+
+    ASSERT((it != MapName2AtomGroup_.end()), "The name of AtomGroup: " << name << " is not registered in SimulationState.");
+
+    return it -> second;
+}

@@ -33,6 +33,8 @@ class SimulationState
 
         // get AtomGroup reference by name
         const AtomGroup& getAtomGroup(std::string name) const;
+        AtomGroup& getAtomGroup(std::string name);
+        const std::map<std::string, AtomGroup>& getAtomGroupRegistry() const{ return MapName2AtomGroup_;}
 
     private:
         Real time_;
