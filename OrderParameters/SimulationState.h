@@ -18,7 +18,7 @@ class SimulationState
         SimulationState(){};
         ~SimulationState(){};
 
-        void setBox(Matrix boxMat){box_.setBoxMatrix(boxMat);}
+        void setSimulationBox(Matrix boxMat){box_.setBoxMatrix(boxMat);}
         void setTime(Real time){time_ = time;}
         void setStep(int step){step_ = step;}
 
