@@ -6,7 +6,7 @@ IndicatorFunction1d::IndicatorFunction1d(Real sigma, Real ac, Real max)
     setLimits();
 }
 
-void IndicatorFunction1d::calculate(const Real& x, Real& h_x, Real& htilde_x, Real& dhtilde_dx)
+void IndicatorFunction1d::calculate(const Real& x, Real& h_x, Real& htilde_x, Real& dhtilde_dx) const
 {
     if (x <= max_)
     {
@@ -31,13 +31,7 @@ void IndicatorFunction1d::calculate(const Real& x, Real& h_x, Real& htilde_x, Re
 
     if (x >= highlow_ && x<= highhigh_)
     {
-        htilde_x = k1_*std::erf((max_ - x)/(std::sqrt(2)*sigma_)) - k2_*(max_ - x) - 1/2; 
-        Real factor = ac_ + max_ - x;
-
-        if (factor >= 0)
-        {
-            htilde_x += 1;
-        }
+        htilde_x = k1_*std::erf((max_ - x)/(std::sqrt(2)*sigma_)) - k2_*(max_ - x) + 0.5; 
 
         dhtilde_dx = - truncatedGaussian(max_ - x);
     }
