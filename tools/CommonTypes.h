@@ -5,7 +5,7 @@
 #include <array>
 
 namespace CommonTypes{
-    using Real          = double;
+    using Real          = float;
     using VectorReal    = std::vector<Real>;
     using Real2         = std::array<Real,2>;
     using Real3         = std::array<Real,3>;
