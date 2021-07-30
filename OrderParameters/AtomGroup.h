@@ -2,6 +2,7 @@
 #include "tools/CommonTypes.h"
 #include "tools/InputParser.h"
 #include "tools/Assert.h"
+#include "parallel/OpenMP_buffer.h"
 
 #include <vector>
 #include <array>
@@ -11,19 +12,32 @@
 class AtomGroup
 {
     public:
+        using Real = CommonTypes::Real;
+        using Real3= CommonTypes::Real3;
+        using VectorReal3 = CommonTypes::VectorReal3;
+
         AtomGroup(const ParameterPack& pack);
         ~AtomGroup(){};
 
         void ParseSelectionString();
 
+        void update(const VectorReal3& total_atoms_);
+
         // getters
         std::string getName() const{return name_;}
         const std::vector<int>& getAtomGroupIndices() const {return AtomGroupIndices_;} 
+        const VectorReal3& getAtomPositions() const {return atom_positions_;}
+
+        // accessors
+        VectorReal3& accessAtomPositions() {return atom_positions_;} // perhaps this one should not be played around with
 
 
     private:
         // Indices of the AtomGroup
         std::vector<int> AtomGroupIndices_;
+
+        // number of atoms in the AtomGroup
+        int num_atoms_;
 
         // name of the AtomGroup
         std::string name_;
@@ -33,4 +47,10 @@ class AtomGroup
 
         // index string 
         std::vector<std::string> index_str_;
+
+        // positions of owned atoms
+        VectorReal3 atom_positions_;
+
+        // buffer for storing VectorReal3 when updating
+        OpenMP::OpenMP_buffer<VectorReal3> atoms_positions_buffer_; 
 };
