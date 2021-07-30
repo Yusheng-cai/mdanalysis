@@ -7,7 +7,7 @@ IndicatorFunction2d::IndicatorFunction2d(Real sigma, Real ac, Real min, Real max
 }
 
 
-void IndicatorFunction2d::calculate(const Real& x, Real& h_x, Real& htilde_x, Real& dhtilde_dx)
+void IndicatorFunction2d::calculate(const Real& x, Real& h_x, Real& htilde_x, Real& dhtilde_dx) const
 {
     if (x >= min_ &&  x<= max_)
     {
@@ -33,13 +33,8 @@ void IndicatorFunction2d::calculate(const Real& x, Real& h_x, Real& htilde_x, Re
 
     if (x >= lowlow_ && x <= lowhigh_)
     {
-        htilde_x = k1_*std::erf((x - min_)/(std::sqrt(2)*sigma_)) - k2_*(x - min_) - 1/2;
-        Real factor = ac_ + 0.5*(max_ - min_) - std::abs(x - 0.5*(max_ + min_));
-
-        if (factor >= 0)
-        {
-            htilde_x += 1;
-        }
+        // The 1 from the last theta function is already added
+        htilde_x = k1_*std::erf((x - min_)/(std::sqrt(2)*sigma_)) - k2_*(x - min_) + 0.5;
 
         Real tilde1 = truncatedGaussian(max_ - x);
         Real tilde2 = truncatedGaussian(min_ - x);
@@ -49,13 +44,8 @@ void IndicatorFunction2d::calculate(const Real& x, Real& h_x, Real& htilde_x, Re
 
     if (x >= highlow_ && x <= highhigh_)
     {
-        htilde_x = k1_*std::erf((max_ - x)/(std::sqrt(2)*sigma_)) - k2_*(max_ - x) - 1/2;
-        Real factor = ac_ + 0.5*(max_ - min_) - std::abs(x - 0.5*(max_ + min_));
-
-        if (factor >= 0)
-        {
-            htilde_x += 1;
-        }
+        // The 1 from the last theta funciton is already added
+        htilde_x = k1_*std::erf((max_ - x)/(std::sqrt(2)*sigma_)) - k2_*(max_ - x) + 0.5;
 
         Real tilde1 = truncatedGaussian(max_ - x);
         Real tilde2 = truncatedGaussian(min_ - x);
@@ -69,5 +59,5 @@ void IndicatorFunction2d::setLimits()
     lowlow_ = min_ - ac_;
     lowhigh_= min_ + ac_;
     highlow_= max_ - ac_;
-    highlow_= max_ + ac_;
+    highhigh_= max_ + ac_;
 }

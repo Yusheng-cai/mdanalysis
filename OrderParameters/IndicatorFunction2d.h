@@ -16,7 +16,7 @@ class IndicatorFunction2d:public IndicatorFunction
         IndicatorFunction2d(Real sigma, Real ac, Real min, Real max);
         virtual ~IndicatorFunction2d(){};
 
-        virtual void calculate(const Real& x, Real& h_x, Real& htilde_x, Real& dhtilde_dx) override;
+        virtual void calculate(const Real& x, Real& h_x, Real& htilde_x, Real& dhtilde_dx) const override;
         virtual void setLimits() override;
 
  
