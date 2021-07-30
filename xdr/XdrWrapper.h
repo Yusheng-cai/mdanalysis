@@ -18,6 +18,8 @@ class XdrWrapper
 {
     public:
         using Real = CommonTypes::Real;
+        using Matrix = CommonTypes::Matrix;
+
         enum Mode
         {
             Read, Write, Append
@@ -42,8 +44,8 @@ class XdrWrapper
         const Frame::VectorReal3& getFroces() const{return frame_.getForces();}
         Real getTime() const {return frame_.getTime();}
         int getStep() const {return frame_.getStep();}
+        const Matrix& getSimulationBox() const {return frame_.getBoxMatrix();}
         
-
     protected:
         XDRFILE* file_=nullptr;
         int natoms_;
