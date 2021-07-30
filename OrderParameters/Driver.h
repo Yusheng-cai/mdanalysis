@@ -5,6 +5,7 @@
 #include "xdr/XdrWrapper.h"
 #include "tools/CommonTypes.h"
 #include "tools/InputParser.h"
+#include "AtomGroup.h"
 
 #include <string>
 #include <memory>
@@ -19,16 +20,20 @@ class Driver
         using XdrPtr = std::unique_ptr<XdrWrapper>;
         using Real = CommonTypes::Real;
         using Real3= CommonTypes::Real3;
+        using VectorReal3 = CommonTypes::VectorReal3;
 
         Driver(std::string filename);
         ~Driver(){};
 
         void initializeXdr(const ParameterPack*);
-        void initializeOP(std::vector<const ParameterPack*>&);
-        void initializeProbeVolume(std::vector<const ParameterPack*>&);
+        void initializeOP(const std::vector<const ParameterPack*>&);
+        void initializeProbeVolume(const std::vector<const ParameterPack*>&);
+        void initializeAtomGroups(const std::vector<const ParameterPack*>&);
 
         Real getTime() const {return Xdr_->getTime();}
         int getStep() const {return Xdr_->getStep();}
+
+        void update();
 
     private:
         ParameterPack pack_;
@@ -37,4 +42,8 @@ class Driver
         XdrPtr Xdr_;
         SimulationState simstate_;
         ProbeVolumeRegistry pv_registry_;
+
+        VectorReal3 total_atom_positions_;
+
+        std::vector<std::string> VectorAgNames_;
 };

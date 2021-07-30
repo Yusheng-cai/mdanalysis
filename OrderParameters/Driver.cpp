@@ -9,7 +9,14 @@ Driver::Driver(std::string filename)
     auto op_pack = pack_.findParamPacks("orderparameter", ParameterPack::KeyType::Optional);
     // Make sure that there is only one xdr file
     auto xdr_pack= pack_.findParamPack("xdrfile", ParameterPack::KeyType::Required);
+    auto ag_pack = pack_.findParamPacks("atomgroup", ParameterPack::KeyType::Optional);
 
+    if (ag_pack.size() != 0)
+    {
+        initializeAtomGroups(ag_pack);
+    }
+
+    // Read the xdr file inputted, this must be provided
     initializeXdr(xdr_pack);
 
     if (pv_pack.size() != 0)
@@ -20,6 +27,21 @@ Driver::Driver(std::string filename)
     if (op_pack.size() != 0)
     {
         initializeOP(op_pack);
+    }
+}
+
+void Driver::initializeAtomGroups(const std::vector<const ParameterPack*>& agpack)
+{
+    for (int i=0;i<agpack.size();i++)
+    {
+        auto pack = agpack[i];
+
+        std::string ag_name;
+        pack -> ReadString("name", ParameterPack::KeyType::Required,ag_name);
+        AtomGroup ag(*pack);
+
+        simstate_.registerAtomGroup(ag_name, ag);
+        VectorAgNames_.push_back(ag_name);
     }
 }
 
@@ -63,9 +85,11 @@ void Driver::initializeXdr(const ParameterPack* xdrpack)
             ASSERT((true == false), "Provided option " << mode << " is not in write/append/read.");
         }
     }
+
+    total_atom_positions_.reserve(Xdr_->getNumAtoms());
 }
 
-void Driver::initializeProbeVolume(std::vector<const ParameterPack*>& PVpack)
+void Driver::initializeProbeVolume(const std::vector<const ParameterPack*>& PVpack)
 {
     for (int i=0; i< PVpack.size();i++)
     {
@@ -82,7 +106,7 @@ void Driver::initializeProbeVolume(std::vector<const ParameterPack*>& PVpack)
     }
 }
 
-void Driver::initializeOP(std::vector<const ParameterPack*>& OPpack)
+void Driver::initializeOP(const std::vector<const ParameterPack*>& OPpack)
 {
     for (int i=0;i<OPpack.size();i++)
     {
@@ -96,4 +120,18 @@ void Driver::initializeOP(std::vector<const ParameterPack*>& OPpack)
 
         OP_.push_back(std::move(op_pointer));
     }
+}
+
+void Driver::update()
+{
+    bool read = Xdr_->readNextFrame();
+
+    const auto& total_atom_positions_ = Xdr_->getPositions();
+    // VectorReal3 total_atom_positions_cast(total_atom_positions_.begin(), total_atom_positions_.end());
+
+    // for (int i=0;i<VectorAgNames_.size();i++)
+    // {
+    //     auto& ag = simstate_.getAtomGroup(VectorAgNames_[i]);
+    //     ag.update(total_atom_positions_cast);
+    // }
 }
