@@ -15,9 +15,6 @@ AtomGroup::AtomGroup(const ParameterPack& pack)
     }
 
     ParseSelectionString();
-
-    // set the master object for atom_positions
-    atoms_positions_buffer_.set_master_object(atom_positions_);
 }
 
 void AtomGroup::ParseSelectionString()
@@ -54,6 +51,9 @@ void AtomGroup::ParseSelectionString()
             {
                 std::string begin_index_str = index_str_[i].substr(0, found_dash);
                 std::string end_index_str   = index_str_[i].substr(found_dash + 1);
+
+                begin_index = StringTools::StringToType<int>(begin_index_str);
+                end_index   = StringTools::StringToType<int>(end_index_str);
                 skip_ = 1;
             }
 
@@ -78,6 +78,12 @@ void AtomGroup::ParseSelectionString()
         }
     }
 
+    for (int i=0;i<AtomGroupIndices_.size();i++)
+    {
+        AtomGroupIndicesToGlobalIndices_.insert(std::make_pair(i, AtomGroupIndices_[i]));    
+    }
+
+
     num_atoms_ = AtomGroupIndices_.size();
 }
 
@@ -85,20 +91,37 @@ void AtomGroup::update(const VectorReal3& total_atoms)
 {
     atoms_positions_buffer_.clearBuffer();
     atom_positions_.clear();
-    atom_positions_.reserve(num_atoms_);
+
+    // important! address of a vector changes throughout
+    atoms_positions_buffer_.set_master_object(atom_positions_);
 
     #pragma omp parallel
     {
         auto& buffer_ = atoms_positions_buffer_.access_buffer_by_id();
+        buffer_.resize(0);
+
         #pragma omp for
         for (int i=0;i < num_atoms_;i++)
         {
-            buffer_.push_back(total_atoms[i]);
+            auto& a = total_atoms[AtomGroupIndices_[i]];
+            buffer_.push_back(a);
         }
     }
+
+    atom_positions_.reserve(num_atoms_);
 
     for(auto it= atoms_positions_buffer_.beginworker();it != atoms_positions_buffer_.endworker();it++)
     {
         atom_positions_.insert(atom_positions_.end(), it->begin(), it->end());
     }
 }
+
+int AtomGroup::AtomGroupIndices2GlobalIndices(int atomgroupIndices) const
+{
+    auto it = AtomGroupIndicesToGlobalIndices_.find(atomgroupIndices);
+
+    ASSERT((it != AtomGroupIndicesToGlobalIndices_.end()), "The indices of number " << atomgroupIndices << " is not found.");
+
+    return it ->second;
+}
+

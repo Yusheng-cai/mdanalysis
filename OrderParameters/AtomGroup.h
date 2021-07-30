@@ -31,6 +31,9 @@ class AtomGroup
         // accessors
         VectorReal3& accessAtomPositions() {return atom_positions_;} // perhaps this one should not be played around with
 
+        // convert from AtomGroupIndices to global indices
+        int AtomGroupIndices2GlobalIndices(int atomgroupIndices) const;
+
 
     private:
         // Indices of the AtomGroup
@@ -53,4 +56,7 @@ class AtomGroup
 
         // buffer for storing VectorReal3 when updating
         OpenMP::OpenMP_buffer<VectorReal3> atoms_positions_buffer_; 
+
+        // Map Atom Group indices to global indices 
+        std::map<int, int> AtomGroupIndicesToGlobalIndices_;
 };
