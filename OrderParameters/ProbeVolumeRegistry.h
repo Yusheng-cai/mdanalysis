@@ -15,7 +15,9 @@ class ProbeVolumeRegistry
         ~ProbeVolumeRegistry(){};
 
         void registerProbeVolume(const std::string name, const ProbeVolume* pv_ptr);
-        ProbeVolume& getProbeVolume(const std::string name) const;
+        const ProbeVolume& getProbeVolume(const std::string name) const;
+
+        ProbeVolume& accessProbeVolume(const std::string name);
 
     private:
         std::map<std::string, ProbeVolumePtr> MapName2PV;  
