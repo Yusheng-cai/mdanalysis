@@ -4,18 +4,19 @@ xdrfile = {
 
 atomgroup = {
 	name = a
-	selection = [ atom_index 1-20:3 , 2-30:4 ]
+	selection = [ atom_index 1-20:3 , 30-1000 ]
 }
 
 probevolume = {
 	name = v
 	type = box
-	xrange =  [ 1 2 ]
-	yrange =  [ 2 3 ]
-	zrange =  [ 3 4 ]
+	xrange =  [ 0 4 ]
+	yrange =  [ 0 4 ]
+	zrange =  [ 0 4 ]
 }
 
 orderparameter = {
 	type = indus
+	atomgroup = a
 	probevolume = v
 }
