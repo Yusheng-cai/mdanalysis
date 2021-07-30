@@ -15,12 +15,12 @@ class IndicatorFunction
         virtual ~IndicatorFunction(){};
 
         // h_a of a single dimension in INDUS indicator function
-        virtual void calculate(const Real& x, Real& h_x, Real& htilde_x, Real& dhtilde_dx) = 0;
+        virtual void calculate(const Real& x, Real& h_x, Real& htilde_x, Real& dhtilde_dx) const = 0;
         virtual void setLimits() = 0;
         virtual void calculateFactors();
 
         // truncated Gaussian phi function, this is a zero centered truncated Gaussian 
-        Real truncatedGaussian(Real alpha);
+        Real truncatedGaussian(Real alpha) const;
 
         // getters
         Real getSigma() const{return sigma_;}

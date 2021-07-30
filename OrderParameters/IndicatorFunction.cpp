@@ -9,11 +9,11 @@ IndicatorFunction::IndicatorFunction(Real sigma, Real ac)
     calculateFactors();
 }
 
-IndicatorFunction::Real IndicatorFunction::truncatedGaussian(Real alpha)
+IndicatorFunction::Real IndicatorFunction::truncatedGaussian(Real alpha) const
 {
     if ((ac_ - std::abs(alpha))>= 0)
     {
-        Real ret = 1/k_*(std::exp(-alpha*alpha/(2*sigma2_)) - std::exp(-ac2_/(2*sigma2_)));
+        Real ret = 1.0/k_*(std::exp(-alpha*alpha/(2*sigma2_)) - std::exp(-ac2_/(2*sigma2_)));
         return ret;
     }
     else
@@ -25,6 +25,6 @@ IndicatorFunction::Real IndicatorFunction::truncatedGaussian(Real alpha)
 void IndicatorFunction::calculateFactors()
 {
     k_ = std::sqrt(2*Constants::PI*sigma2_)*std::erf(ac_/std::sqrt(2*sigma2_)) - 2*ac_*std::exp(-ac2_/(2*sigma2_));
-    k1_ = 1/k_*std::sqrt(Constants::PI*sigma2_/2);
-    k2_ = 1/k_*std::exp(-ac2_/(2*sigma2_));
+    k1_ = 1.0/k_*std::sqrt(Constants::PI*sigma2_/2);
+    k2_ = 1.0/k_*std::exp(-ac2_/(2*sigma2_));
 }
