@@ -24,6 +24,12 @@ class SimulationBox
         // calculate the shift between x1 and x2
         Real3 calculateShift(const Real3& x1, const Real3& ref) const;
 
+        // get simulation box
+        const Matrix& getBox() const {return box_;}
+
+        // get the 3 sides of the cubic box
+        Real3 getSides() const {return length_;}
+
     private:
         Matrix box_;
 
