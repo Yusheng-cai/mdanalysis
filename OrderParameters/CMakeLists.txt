@@ -39,7 +39,7 @@ target_include_directories(OrderParameters
                         $<INSTALL_INTERFACE:${PROJECT_BINARY_DIR}/include>
 )
 
-target_link_libraries(OrderParameters PUBLIC tools xdr)
+target_link_libraries(OrderParameters PUBLIC tools xdr parallel)
 
 include(InstallLibraryWithStandardSetup)
 InstallLibraryWithStandardSetup(OrderParameters 
