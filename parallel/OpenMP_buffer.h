@@ -50,6 +50,8 @@ class OpenMP_buffer{
             }
         }
 
+        T* getMasterObject(){return master_object_ptr_;}
+
         // start from the second buffer since the first one is always the "master object"
         iterator beginworker() {return buffer_.begin()++;}
         iterator endworker()   {return buffer_.end();}
