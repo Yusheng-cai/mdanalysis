@@ -41,7 +41,7 @@ class ProbeVolume
 
         // Update the ProbeVolume as needed -> usually used for Dynamic Probe Volumes
         virtual void update(){};
-        virtual ProbeVolumeOutput calculate(const Real3& x) = 0;
+        virtual ProbeVolumeOutput calculate(const Real3& x) const = 0;
         virtual void setGeometry(){};
 
         bool isDynamic(){return isDynamic_;}
@@ -59,8 +59,8 @@ class ProbeVolume
         void setAlphaC(Real alphaC) {ac_ = alphaC;}
 
     protected:
-        Real sigma_;
-        Real ac_;
+        Real sigma_=0.01;
+        Real ac_=0.02;
 
         // default Dynamic to be false
         bool isDynamic_=false;
