@@ -13,6 +13,7 @@ set(TOOLS_HEADER
     "InputParser.h"
     "RandomNumber.h"
     "CommandLineArguments.h"
+    "Registry.h"
 )
 
 target_include_directories(tools
