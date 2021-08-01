@@ -1,4 +1,5 @@
 #include "XdrWrapper.h"
+#include "libxdr/xtc_seek.h"
 
 class XtcFile:public XdrWrapper
 {
@@ -8,6 +9,7 @@ class XtcFile:public XdrWrapper
 
         virtual bool readNextFrame() override;
         virtual void readNumAtoms() override;
+        virtual void readNframes() override;
     private:
         Frame::Real precision_;
 };
