@@ -10,3 +10,12 @@ void OrderParameters::registerOutput(std::string name, OutputValue::ValueFunctio
 
     OutputValues.insert(std::make_pair(name, output)); 
 }
+
+const OutputValue& OrderParameters::getOutput(std::string name) const
+{
+    auto it = OutputValues.find(name);
+
+    ASSERT((it != OutputValues.end()), "The name " << name << " is not available.");
+
+    return it -> second;
+}

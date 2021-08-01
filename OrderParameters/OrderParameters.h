@@ -1,3 +1,4 @@
+#pragma once
 #include "tools/GenericFactory.h"
 #include "tools/InputParser.h"
 #include "Output_values.h"
@@ -30,9 +31,11 @@ class OrderParameters
         // register the output value's function
         void registerOutput(std::string name, OutputValue::ValueFunction func);
         const OutputRegistry& getOutputRegistry() const {return OutputValues;} 
+        const OutputValue& getOutput(std::string name_) const;
 
         // getters 
         Real getValue() const {return value;};
+        std::string getName() const {return name_;}
 
     protected:
         OutputRegistry OutputValues;
@@ -40,6 +43,8 @@ class OrderParameters
         Real value;
         
         SimulationState& simstate_;
+
+        std::string name_;
 };
 
 namespace OrderParametersRegistry
