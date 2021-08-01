@@ -39,11 +39,13 @@ class XdrWrapper
 
         virtual bool readNextFrame() = 0;
         virtual void readNumAtoms()  = 0;
+        virtual void readNframes(){};
         const Frame::VectorReal3& getPositions() const{return frame_.getPositions();}
         const Frame::VectorReal3& getVelocities() const{return frame_.getVelocities();}
         const Frame::VectorReal3& getFroces() const{return frame_.getForces();}
         Real getTime() const {return frame_.getTime();}
         int getStep() const {return frame_.getStep();}
+        int getNframes() const {return nframes_;}
         const Matrix& getSimulationBox() const {return frame_.getBoxMatrix();}
         
     protected:
@@ -53,6 +55,7 @@ class XdrWrapper
         std::string operation_mode_;
 
         Frame frame_;
+        int nframes_=0;
 };
 
 namespace XdrFiles

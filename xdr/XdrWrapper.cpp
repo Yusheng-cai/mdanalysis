@@ -24,7 +24,14 @@ void XdrWrapper::open(std::string fname, Mode mode)
     readNumAtoms();
 
     frame_.setNumAtoms(natoms_);
+
+    int nframes = 0;
+    int est_nframes = 0;
+    int64_t* offsets = nullptr;
+
+    readNframes();
 }
+
 
 bool XdrWrapper::isOpen()
 {
