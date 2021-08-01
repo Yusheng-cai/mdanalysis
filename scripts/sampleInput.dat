@@ -16,7 +16,14 @@ probevolume = {
 }
 
 orderparameter = {
+	name = p
 	type = indus
 	atomgroup = a
 	probevolume = v
 }
+
+outputfile = {
+	name = abc.out
+	value = [ p.n p.ntilde ]
+}
+	
