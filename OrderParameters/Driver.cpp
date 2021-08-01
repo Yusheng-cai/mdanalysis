@@ -10,6 +10,7 @@ Driver::Driver(std::string filename)
     // Make sure that there is only one xdr file
     auto xdr_pack= pack_.findParamPack("xdrfile", ParameterPack::KeyType::Required);
     auto ag_pack = pack_.findParamPacks("atomgroup", ParameterPack::KeyType::Optional);
+    auto output_pack = pack_.findParamPacks("outputfile", ParameterPack::KeyType::Optional);
 
     if (ag_pack.size() != 0)
     {
@@ -27,6 +28,23 @@ Driver::Driver(std::string filename)
     if (op_pack.size() != 0)
     {
         initializeOP(op_pack);
+        // only register output values
+        RegisterOuputValues();
+    }
+
+    if (output_pack.size() != 0)
+    {
+        intializeOutputFiles(output_pack);
+    }
+}
+
+void Driver::intializeOutputFiles(const std::vector<const ParameterPack*>& output_pack)
+{
+    for (int i=0;i<output_pack.size();i++)
+    {
+        auto pack = output_pack[i];
+
+        OutputFiles_.push_back(outputptr(new OutputStream(*pack, *this)));
     }
 }
 
@@ -43,6 +61,28 @@ void Driver::initializeAtomGroups(const std::vector<const ParameterPack*>& agpac
         simstate_.registerAtomGroup(ag_name, ag);
         VectorAgNames_.push_back(ag_name);
     }
+}
+
+void Driver::RegisterOuputValues()
+{
+    for (int i=0; i<OP_.size();i++)
+    {
+        auto registry = OP_[i]->getOutputRegistry();
+
+        for (auto it = registry.begin(); it != registry.end();it++)
+        {
+            std::string op_name = OP_[i]->getName();
+            std::string output_name = it -> first;
+            std::string full_name = op_name + "." + output_name;
+
+            outputValueRegistry_.insert(full_name, it -> second);
+        }
+    }
+}
+
+const OutputValue& Driver::getOutputValue(std::string name) const
+{
+    return outputValueRegistry_.find(name);
 }
 
 void Driver::initializeXdr(const ParameterPack* xdrpack)
@@ -87,6 +127,7 @@ void Driver::initializeXdr(const ParameterPack* xdrpack)
     }
 
     total_atom_positions_.reserve(Xdr_->getNumAtoms());
+    std::cout << "We have " << Xdr_->getNframes() << " frames" << std::endl;
 }
 
 void Driver::initializeProbeVolume(const std::vector<const ParameterPack*>& PVpack)
@@ -125,6 +166,10 @@ void Driver::initializeOP(const std::vector<const ParameterPack*>& OPpack)
 void Driver::update()
 {
     bool read = Xdr_->readNextFrame();
+    if (read)
+    {
+        is_Active_ = false;
+    }
 
     const auto& total_atom_positions_ = Xdr_->getPositions();
 

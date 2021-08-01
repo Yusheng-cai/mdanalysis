@@ -1,9 +1,9 @@
-#include "Output_files.h"
+#include "Driver.h"
 
 OutputStream::OutputStream(const ParameterPack& input, const Driver& driver)
 :driver_(driver)
 {
-    ASSERT((input.get_packname() == "output_file"), "The passed in parameter pack is not for Output_file!");
+    ASSERT((input.get_packname() == "outputfile"), "The passed in parameter pack is not for Output_file!");
 
     // Read the name of the file, default to "KMC.out"
     input.ReadString("name", ParameterPack::KeyType::Optional, name_);

@@ -6,6 +6,9 @@
 #include "tools/CommonTypes.h"
 #include "tools/InputParser.h"
 #include "AtomGroup.h"
+#include "tools/Registry.h"
+#include "Output_values.h"
+#include "Output_files.h"
 
 #include <string>
 #include <memory>
@@ -17,11 +20,12 @@ class Driver
 {
     public:
         using ProbeVolumePtr = std::unique_ptr<ProbeVolume>;
-        using OPptr = std::unique_ptr<OrderParameters>;
-        using XdrPtr = std::unique_ptr<XdrWrapper>;
-        using Real = CommonTypes::Real;
-        using Real3= CommonTypes::Real3;
-        using VectorReal3 = CommonTypes::VectorReal3;
+        using OPptr          = std::unique_ptr<OrderParameters>;
+        using XdrPtr         = std::unique_ptr<XdrWrapper>;
+        using Real           = CommonTypes::Real;
+        using Real3          = CommonTypes::Real3;
+        using VectorReal3    = CommonTypes::VectorReal3;
+        using outputptr      = std::unique_ptr<OutputStream>;
 
         Driver(std::string filename);
         ~Driver(){};
@@ -30,13 +34,19 @@ class Driver
         void initializeOP(const std::vector<const ParameterPack*>&);
         void initializeProbeVolume(const std::vector<const ParameterPack*>&);
         void initializeAtomGroups(const std::vector<const ParameterPack*>&);
+        void intializeOutputFiles(const std::vector<const ParameterPack*>&);
+
+        void RegisterOuputValues();
+        const OutputValue& getOutputValue(std::string name) const;
 
         Real getTime() const {return Xdr_->getTime();}
         int getStep() const {return Xdr_->getStep();}
+        int getNframes() const {return Xdr_->getNframes();}
 
         void update();
-
         void calculate();
+
+        bool isActive(){return is_Active_;}
 
     private:
         ParameterPack pack_;
@@ -49,4 +59,10 @@ class Driver
         VectorReal3 total_atom_positions_;
 
         std::vector<std::string> VectorAgNames_;
+
+        Registry<std::string, OutputValue> outputValueRegistry_;
+
+        std::vector<outputptr> OutputFiles_;
+
+        bool is_Active_ = true;
 };

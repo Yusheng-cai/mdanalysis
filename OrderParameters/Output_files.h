@@ -3,11 +3,13 @@
 #include "tools/InputParser.h"
 #include "tools/Assert.h"
 #include "tools/CommonTypes.h"
-#include "Driver.h"
 
 #include <string>
 #include <iostream>
 #include <iomanip>
+
+
+class Driver;
 
 
 class OutputStream
