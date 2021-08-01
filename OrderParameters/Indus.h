@@ -1,3 +1,4 @@
+#pragma once
 #include "OrderParameters.h"
 #include "ProbeVolume.h"
 #include "parallel/OpenMP_buffer.h"
@@ -6,6 +7,8 @@
 class Indus:public OrderParameters
 {
     public:
+        using Real3 = CommonTypes::Real3;
+
         Indus(const OrderParametersInput& input);
         virtual ~Indus(){};
 
@@ -15,7 +18,10 @@ class Indus:public OrderParameters
         // getters
         Real getN() const {return N_;}
         Real getNtilde() const {return Ntilde_;}
-    
+        const std::vector<int>& getIndusIndices() const{return indusIndices_;};
+
+        // accessors
+        std::vector<int>& accessIndusIndices() {return indusIndices_;} 
     private:
         Real N_;
         Real Ntilde_;
@@ -23,4 +29,9 @@ class Indus:public OrderParameters
         std::string atomGroupName_;
         std::string pvName_;
         ProbeVolumeRegistry& pv_;
+
+        OpenMP::OpenMP_buffer<std::vector<int>> IndusIndicesBuffer_;
+        std::vector<int> indusIndices_;
+
+        std::vector<Real3> derivatives_;
 };
