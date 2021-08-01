@@ -10,7 +10,11 @@ int main(int argc, char** argv)
 
     Driver d(fname);
 
-    d.update();
+    while (d.isActive())
+    {
+        d.update();
+        d.calculate();
+    }
  
     return 0;
 };
