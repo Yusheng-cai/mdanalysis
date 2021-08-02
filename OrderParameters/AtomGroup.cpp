@@ -45,6 +45,9 @@ void AtomGroup::ParseSelectionString()
 
                 begin_index = StringTools::StringToType<int>(begin_index_str);
                 end_index   = StringTools::StringToType<int>(end_index_str);
+                begin_index-= 1;
+                end_index  -= 1;
+
                 skip_       = StringTools::StringToType<int>(skip);
             }
             else 
@@ -54,6 +57,9 @@ void AtomGroup::ParseSelectionString()
 
                 begin_index = StringTools::StringToType<int>(begin_index_str);
                 end_index   = StringTools::StringToType<int>(end_index_str);
+
+                begin_index -= 1;
+                end_index   -= 1;
                 skip_ = 1;
             }
 
