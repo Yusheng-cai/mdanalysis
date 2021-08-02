@@ -15,6 +15,8 @@ target_sources(OrderParameters PRIVATE
     "ProbeVolumeRegistry.cpp"
     "Driver.cpp"
     "Output_files.cpp"
+    "Qtensor.cpp"
+    "P2.cpp"
 )
 
 set(OrderParameters_HEADER
@@ -31,6 +33,8 @@ set(OrderParameters_HEADER
     "ProbeVolumeRegistry.h"
     "Driver.h"
     "Output_files.h"
+    "Qtensor.h"
+    "P2.h"
 )
 
 target_include_directories(OrderParameters
