@@ -1,0 +1,29 @@
+xdrfile = {
+	path = traj_comp.xtc
+}
+
+atomgroup = {
+	name = a
+	selection = [ atom_index 1-20:3 , 30-1000 ]
+}
+
+probevolume = {
+	name = v
+	type = box
+	xrange =  [ 0 4 ]
+	yrange =  [ 0 4 ]
+	zrange =  [ 0 4 ]
+}
+
+orderparameter = {
+	name = p
+	type = indus
+	atomgroup = a
+	probevolume = v
+}
+
+outputfile = {
+	name = abc.out
+	value = [ p.n p.ntilde ]
+}
+	
