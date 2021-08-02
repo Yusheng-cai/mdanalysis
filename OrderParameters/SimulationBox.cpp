@@ -35,6 +35,7 @@ SimulationBox::SimulationBox(Real3& length)
 
 void SimulationBox::calculateDistance(const Real3& x1, const Real3& x2, Real3& distance, Real& sq_dist) const
 {
+    sq_dist = 0.0;
     for (int i=0;i<3;i++)
     {
         Real dist = x1[i] - x2[i];
