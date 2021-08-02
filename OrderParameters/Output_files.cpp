@@ -93,7 +93,7 @@ void OutputStream::printIfOnStep()
 
         for (auto val:value_)
         {
-            // ofs_ << driver_.get_output_val(val);
+            ofs_ << driver_.getOutputValue(val).get_value();
             
             ofs_ << " ";
         }
