@@ -189,6 +189,8 @@ void Driver::update()
     // update the simulation box
     auto& box = simstate_.getSimulationBox();
     simstate_.setSimulationBox(Xdr_->getSimulationBox());
+    simstate_.setTime(Xdr_->getTime());
+    simstate_.setStep(Xdr_->getStep());
 
     // update the Order Parameters
     for (int i=0;i<OP_.size();i++)
@@ -216,4 +218,9 @@ void Driver::calculate()
         std::cout << "Time it took was " << duration.count() << " microseconds" << std::endl;
     }
 
+    for (int i=0; i< OutputFiles_.size();i++)
+    {
+        auto& out = OutputFiles_[i];
+        out ->printIfOnStep();
+    }
 }
