@@ -44,6 +44,8 @@ class OrderParameters
         
         SimulationState& simstate_;
 
+        SimulationBox& simbox_;
+
         std::string name_;
 };
 

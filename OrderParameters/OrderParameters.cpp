@@ -1,7 +1,7 @@
 #include "OrderParameters.h"
 
 OrderParameters::OrderParameters(const OrderParametersInput& input)
-:simstate_(input.simstate)
+:simstate_(input.simstate), simbox_(input.simstate.getSimulationBox())
 {}
 
 void OrderParameters::registerOutput(std::string name, OutputValue::ValueFunction func)
