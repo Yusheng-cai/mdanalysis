@@ -3,10 +3,22 @@
 #include "tools/InputParser.h"
 #include "tools/Assert.h"
 #include "parallel/OpenMP_buffer.h"
+#include "xdr/GroFile.h"
+#include "AtomGroupParsingStrategy.h"
+
 
 #include <vector>
+#include <memory>
 #include <array>
 #include <string>
+
+class AtomGroup;
+
+struct AtomGroupInput
+{
+    ParameterPack& pack_;
+    GroFile& grofile_;
+};
 
 // AtomGroup is responsible for reading the input parameter pack and figuring out the correct indices for this particular AGroup
 class AtomGroup
@@ -15,11 +27,10 @@ class AtomGroup
         using Real = CommonTypes::Real;
         using Real3= CommonTypes::Real3;
         using VectorReal3 = CommonTypes::VectorReal3;
-
-        AtomGroup(const ParameterPack& pack);
+        using stratptr  = AtomGroupParsingStrategy*; 
+        
+        AtomGroup(const AtomGroupInput& input);
         ~AtomGroup(){};
-
-        void ParseSelectionString();
 
         void update(const VectorReal3& total_atoms_);
 
@@ -59,4 +70,10 @@ class AtomGroup
 
         // Map Atom Group indices to global indices 
         std::map<int, int> AtomGroupIndicesToGlobalIndices_;
+
+        // strategy for parsing
+        stratptr strategy_;
+
+        //GroFile
+        GroFile& grofile_;
 };
