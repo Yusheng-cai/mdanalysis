@@ -21,5 +21,5 @@ orderparameter = {
 
 outputfile = {
     name = LC.out
-    value = [ a.p2 a.qxx a.qxy a.qxz a.qyy a.yz ] 
+    value = [ a.p2 a.qxx a.qxy a.qxz a.qyy a.qyz ] 
 }
