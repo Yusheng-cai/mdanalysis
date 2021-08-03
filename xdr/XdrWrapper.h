@@ -8,6 +8,8 @@
 #include "Frame.h"
 #include "tools/GenericFactory.h"
 #include "tools/CommonTypes.h"
+#include "tools/InputParser.h"
+#include "GroFile.h"
 
 #include <string>
 #include <vector>
@@ -25,8 +27,8 @@ class XdrWrapper
             Read, Write, Append
         };
 
-        XdrWrapper(){};    
-        void open(std::string name, Mode);
+        XdrWrapper(const ParameterPack& pack);    
+        void open();
         virtual ~XdrWrapper();
 
         // close the file
@@ -51,11 +53,17 @@ class XdrWrapper
     protected:
         XDRFILE* file_=nullptr;
         int natoms_;
-        std::string name_;
+        std::string path_;
         std::string operation_mode_;
+
+        // gro file information
+        GroFile grofile_;
+        std::string groname_="";
 
         Frame frame_;
         int nframes_=0;
+
+        ParameterPack& pack_;
 };
 
 namespace XdrFiles
@@ -63,9 +71,9 @@ namespace XdrFiles
     using Key  = std::string;
     using Base = XdrWrapper;
 
-    using factory = GenericFactory<Base, Key>;
+    using factory = GenericFactory<Base, Key, const ParameterPack&>;
 
     template<class D>
-    using registry_ = RegisterInFactory<Base, D, Key>;
+    using registry_ = RegisterInFactory<Base, D, Key, const ParameterPack&>;
 };
 #endif

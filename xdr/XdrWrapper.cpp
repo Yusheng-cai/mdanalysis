@@ -1,23 +1,38 @@
 #include "XdrWrapper.h"
-
-void XdrWrapper::open(std::string fname, Mode mode)
+XdrWrapper::XdrWrapper(const ParameterPack& pack)
+:pack_(const_cast<ParameterPack&>(pack))
 {
-    name_ = fname;
+    pack_.ReadString("path", ParameterPack::KeyType::Required, path_);
+    bool readmode = pack_.ReadString("mode", ParameterPack::KeyType::Optional, operation_mode_);
+ 
 
-    switch(mode)
+    if ( ! readmode)
     {
-        case Mode::Read:
-            operation_mode_="r";
-            break;
-        case Mode::Write:
-            operation_mode_="w";
-            break;
-        case Mode::Append:
-            operation_mode_="a";
-            break;
-    };
+        operation_mode_ = "read";
+    }
+}
 
-    file_ = xdrfile_open(fname.c_str(), operation_mode_.c_str());
+void XdrWrapper::open()
+{
+    std::string mode_;
+
+    ASSERT((operation_mode_ == "read" || operation_mode_ == "append" || operation_mode_ == "write"), "mode has to be one of 'read' & 'append' & 'write'");
+
+    // default is reading mode
+    if (operation_mode_ == "read")
+    {
+        mode_ = "r";
+    }
+    else if (operation_mode_ == "append")
+    {
+        mode_ = "a";
+    }   
+    else if (operation_mode_ == "write")
+    {
+        mode_ = "w";
+    }
+
+    file_ = xdrfile_open(path_.c_str(), mode_.c_str());
     ASSERT((isOpen()), "The file did not open correctly.");
 
     // Read Number of Atoms 

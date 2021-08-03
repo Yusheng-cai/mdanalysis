@@ -5,8 +5,8 @@ namespace XdrFiles
     static const registry_<TrrFile> register_trrfile("trr");
 }
 
-TrrFile::TrrFile()
-:XdrWrapper()
+TrrFile::TrrFile(const ParameterPack& pack)
+:XdrWrapper(pack)
 {};
 
 bool TrrFile::readNextFrame()
@@ -56,6 +56,6 @@ void TrrFile::readNumAtoms()
 {
     ASSERT((isOpen()), "The file is not open.");
 
-    int sucess = read_trr_natoms(const_cast<char*>(name_.c_str()),&natoms_);
+    int sucess = read_trr_natoms(const_cast<char*>(path_.c_str()),&natoms_);
     ASSERT((sucess == exdrOK), "Reading natoms failed.");
 }

@@ -4,15 +4,15 @@ namespace XdrFiles
     registry_<XtcFile> register_Xtc("xtc");
 }
 
-XtcFile::XtcFile()
-:XdrWrapper()
+XtcFile::XtcFile(const ParameterPack& pack)
+:XdrWrapper(pack)
 {}
 
 void XtcFile::readNumAtoms()
 {
     ASSERT((isOpen()), "The file is not opened.");
 
-    int success = read_xtc_natoms(const_cast<char*>(name_.c_str()), &natoms_);
+    int success = read_xtc_natoms(const_cast<char*>(path_.c_str()), &natoms_);
 
     ASSERT((success == exdrOK), "The process to read xtc natoms is not sucessful.");
 }
@@ -22,7 +22,7 @@ void XtcFile::readNframes()
     int est_nframes=0;
     int64_t* offsets=nullptr;
 
-    read_xtc_n_frames(const_cast<char*>(name_.c_str()),&nframes_, &est_nframes, &offsets);
+    read_xtc_n_frames(const_cast<char*>(path_.c_str()),&nframes_, &est_nframes, &offsets);
 }
 
 bool XtcFile::readNextFrame()

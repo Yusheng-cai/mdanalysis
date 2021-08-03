@@ -7,7 +7,7 @@
 class TrrFile:public XdrWrapper
 {
     public:
-        TrrFile();
+        TrrFile(const ParameterPack& pack);
         virtual ~TrrFile(){};
 
         virtual bool readNextFrame() override;
