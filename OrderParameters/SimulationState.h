@@ -41,5 +41,5 @@ class SimulationState
         int step_;
 
         SimulationBox box_;
-        std::map<std::string, AtomGroup> MapName2AtomGroup_;
+        std::map<std::string,AtomGroup> MapName2AtomGroup_;
 };

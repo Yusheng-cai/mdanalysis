@@ -17,6 +17,8 @@ target_sources(OrderParameters PRIVATE
     "Output_files.cpp"
     "Qtensor.cpp"
     "P2.cpp"
+    "p2tilde.cpp"
+    "AtomGroupParsingStrategy.cpp"
 )
 
 set(OrderParameters_HEADER
@@ -35,6 +37,8 @@ set(OrderParameters_HEADER
     "Output_files.h"
     "Qtensor.h"
     "P2.h"
+    "p2tilde.h"
+    "AtomGroupParsingStrategy.h"
 )
 
 target_include_directories(OrderParameters
