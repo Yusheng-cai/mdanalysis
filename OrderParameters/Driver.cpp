@@ -7,18 +7,22 @@ Driver::Driver(std::string filename)
 
     auto pv_pack = pack_.findParamPacks("probevolume", ParameterPack::KeyType::Optional);
     auto op_pack = pack_.findParamPacks("orderparameter", ParameterPack::KeyType::Optional);
+
     // Make sure that there is only one xdr file
     auto xdr_pack= pack_.findParamPack("xdrfile", ParameterPack::KeyType::Required);
     auto ag_pack = pack_.findParamPacks("atomgroup", ParameterPack::KeyType::Optional);
     auto output_pack = pack_.findParamPacks("outputfile", ParameterPack::KeyType::Optional);
+    auto gro_pack= pack_.findParamPack("grofile", ParameterPack::KeyType::Optional);
+
+    // Read the xdr file inputted, this must be provided
+    initializeXdr(xdr_pack);
+    initializeGroFile(gro_pack);
 
     if (ag_pack.size() != 0)
     {
         initializeAtomGroups(ag_pack);
     }
 
-    // Read the xdr file inputted, this must be provided
-    initializeXdr(xdr_pack);
 
     if (pv_pack.size() != 0)
     {
@@ -34,11 +38,11 @@ Driver::Driver(std::string filename)
 
     if (output_pack.size() != 0)
     {
-        intializeOutputFiles(output_pack);
+        initializeOutputFiles(output_pack);
     }
 }
 
-void Driver::intializeOutputFiles(const std::vector<const ParameterPack*>& output_pack)
+void Driver::initializeOutputFiles(const std::vector<const ParameterPack*>& output_pack)
 {
     for (int i=0;i<output_pack.size();i++)
     {
@@ -56,7 +60,9 @@ void Driver::initializeAtomGroups(const std::vector<const ParameterPack*>& agpac
 
         std::string ag_name;
         pack -> ReadString("name", ParameterPack::KeyType::Required,ag_name);
-        AtomGroup ag(*pack);
+
+        AtomGroupInput agInput = { const_cast<ParameterPack&>(*pack), grofile_};
+        AtomGroup ag(agInput);
 
         simstate_.registerAtomGroup(ag_name, ag);
         VectorAgNames_.push_back(ag_name);
@@ -85,49 +91,37 @@ const OutputValue& Driver::getOutputValue(std::string name) const
     return outputValueRegistry_.find(name);
 }
 
+void Driver::initializeGroFile(const ParameterPack* gropack)
+{
+    if (gropack != nullptr)
+    {
+        std::string groname_;
+        gropack->ReadString("name", ParameterPack::KeyType::Required,groname_);
+
+
+        grofile_.Open(groname_);
+    }
+}
+
 void Driver::initializeXdr(const ParameterPack* xdrpack)
 {
+    ASSERT((xdrpack != nullptr), "Xdr file such as trr or xtc file is not provided.");
+
     std::string path;
     std::string mode;
 
     // Read the path, name, mode of the file
     xdrpack->ReadString("path", ParameterPack::KeyType::Required, path);
-    bool read = xdrpack->ReadString("mode", ParameterPack::KeyType::Optional, mode);
 
     // split the path to obtain the type of xdr file we are working with, i.e test.xtc
     int found = path.find_first_of(".");
     std::string type = path.substr(found+1);
 
     // Create a pointer to the Xdr file that we are working with
-    Xdr_ = XdrPtr(XdrFiles::factory::instance().create(type));
-
-    // default is reading mode
-    if (read == false)
-    {
-        Xdr_->open(path, XdrWrapper::Mode::Read);
-    }
-    else
-    {
-        if (mode == "read")
-        {
-            Xdr_ ->open(path, XdrWrapper::Mode::Read);
-        }
-        else if (mode == "append")
-        {
-            Xdr_->open(path, XdrWrapper::Mode::Append);
-        }   
-        else if (mode == "write")
-        {
-            Xdr_->open(path, XdrWrapper::Mode::Write);
-        }
-        else 
-        {
-            ASSERT((true == false), "Provided option " << mode << " is not in write/append/read.");
-        }
-    }
+    Xdr_ = XdrPtr(XdrFiles::factory::instance().create(type, *xdrpack));
+    Xdr_->open();
 
     total_atom_positions_.reserve(Xdr_->getNumAtoms());
-    std::cout << "We have " << Xdr_->getNframes() << " frames" << std::endl;
 }
 
 void Driver::initializeProbeVolume(const std::vector<const ParameterPack*>& PVpack)
@@ -177,6 +171,7 @@ void Driver::update()
     {
         auto start = std::chrono::high_resolution_clock::now();
         auto& ag = simstate_.getAtomGroup(VectorAgNames_[i]);
+
         ag.update(total_atom_positions_);
 
         auto stop = std::chrono::high_resolution_clock::now();

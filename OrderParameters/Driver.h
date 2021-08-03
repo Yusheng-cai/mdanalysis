@@ -9,6 +9,7 @@
 #include "tools/Registry.h"
 #include "Output_values.h"
 #include "Output_files.h"
+#include "xdr/GroFile.h"
 
 #include <string>
 #include <memory>
@@ -34,7 +35,8 @@ class Driver
         void initializeOP(const std::vector<const ParameterPack*>&);
         void initializeProbeVolume(const std::vector<const ParameterPack*>&);
         void initializeAtomGroups(const std::vector<const ParameterPack*>&);
-        void intializeOutputFiles(const std::vector<const ParameterPack*>&);
+        void initializeOutputFiles(const std::vector<const ParameterPack*>&);
+        void initializeGroFile(const ParameterPack*);
 
         void RegisterOuputValues();
         const OutputValue& getOutputValue(std::string name) const;
@@ -51,9 +53,17 @@ class Driver
     private:
         ParameterPack pack_;
         std::map<std::string, ProbeVolumePtr> MapName2PV_;
+
+        // Vector of Order Parameters
         std::vector<OPptr> OP_;
+
+        // Xdr file pointer
         XdrPtr Xdr_;
+
+        // simulation state object
         SimulationState simstate_;
+
+        // probe Volume registry that keeps track of all the probe volumes
         ProbeVolumeRegistry pv_registry_;
 
         VectorReal3 total_atom_positions_;
@@ -63,6 +73,8 @@ class Driver
         Registry<std::string, OutputValue> outputValueRegistry_;
 
         std::vector<outputptr> OutputFiles_;
+
+        GroFile grofile_;
 
         bool is_Active_ = true;
 };
