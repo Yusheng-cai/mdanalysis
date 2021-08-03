@@ -6,6 +6,7 @@ target_sources(xdr PRIVATE
     "TrrFile.cpp"
     "Frame.cpp"
     "XtcFile.cpp"
+    "GroFile.cpp"
 )
 
 target_include_directories(xdr
@@ -17,6 +18,7 @@ set(XDR_HEADER
     "TrrFile.h"
     "XdrWrapper.h"
     "XtcFile.h"
+    "GroFile.h"
 )
 
 target_link_libraries(xdr PRIVATE tools xdrC)
