@@ -7,6 +7,7 @@ target_sources(OrderParameters PRIVATE
     "OrderParameters.cpp"
     "ProbeVolume.cpp"
     "ProbeVolumeBox.cpp"
+    "ProbeVolumeSphere.cpp"
     "SimulationBox.cpp"
     "SimulationState.cpp"
     "AtomGroup.cpp"
@@ -19,6 +20,7 @@ target_sources(OrderParameters PRIVATE
     "P2.cpp"
     "p2tilde.cpp"
     "AtomGroupParsingStrategy.cpp"
+    "AtomDerivativesSet.cpp"
 )
 
 set(OrderParameters_HEADER
@@ -28,6 +30,7 @@ set(OrderParameters_HEADER
     "OrderParameters.h"
     "ProbeVolume.h"
     "ProbeVolumeBox.h"
+    "ProbeVolumeSphere.h"
     "SimulationState.h"
     "AtomGroup.h"
     "Output_values.h"
@@ -39,6 +42,7 @@ set(OrderParameters_HEADER
     "P2.h"
     "p2tilde.h"
     "AtomGroupParsingStrategy.h"
+    "AtomDerivativesSet.h"
 )
 
 target_include_directories(OrderParameters
