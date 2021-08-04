@@ -24,6 +24,8 @@ namespace StringTools
 
     template<typename T>
     bool VectorStringTransform(std::vector<std::string> vecstr, std::vector<T>& output);
+
+    void RemoveBlankInString(std::string& str);
 }
 
 

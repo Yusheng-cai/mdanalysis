@@ -15,6 +15,11 @@ bool StringTools::isNumber(std::string str)
     return (! ss.fail());
 }
 
+void StringTools::RemoveBlankInString(std::string& str)
+{
+    str.erase(std::remove(str.begin(), str.end(), ' '), str.end());
+}
+
                             ////// Parameter packs ///////// 
 std::string& ParameterPack::insert(const std::string& key, const std::string& value)
 {
@@ -181,7 +186,7 @@ bool ParameterPack::Readbool(const std::string& key, const KeyType keytype, bool
     std::string temp_str;
 
     bool read = ReadString(key, keytype, temp_str);
-    StringTools::to_lower(temp_str);
+    // StringTools::to_lower(temp_str);
 
     if (read == true)
     {
@@ -214,7 +219,7 @@ bool ParameterPack::ReadVectorString(const std::string& key, const KeyType keyty
         for (int i=0;i< strvec->size();i++)
         {
             std::string str = strvec->at(i);
-            StringTools::to_lower(str);
+            // StringTools::to_lower(str);
             vecstr.push_back(str);
         }
         return true;
@@ -324,7 +329,7 @@ TokenStream::Status InputParser::ParseNextToken(TokenStream& toks, ParameterPack
     ASSERT((status != TokenStream::Status::Failure), "Reading value failed.");
     if (value == "{")
     {
-        StringTools::to_lower(key);
+        // StringTools::to_lower(key);
         auto& new_param = parampack.insert(key, ParameterPack(key));
         status = ParseParamPack(toks, new_param);
 
@@ -340,13 +345,13 @@ TokenStream::Status InputParser::ParseNextToken(TokenStream& toks, ParameterPack
         ASSERT((status == TokenStream::Status::Close_bracket), "Missing Ending bracket");
 
         // make the key lower case too allow for flexibility
-        StringTools::to_lower(key);
+        // StringTools::to_lower(key);
         parampack.insert(key, vecvals);
     }
     else
     {
-        StringTools::to_lower(key);
-        StringTools::to_lower(value);
+        //StringTools::to_lower(key);
+        //StringTools::to_lower(value);
         parampack.insert(key,value);
     }
 
