@@ -106,7 +106,6 @@ void run(std::string fname, CommandLineArguments& cmd)
 
     for (int i =0;i<atomPack.size();i++)
     {
-        std::cout << "i = " << i << std::endl;
         auto pack = atomPack[i];
         AtomGroupInput input = {const_cast<ParameterPack&>(*pack), grofile};
         AtomGroup ag(input);
