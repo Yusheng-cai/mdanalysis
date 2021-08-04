@@ -26,8 +26,8 @@ void P2tilde::calculate()
     auto& headAG = simstate_.getAtomGroup(headgroupname_);
     auto& tailAG = simstate_.getAtomGroup(tailgroupname_);
 
-    auto& headAGpos_ = headAG.getAtomPositions();
-    auto& tailAGpos_ = tailAG.getAtomPositions();
+    auto& headatoms_ = headAG.getAtoms();
+    auto& tailatoms_ = tailAG.getAtoms();
 
     #pragma omp parallel
     {
@@ -37,10 +37,10 @@ void P2tilde::calculate()
         Real localN = 0;
 
         #pragma omp for
-        for (int i=0; i<headAGpos_.size();i++)
+        for (int i=0; i<headatoms_.size();i++)
         {
-            Real3 headpos_ = headAGpos_[i];
-            Real3 tailpos_ = tailAGpos_[i]; 
+            Real3 headpos_ = headatoms_[i].position;
+            Real3 tailpos_ = tailatoms_[i].position; 
 
             ProbeVolumeOutput output = probeV.calculate(headpos_);
 
