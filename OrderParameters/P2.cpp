@@ -12,8 +12,11 @@ P2::P2(const OrderParametersInput& input)
     input.pack_.ReadString("headgroup", ParameterPack::KeyType::Required, headgroupname_);
     input.pack_.ReadString("name", ParameterPack::KeyType::Required, name_);
 
-    auto& tailAG = simstate_.getAtomGroup(tailgroupname_);
-    auto& headAG = simstate_.getAtomGroup(headgroupname_);
+    addAtomGroup(headgroupname_);
+    addAtomGroup(tailgroupname_);
+
+    auto& tailAG = getAtomGroup(tailgroupname_);
+    auto& headAG = getAtomGroup(headgroupname_);
 
     tailgroupsize_ = tailAG.getAtomGroupIndices().size();
     headgroupsize_ = headAG.getAtomGroupIndices().size();
@@ -33,8 +36,8 @@ void P2::calculate()
     // zero the Qtensor
     Qtensor_.fill({});
 
-    auto& tailAG = simstate_.getAtomGroup(tailgroupname_);
-    auto& headAG = simstate_.getAtomGroup(headgroupname_);
+    auto& tailAG = getAtomGroup(tailgroupname_);
+    auto& headAG = getAtomGroup(headgroupname_);
 
     auto& tailpositions_ = tailAG.getAtomPositions();
     auto& headpositions_ = headAG.getAtomPositions();

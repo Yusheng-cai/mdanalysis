@@ -14,11 +14,13 @@ Indus::Indus(const OrderParametersInput& input)
 
     registerOutput("n", [this](void)->Real {return this->getN();});
     registerOutput("ntilde", [this](void)->Real {return this->getNtilde();});
+
+    addAtomGroup(atomGroupName_);
 }
 
 void Indus::calculate()
 {
-    auto& ag  = simstate_.getAtomGroup(atomGroupName_);
+    auto& ag  = getAtomGroup(atomGroupName_);
     auto& pos = ag.getAtomPositions();
     auto& pv  = pv_.getProbeVolume(pvName_);
     IndusIndicesBuffer_.set_master_object(indusIndices_);
