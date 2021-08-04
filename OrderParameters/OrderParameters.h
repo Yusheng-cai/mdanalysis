@@ -4,9 +4,11 @@
 #include "Output_values.h"
 #include "SimulationState.h"
 #include "ProbeVolumeRegistry.h"
+#include "AtomDerivativesSet.h"
 
 #include <map>
 #include <string>
+#include <memory>
 #include <functional>
 
 struct OrderParametersInput
@@ -32,10 +34,19 @@ class OrderParameters
         void registerOutput(std::string name, OutputValue::ValueFunction func);
         const OutputRegistry& getOutputRegistry() const {return OutputValues;} 
         const OutputValue& getOutput(std::string name_) const;
+        void addAtomGroup(std::string name);
 
         // getters 
         Real getValue() const {return value;};
         std::string getName() const {return name_;}
+        const std::vector<AtomDerivativesSet>& getDerivativeOutputs() const {return derivativeOutputs_;}
+        std::vector<AtomDerivativesSet>& accessDerivativeOutputs() {return derivativeOutputs_;}
+
+        const AtomDerivativesSet& getDerivatives(std::string& AtomGroupName) const; 
+        AtomDerivativesSet& accessDerivatives(std::string& AtomGroupName);
+
+        AtomGroup& accessAtomGroup(std::string& name); 
+        const AtomGroup& getAtomGroup(std::string& name) const;
 
     protected:
         OutputRegistry OutputValues;
@@ -47,6 +58,13 @@ class OrderParameters
         SimulationBox& simbox_;
 
         std::string name_;
+
+        std::vector<AtomDerivativesSet> derivativeOutputs_;
+
+        std::vector<const AtomGroup*> OPAtomGroups_;
+
+        // a map from Atomgroup name to the index in the vector of atomderivativesSet
+        std::map<std::string, int> MapAtomGroupNameToIndex_;
 };
 
 namespace OrderParametersRegistry
