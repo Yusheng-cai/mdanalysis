@@ -27,7 +27,7 @@ class GroFile
 
         void Open(std::string Name);
         void ParseFile();
-        void ReadNumLines();
+        void ReadLines();
 
         // getters
         int getResidueNumber(int i)const {return atomsinfo_[i].residueNumber_;}
@@ -36,7 +36,9 @@ class GroFile
         int getAtomNumber(int i)const{return atomsinfo_[i].atomNumber_;}
         int getNumAtoms() const {return num_atoms_;}
         int getNumResidues() const {return numResidues_;}
+        int getNumUniqueResidues() const {return numUniqueResidues_;}
         const std::set<std::string> getAtomTypes() const {return AtomTypes_;}
+        const std::set<std::string> getResidueNames() const {return ResidueNames_;}
 
         // booleans that tells others whether or not the GroFile is read
         bool isEmpty() const {return empty_;}
@@ -53,6 +55,7 @@ class GroFile
 
         // keeps track of the unique atomTypes in the gro file
         std::set<std::string> AtomTypes_;
+        std::set<std::string> ResidueNames_;
 
         int numlines_;
 
@@ -60,5 +63,9 @@ class GroFile
 
         int num_atoms_;
 
+        // Number of total residues 
         int numResidues_;
+
+        // Number of unique residues 
+        int numUniqueResidues_;
 };
