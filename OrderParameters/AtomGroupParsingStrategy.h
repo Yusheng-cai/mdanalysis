@@ -34,10 +34,10 @@ class AtomIndexParsing:public AtomGroupParsingStrategy
 
 };
 
-class ResidueParsing:public AtomGroupParsingStrategy
+class ResidueNumberParsing:public AtomGroupParsingStrategy
 {
     public:
-        ResidueParsing(AtomGroupParsingInput& input):AtomGroupParsingStrategy(input){};
+        ResidueNumberParsing(AtomGroupParsingInput& input):AtomGroupParsingStrategy(input){};
 
         virtual void Parse(std::vector<int>& indices);
 };
@@ -46,6 +46,14 @@ class AtomTypeParsing:public AtomGroupParsingStrategy
 {
     public:
         AtomTypeParsing(AtomGroupParsingInput& input):AtomGroupParsingStrategy(input){};
+
+        virtual void Parse(std::vector<int>& indices);
+};
+
+class ResidueNameParsing:public AtomGroupParsingStrategy
+{
+    public:
+        ResidueNameParsing(AtomGroupParsingInput& input):AtomGroupParsingStrategy(input){};
 
         virtual void Parse(std::vector<int>& indices);
 };

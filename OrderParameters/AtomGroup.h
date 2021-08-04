@@ -27,7 +27,7 @@ class AtomGroup
         using Real = CommonTypes::Real;
         using Real3= CommonTypes::Real3;
         using VectorReal3 = CommonTypes::VectorReal3;
-        using stratptr  = AtomGroupParsingStrategy*; 
+        using stratptr  = std::shared_ptr<AtomGroupParsingStrategy>; 
         
         AtomGroup(const AtomGroupInput& input);
         ~AtomGroup(){};
