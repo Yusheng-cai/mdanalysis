@@ -1,5 +1,5 @@
 xdrfile = {
-	path = traj_comp.xtc
+	path = LC.xtc
 }
 
 atomgroup = {
@@ -16,7 +16,13 @@ probevolume = {
 }
 
 orderparameter = {
+	name = g
 	type = indus
 	atomgroup = a
 	probevolume = v
+}
+
+outputfile = {
+    name = indus.out
+    value = [ g.n g.ntilde ] 
 }
