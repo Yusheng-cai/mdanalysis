@@ -39,17 +39,17 @@ void P2::calculate()
     auto& tailAG = getAtomGroup(tailgroupname_);
     auto& headAG = getAtomGroup(headgroupname_);
 
-    auto& tailpositions_ = tailAG.getAtomPositions();
-    auto& headpositions_ = headAG.getAtomPositions();
+    auto& tailatoms_ = tailAG.getAtoms();
+    auto& headatoms_ = headAG.getAtoms();
 
     #pragma omp parallel
     {
         Matrix Qtensor_local = {};
         #pragma omp for
-        for (int i=0;i<tailpositions_.size();i++)
+        for (int i=0;i<tailatoms_.size();i++)
         {
-            Real3 tailatompos_ = tailpositions_[i];
-            Real3 headatompos_ = headpositions_[i];
+            Real3 tailatompos_ = tailatoms_[i].position;
+            Real3 headatompos_ = headatoms_[i].position;
 
             Real3 localdirector = {};
             Real sq_dist = 0.0;
