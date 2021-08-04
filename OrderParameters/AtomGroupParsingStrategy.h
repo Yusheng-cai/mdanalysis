@@ -17,8 +17,11 @@ class AtomGroupParsingStrategy
 {
     public:
         AtomGroupParsingStrategy(AtomGroupParsingInput& input):grofile_(input.grofile_), selection_str_(input.selection_str){};
+        virtual ~AtomGroupParsingStrategy(){};
 
         virtual void Parse(std::vector<int>& indices) = 0;
+
+        void SortAndCheckNoDuplicate(std::vector<int>& indices);
     protected:
         GroFile& grofile_;
         std::vector<std::string>& selection_str_;
@@ -29,6 +32,7 @@ class AtomIndexParsing:public AtomGroupParsingStrategy
 {
     public:
         AtomIndexParsing(AtomGroupParsingInput& input):AtomGroupParsingStrategy(input){};
+        virtual ~AtomIndexParsing(){};
 
         virtual void Parse(std::vector<int>& indices);
 
@@ -38,6 +42,7 @@ class ResidueNumberParsing:public AtomGroupParsingStrategy
 {
     public:
         ResidueNumberParsing(AtomGroupParsingInput& input):AtomGroupParsingStrategy(input){};
+        virtual ~ResidueNumberParsing(){};
 
         virtual void Parse(std::vector<int>& indices);
 };
@@ -46,6 +51,7 @@ class AtomTypeParsing:public AtomGroupParsingStrategy
 {
     public:
         AtomTypeParsing(AtomGroupParsingInput& input):AtomGroupParsingStrategy(input){};
+        virtual ~AtomTypeParsing(){};
 
         virtual void Parse(std::vector<int>& indices);
 };
@@ -54,6 +60,7 @@ class ResidueNameParsing:public AtomGroupParsingStrategy
 {
     public:
         ResidueNameParsing(AtomGroupParsingInput& input):AtomGroupParsingStrategy(input){};
+        virtual ~ResidueNameParsing(){};
 
         virtual void Parse(std::vector<int>& indices);
 };

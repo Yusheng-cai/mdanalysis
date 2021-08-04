@@ -8,6 +8,17 @@ namespace AtomGroupParsingRegistry
     registry_<ResidueNameParsing> registerResidueName("resname");
 }
 
+void AtomGroupParsingStrategy::SortAndCheckNoDuplicate(std::vector<int>& indices)
+{
+    // sort the indices vector
+    std::sort(indices.begin(), indices.end());
+
+    for (int i=0;i<indices.size()-1;i++)
+    {
+        ASSERT((indices[i] != indices[i+1]), "There is duplicate indices in the atom list provided.");
+    }
+}
+
 void AtomIndexParsing::Parse(std::vector<int>& indices)
 {
     for (int i =1; i<selection_str_.size();i++)
@@ -79,12 +90,7 @@ void AtomIndexParsing::Parse(std::vector<int>& indices)
     }
 
     // sort the indices vector
-    std::sort(indices.begin(), indices.end());
-
-    for (int i=0;i<indices.size()-1;i++)
-    {
-        ASSERT((indices[i] != indices[i+1]), "There is duplicate indices in the atom list provided.");
-    }
+    SortAndCheckNoDuplicate(indices); 
 }
 
 void ResidueNumberParsing::Parse(std::vector<int>& indices)
@@ -174,12 +180,7 @@ void ResidueNumberParsing::Parse(std::vector<int>& indices)
     }
 
     // sort the indices vector
-    std::sort(indices.begin(), indices.end());
-
-    for (int i=0;i<indices.size()-1;i++)
-    {
-        ASSERT((indices[i] != indices[i+1]), "There is duplicate indices in the atom list provided.");
-    }
+    SortAndCheckNoDuplicate(indices); 
 }
 
 void AtomTypeParsing::Parse(std::vector<int>& indices)
@@ -219,12 +220,7 @@ void AtomTypeParsing::Parse(std::vector<int>& indices)
     }
 
     // sort the indices vector
-    std::sort(indices.begin(), indices.end());
-
-    for (int i=0;i<indices.size()-1;i++)
-    {
-        ASSERT((indices[i] != indices[i+1]), "There is duplicate indices in the atom list provided.");
-    }
+    SortAndCheckNoDuplicate(indices); 
 }
 
 void ResidueNameParsing::Parse(std::vector<int>& indices)
@@ -264,10 +260,5 @@ void ResidueNameParsing::Parse(std::vector<int>& indices)
     }
 
     // sort the indices vector
-    std::sort(indices.begin(), indices.end());
-
-    for (int i=0;i<indices.size()-1;i++)
-    {
-        ASSERT((indices[i] != indices[i+1]), "There is duplicate indices in the atom list provided.");
-    }
+    SortAndCheckNoDuplicate(indices);
 }
