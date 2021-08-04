@@ -10,7 +10,7 @@ int main(int argc, char** argv)
 
     Driver d(fname);
 
-    while (d.isActive())
+    for(int i=0;i<d.getNframes();i++)
     {
         d.update();
         d.calculate();
