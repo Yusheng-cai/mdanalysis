@@ -11,13 +11,16 @@
 #include <set>
 #include <algorithm>
 
-struct Atom
+namespace xdr
 {
-    int residueNumber_;
-    std::string residueName_;
-    std::string atomName_;
-    int atomNumber_;
-};
+    struct Atom
+    {
+        int residueNumber_;
+        std::string residueName_;
+        std::string atomName_;
+        int atomNumber_;
+    };
+}
 
 class GroFile
 {
@@ -47,7 +50,7 @@ class GroFile
         std::string filename_;
         std::string Cformat_ = "%5d%-5s%5s%5d%8.3f%8.3f%8.3f%8.4f%8.4f%8.4f";
 
-        std::vector<Atom> atomsinfo_;
+        std::vector<xdr::Atom> atomsinfo_;
 
         std::ifstream ifs_;
 

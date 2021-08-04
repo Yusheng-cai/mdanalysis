@@ -83,7 +83,7 @@ void GroFile::ParseFile()
         atomNumber  = StringTools::StringToType<int>(atomNumberstr);
 
         // instantiate the Atom object and append it to atomsinfo 
-        Atom a = {residueNumber, residueName, atomName, atomNumber};
+        xdr::Atom a = {residueNumber, residueName, atomName, atomNumber};
         atomsinfo_.push_back(std::move(a));
         ResidueSet.insert(residueNumber);
         AtomTypes_.insert(atomName);
