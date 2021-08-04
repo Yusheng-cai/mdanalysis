@@ -14,4 +14,7 @@ namespace OpenMP
 
     // obtain the maximum number of threads
     int get_max_threads();
+
+    // check if in parallel, this returns true if we are in the parallel region and multiple threads are active
+    bool in_parallel();
 } // namespace  
