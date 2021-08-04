@@ -2,7 +2,8 @@
 
 void SimulationState::registerAtomGroup(std::string name, AtomGroup& ag)
 {
-    MapName2AtomGroup_.insert(std::make_pair(name,ag));
+    //MapName2AtomGroup_.insert(std::make_pair(name,std::move(ag)));
+    MapName2AtomGroup_.emplace(name, std::move(ag));
 }
 
 const AtomGroup& SimulationState::getAtomGroup(std::string name) const
