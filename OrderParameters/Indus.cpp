@@ -21,9 +21,20 @@ Indus::Indus(const OrderParametersInput& input)
 void Indus::calculate()
 {
     auto& ag  = getAtomGroup(atomGroupName_);
-    auto& pos = ag.getAtomPositions();
+    auto& atoms = ag.getAtoms();
     auto& pv  = pv_.getProbeVolume(pvName_);
     IndusIndicesBuffer_.set_master_object(indusIndices_);
+
+    for (int i=0;i<derivativeOutputs_.size();i++)
+    {
+        // clear the current derivatives
+        derivativeOutputs_[i].clear();
+
+        // set the master object
+        derivativeOutputs_[i].setMasterObject();
+    }
+
+    auto& derivativesSet = accessDerivatives(atomGroupName_);
 
     #pragma omp parallel
     {
@@ -32,18 +43,18 @@ void Indus::calculate()
 
         auto& indicesbuffer_ = IndusIndicesBuffer_.access_buffer_by_id();
         #pragma omp for
-        for (int i=0;i<pos.size();i++)
+        for (int i=0;i<atoms.size();i++)
         { 
-            int globalIndices = ag.AtomGroupIndices2GlobalIndices(i); 
-
-            ProbeVolumeOutput output = pv.calculate(pos[i]);
+            ProbeVolumeOutput output = pv.calculate(atoms[i].position);
             
             ASSERT((output.htilde_x_ <= 1 && output.htilde_x_ >= 0), "htilde_x_ is not less or equal to 1 and larger or equal to 0, it is equal to " << output.htilde_x_);
 
             // if htilde_x larger than 0
             if(output.htilde_x_ > 0)
             {
-                 indicesbuffer_.push_back(globalIndices);
+                 indicesbuffer_.push_back(atoms[i].index);
+
+                 derivativesSet.insertOMP(atoms[i].index, output.dhtilde_dx_);
             }
 
             local_Ntilde += output.htilde_x_;
@@ -56,6 +67,24 @@ void Indus::calculate()
             N_ += local_N;
         }
     }
+
+    derivativesSet.CombineAndClearOMPBuffer();
+
+    // for (int i=0;i<derivativesSet.size();i++)
+    // {
+    //     auto& d = derivativesSet.getAtomDerivativeByIndex(i);
+    //     auto deriv = d.derivatives;
+    //     auto index = d.index;
+        
+    //     std::cout << "index = " << d.index << std::endl;
+
+    //     for (int j=0;j<3;j++)
+    //     {
+    //         std::cout << deriv[0] << " ";
+    //     }
+    //     std::cout << "\n";
+    // }
+
 
     int size = 0; 
     for (auto it = IndusIndicesBuffer_.beginworker(); it != IndusIndicesBuffer_.endworker();it++)
