@@ -20,6 +20,18 @@ struct AtomGroupInput
     GroFile& grofile_;
 };
 
+namespace OP
+{
+    struct Atom
+    {
+        using Real3 = CommonTypes::Real3;
+        using Real  = CommonTypes::Real;
+
+        Real3 position;
+        int index;
+    };
+};
+
 // AtomGroup is responsible for reading the input parameter pack and figuring out the correct indices for this particular AGroup
 class AtomGroup
 {
@@ -36,22 +48,23 @@ class AtomGroup
 
         // getters
         std::string getName() const{return name_;}
-        const std::vector<int>& getAtomGroupIndices() const {return AtomGroupIndices_;} 
-        const VectorReal3& getAtomPositions() const {return atom_positions_;}
-
-        // accessors
-        VectorReal3& accessAtomPositions() {return atom_positions_;} // perhaps this one should not be played around with
+        const std::vector<int>& getAtomGroupIndices() const {return AtomGroupGlobalIndices_;} 
 
         // convert from AtomGroupIndices to global indices
         int AtomGroupIndices2GlobalIndices(int atomgroupIndices) const;
+        int GlobalIndices2AtomGroupIndices(int globalIndices) const;
 
+        const OP::Atom getAtomByIndex(int index) const {return atoms_[index];} 
+        OP::Atom accessAtomByIndex(int index) {return atoms_[index];}
+        const std::vector<OP::Atom>& getAtoms() const {return atoms_;}
+        std::vector<OP::Atom>& accessAtoms() {return atoms_;}
 
     private:
         // Indices of the AtomGroup
-        std::vector<int> AtomGroupIndices_;
+        std::vector<int> AtomGroupGlobalIndices_;
 
         // number of atoms in the AtomGroup
-        int num_atoms_;
+        int numAtomGroupatoms_;
 
         // name of the AtomGroup
         std::string name_;
@@ -62,14 +75,14 @@ class AtomGroup
         // index string 
         std::vector<std::string> index_str_;
 
-        // positions of owned atoms
-        VectorReal3 atom_positions_;
+        // The atoms
+        std::vector<OP::Atom> atoms_;
 
-        // buffer for storing VectorReal3 when updating
-        OpenMP::OpenMP_buffer<VectorReal3> atoms_positions_buffer_; 
+        OpenMP::OpenMP_buffer<std::vector<OP::Atom>> atoms_buffer_;
 
         // Map Atom Group indices to global indices 
         std::map<int, int> AtomGroupIndicesToGlobalIndices_;
+        std::map<int, int> GlobalIndicesToAtomGroupIndices_;
 
         // strategy for parsing
         stratptr strategy_;
