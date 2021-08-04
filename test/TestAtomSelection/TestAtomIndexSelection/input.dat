@@ -1,0 +1,23 @@
+atomgroup = {
+	name = a
+	selection = [ atom_index 1-9500:19 ]
+}
+
+atomgroup = {
+	name = b
+	selection = [ atom_index 1-9500 ]
+}
+
+atomgroup = {
+	name = c
+	selection = [ atom_index 1 , 2 , 3 ]
+}
+
+atomgroup = {
+	name = d
+	selection = [ atom_index 1-1000 , 3000-4000:2 ]
+}
+
+grofile = {
+	path = SampleTrajectory/test.gro
+}

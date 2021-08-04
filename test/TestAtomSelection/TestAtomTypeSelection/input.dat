@@ -1,0 +1,98 @@
+atomgroup = {
+	name = a
+	selection = [ atomtype N1 ]
+}
+
+atomgroup = {
+	name = b
+	selection = [ atomtype C2 ]
+}
+
+atomgroup = {
+	name = c
+	selection = [ atomtype C3 ]
+}
+
+atomgroup = {
+	name = d
+	selection = [ atomtype C4 ]
+}
+
+atomgroup = {
+	name = e
+	selection = [ atomtype C5 ]
+}
+
+atomgroup = {
+	name = f
+	selection = [ atomtype C6 ]
+}
+
+atomgroup = {
+	name = g
+	selection = [ atomtype C7 ]
+}
+
+atomgroup = {
+	name = h
+	selection = [ atomtype C8 ]
+}
+
+atomgroup = {
+	name = i
+	selection = [ atomtype C9 ]
+}
+
+atomgroup = {
+	name = j
+	selection = [ atomtype C10 ]
+}
+
+atomgroup = {
+	name = k
+	selection = [ atomtype C11 ]
+}
+
+atomgroup = {
+	name = l
+	selection = [ atomtype C12 ]
+}
+
+atomgroup = {
+	name = m
+	selection = [ atomtype C13 ]
+}
+
+atomgroup = {
+	name = n
+	selection = [ atomtype C14 ]
+}
+
+atomgroup = {
+	name = o
+	selection = [ atomtype C15 ]
+}
+
+atomgroup = {
+	name = p
+	selection = [ atomtype C16 ]
+}
+
+atomgroup = {
+	name = q
+	selection = [ atomtype C17 ]
+}
+
+atomgroup = {
+	name = r
+	selection = [ atomtype C18 ]
+}
+
+atomgroup = {
+	name = s
+	selection = [ atomtype C19 ]
+}
+
+grofile = {
+	path = SampleTrajectory/test.gro
+}
