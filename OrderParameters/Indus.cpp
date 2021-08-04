@@ -75,12 +75,23 @@ void Indus::calculate()
     //     auto& d = derivativesSet.getAtomDerivativeByIndex(i);
     //     auto deriv = d.derivatives;
     //     auto index = d.index;
+    //     int local_index = ag.GlobalIndices2AtomGroupIndices(d.index);
         
     //     std::cout << "index = " << d.index << std::endl;
+    //     auto atom = ag.getAtomByIndex(local_index);
+    //     ASSERT((atom.index == index), "Bad.");
 
+    //     std::cout << "Positions is : ";
+    //     for (int i=0;i<3;i++)
+    //     {
+    //         std::cout << atom.position[i] << " ";
+    //     }
+    //     std::cout << "\n";
+
+    //     std::cout << "Derivative is : ";
     //     for (int j=0;j<3;j++)
     //     {
-    //         std::cout << deriv[0] << " ";
+    //         std::cout << deriv[j] << " ";
     //     }
     //     std::cout << "\n";
     // }
