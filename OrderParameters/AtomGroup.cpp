@@ -19,44 +19,62 @@ AtomGroup::AtomGroup(const AtomGroupInput& input)
         AtomGroupIndicesToGlobalIndices_.insert(std::make_pair(i, AtomGroupGlobalIndices_[i]));    
         GlobalIndicesToAtomGroupIndices_.insert(std::make_pair(AtomGroupGlobalIndices_[i],i));
     }
+
+    atoms_.resize(numAtomGroupatoms_);
 }
 
 void AtomGroup::update(const VectorReal3& total_atoms)
 {
-    atoms_.clear();
-    atoms_buffer_.clearBuffer();
+    // atoms_.clear();
+    // atoms_.reserve(numAtomGroupatoms_);
+    // atoms_buffer_.clearBuffer();
 
-    // important! address of a vector changes throughout
-    atoms_buffer_.set_master_object(atoms_);
+    // // important! address of a vector changes throughout
+    // atoms_buffer_.set_master_object(atoms_);
 
-    #pragma omp parallel
+    for (int i=0;i < numAtomGroupatoms_;i++)
     {
-        auto& abuffer_ = atoms_buffer_.access_buffer_by_id();
-        abuffer_.resize(0);
-
-        #pragma omp for schedule(static)
-        for (int i=0;i < numAtomGroupatoms_;i++)
-        {
-            OP::Atom p;
-            p.position = total_atoms[AtomGroupGlobalIndices_[i]];
-            p.index = AtomGroupGlobalIndices_[i];
-            abuffer_.push_back(p);
-        }
+        OP::Atom p;
+        p.position = total_atoms[AtomGroupGlobalIndices_[i]];
+        p.index = AtomGroupGlobalIndices_[i];
+        atoms_[i] = p;
     }
 
-    atoms_.reserve(numAtomGroupatoms_);
+    // #pragma omp parallel
+    // {
+    //     auto& abuffer_ = atoms_buffer_.access_buffer_by_id();
+    //     abuffer_.resize(0);
 
-    for(auto it= atoms_buffer_.beginworker();it != atoms_buffer_.endworker();it++)
-    {
-        atoms_.insert(atoms_.end(), it->begin(), it->end());
-    }
+    //     #pragma omp for schedule(static)
+    //     for (int i=0;i < numAtomGroupatoms_;i++)
+    //     {
+    //         OP::Atom p;
+    //         p.position = total_atoms[AtomGroupGlobalIndices_[i]];
+    //         p.index = AtomGroupGlobalIndices_[i];
+    //         abuffer_.push_back(p);
+    //     }
+    // }
 
-    // want to add an extra check just to make sure that the atoms are in order
-    #pragma omp parallel for
-    for (int i=1;i<atoms_.size();i++)
-    {
-        ASSERT((atoms_[i].index >= atoms_[i-1].index), "The atoms indices are not in order!");
-    }
+    // if (OpenMP::get_max_threads() > 1)
+    // {
+    //     atoms_.reserve(numAtomGroupatoms_);
+
+    //     for(auto it= atoms_buffer_.beginworker();it != atoms_buffer_.endworker();it++)
+    //     {
+    //         atoms_.insert(atoms_.end(), it->begin(), it->end());
+    //     }
+    // }
+
+    // // want to add an extra check just to make sure that the atoms are in order
+    // if (OpenMP::get_max_threads() > 1)
+    // {
+    //     std::cout << "We checking order" << std::endl;
+    //     #pragma omp parallel for
+    //     for (int i=1;i<atoms_.size();i++)
+    //     {
+    //         ASSERT((atoms_[i].index >= atoms_[i-1].index), "The atoms indices are not in order!");
+    //     }
+    // }
 }
 
 int AtomGroup::AtomGroupIndices2GlobalIndices(int atomgroupIndices) const
