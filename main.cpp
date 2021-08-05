@@ -1,4 +1,5 @@
 #include "OrderParameters/Driver.h"
+#include "tools/CommandLineArguments.h"
 
 #include <iostream>
 #include <string>
@@ -6,9 +7,22 @@
 
 int main(int argc, char** argv)
 {
-    std::string fname = argv[1];
+    std::string fname="";
 
-    Driver d(fname);
+    CommandLineArguments cmd(argc, argv);
+    if (cmd.has_key("f"))
+    {
+        cmd.readString("f", CommandLineArguments::Keys::Required,fname);
+    }
+    else
+    {
+        ASSERT((argc > 1), "There must be an input file.");
+        fname = argv[1];
+    }
+
+    ASSERT((!fname.empty()), "Missing input file.");
+
+    Driver d(fname,cmd);
 
     for(int i=0;i<d.getNframes();i++)
     {
