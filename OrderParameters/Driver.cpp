@@ -216,12 +216,16 @@ void Driver::calculate()
         auto stop = std::chrono::high_resolution_clock::now();
 
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-        std::cout << "Time it took was " << duration.count() << " microseconds" << std::endl;
+        std::cout << "Time it took for OP calculation is " << duration.count() << " microseconds" << std::endl;
     }
 
+    auto start = std::chrono::high_resolution_clock::now();
     for (int i=0; i< OutputFiles_.size();i++)
     {
         auto& out = OutputFiles_[i];
         out ->printIfOnStep();
     }
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop-start);
+    std::cout << "Time it took for writing file is " << duration.count() << " microseconds" << std::endl;
 }
