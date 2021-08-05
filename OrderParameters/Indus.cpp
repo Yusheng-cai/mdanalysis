@@ -10,7 +10,6 @@ Indus::Indus(const OrderParametersInput& input)
 {
     input.pack_.ReadString("probevolume", ParameterPack::KeyType::Required, pvName_);
     input.pack_.ReadString("atomgroup", ParameterPack::KeyType::Required, atomGroupName_);
-    input.pack_.ReadString("name", ParameterPack::KeyType::Required, name_);
 
     registerOutput("n", [this](void)->Real {return this->getN();});
     registerOutput("ntilde", [this](void)->Real {return this->getNtilde();});
@@ -24,15 +23,7 @@ void Indus::calculate()
     auto& atoms = ag.getAtoms();
     auto& pv  = pv_.getProbeVolume(pvName_);
     IndusIndicesBuffer_.set_master_object(indusIndices_);
-
-    for (int i=0;i<derivativeOutputs_.size();i++)
-    {
-        // clear the current derivatives
-        derivativeOutputs_[i].clear();
-
-        // set the master object
-        derivativeOutputs_[i].setMasterObject();
-    }
+    clearDerivativesOutputs(); 
 
     auto& derivativesSet = accessDerivatives(atomGroupName_);
 
