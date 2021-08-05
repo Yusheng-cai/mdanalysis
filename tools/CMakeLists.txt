@@ -4,6 +4,7 @@ target_sources(tools PRIVATE
     "RandomNumber.cpp"
     "InputParser.cpp"
     "CommandLineArguments.cpp"
+    "FileSystem.cpp"
 )
 
 set(TOOLS_HEADER
@@ -14,6 +15,7 @@ set(TOOLS_HEADER
     "RandomNumber.h"
     "CommandLineArguments.h"
     "Registry.h"
+    "FileSystem.h"
 )
 
 target_include_directories(tools
