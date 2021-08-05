@@ -13,6 +13,8 @@ P2tilde::P2tilde(const OrderParametersInput& input)
     input.pack_.ReadString("tailgroup", ParameterPack::KeyType::Required, tailgroupname_);
 
     registerOutput("p2tilde", [this](void)->Real {return this->getP2tilde();});
+    registerOutput("n", [this](void)->Real {return this->getN();});
+    registerOutput("ntilde", [this](void)->Real {return this->getNtilde();});
     registerOutput("qxx", [this](void) -> Real {return this->getQxx();});
     registerOutput("qxy", [this](void) -> Real {return this->getQxy();});
     registerOutput("qxz", [this](void) -> Real {return this -> getQxz();});
@@ -22,6 +24,8 @@ P2tilde::P2tilde(const OrderParametersInput& input)
 
 void P2tilde::calculate()
 {
+    Qtensor_.fill({});
+
     auto& probeV = pv_.getProbeVolume(pvname_);
     auto& headAG = simstate_.getAtomGroup(headgroupname_);
     auto& tailAG = simstate_.getAtomGroup(tailgroupname_);
@@ -79,6 +83,11 @@ void P2tilde::calculate()
     }
 
     Qtensor::matrix_mult_inplace(Qtensor_, 1.0/(2.0*Ntilde_));
+
+    auto result = Qtensor::OP_Qtensor(Qtensor_);
+
+    p2tilde_ = result.first;
+    v1_ = result.second;
 }
 
 void P2tilde::update()
