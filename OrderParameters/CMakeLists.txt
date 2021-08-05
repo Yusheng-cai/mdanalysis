@@ -19,6 +19,7 @@ target_sources(OrderParameters PRIVATE
     "Qtensor.cpp"
     "P2.cpp"
     "p2tilde.cpp"
+    "P2cos.cpp"
     "AtomGroupParsingStrategy.cpp"
     "AtomDerivativesSet.cpp"
 )
@@ -41,6 +42,7 @@ set(OrderParameters_HEADER
     "Qtensor.h"
     "P2.h"
     "p2tilde.h"
+    "P2cos.h"
     "AtomGroupParsingStrategy.h"
     "AtomDerivativesSet.h"
 )
