@@ -23,6 +23,7 @@ orderparameter = {
 }
 
 outputfile = {
-    name = indus.out
+    name = op.out
     value = [ g.n g.ntilde ] 
+    precision = 1
 }

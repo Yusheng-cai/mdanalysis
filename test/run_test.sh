@@ -3,12 +3,13 @@
 num_threads=0
 test_dir=""
 # We can read in multiple instance of the same flag by doing it multiple times, -o a -o b -o c etc.
-while getopts ":p:i:d:n:r:o:s:" opt; do
+while getopts ":p:i:d:n:f:r:o:s:" opt; do
     case $opt in 
         p) program=${OPTARG};;
         i) input=${OPTARG};;
 	    n) num_threads=${OPTARG};;
         d) test_dir=${OPTARG};;
+        f) ref_dir=${OPTARG};;
         r) output_ref+=(${OPTARG});;
         o) output_test+=(${OPTARG});;
         s) stdout_comp=${OPTARG};;
@@ -41,7 +42,7 @@ then
 fi
 
 # run the program with the input
-${program} ${input} > stdout
+${program} -f ${input} -apath ${ref_dir} > stdout
 
 for ((i=0; i<${len}; ++i)) do
     test_file=${output_test[$i]}

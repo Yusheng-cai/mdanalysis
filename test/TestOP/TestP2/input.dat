@@ -20,6 +20,7 @@ orderparameter = {
 }
 
 outputfile = {
-    name = LC.out
+    name = op.out
     value = [ a.p2 a.qxx a.qxy a.qxz a.qyy a.qyz ] 
+    precision = 2
 }
