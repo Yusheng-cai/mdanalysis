@@ -10,7 +10,6 @@ P2::P2(const OrderParametersInput& input)
 {
     input.pack_.ReadString("tailgroup", ParameterPack::KeyType::Required, tailgroupname_);
     input.pack_.ReadString("headgroup", ParameterPack::KeyType::Required, headgroupname_);
-    input.pack_.ReadString("name", ParameterPack::KeyType::Required, name_);
 
     addAtomGroup(headgroupname_);
     addAtomGroup(tailgroupname_);
@@ -35,12 +34,21 @@ void P2::calculate()
 {
     // zero the Qtensor
     Qtensor_.fill({});
+    uij_.clear();
+    norms_.clear();
 
+   
     auto& tailAG = getAtomGroup(tailgroupname_);
     auto& headAG = getAtomGroup(headgroupname_);
 
     auto& tailatoms_ = tailAG.getAtoms();
     auto& headatoms_ = headAG.getAtoms();
+
+    ASSERT((tailatoms_.size() == headatoms_.size()), "The size of the tail atom is " << tailatoms_.size() << " while the size of the head atom is \
+    " << headatoms_.size());
+
+    uij_.resize(headatoms_.size());
+    norms_.resize(headatoms_.size());
 
     #pragma omp parallel
     {
@@ -53,10 +61,15 @@ void P2::calculate()
 
             Real3 localdirector = {};
             Real sq_dist = 0.0;
+            Real norm;
             simbox_.calculateDistance(headatompos_, tailatompos_, localdirector, sq_dist);
 
             // normalize the local director
-            localdirector = Qtensor::vec_mult(1.0/std::sqrt(sq_dist), localdirector);
+            norm = std::sqrt(sq_dist);
+            localdirector = Qtensor::vec_mult(1.0/norm, localdirector);
+
+            uij_[i] = localdirector;
+            norms_[i] = norm;
 
             // calculate the atomic Qtensor
             Matrix Qtensor_atomic = Qtensor::vec_dyadic(localdirector, localdirector);
@@ -80,6 +93,70 @@ void P2::calculate()
     auto pair = Qtensor::OP_Qtensor(Qtensor_);
     P2_OP_ = pair.first;
     v1_    = pair.second;
+
+    auto headatomDerivatives_ = accessDerivatives(headgroupname_);
+    auto tailatomDerivatives_ = accessDerivatives(tailgroupname_);
+
+    // clear all the derivatives stored in derivativesOutputs
+    clearDerivativesOutputs();
+    Real N = tailatoms_.size();
+
+    #pragma omp parallel
+    {
+        #pragma omp for
+        for (int i=0;i<N;i++)
+        {
+            Real3 uij = uij_[i];
+            Real norm = norms_[i];
+            auto derivative = dP2dr(N, norm, v1_, uij);
+
+            auto headatom = headatoms_[i];
+            auto tailatom = tailatoms_[i];
+
+            headatomDerivatives_.insertOMP(headatom.index, derivative.first);
+            tailatomDerivatives_.insertOMP(tailatom.index, derivative.second);
+        } 
+    }
+    headatomDerivatives_.CombineAndClearOMPBuffer();
+    tailatomDerivatives_.CombineAndClearOMPBuffer();
+
+    std::cout << "headatomDerivatives.size() = " << headatomDerivatives_.size() << std::endl;
+    // for (int i=0;i<headatomDerivatives_.size();i++)
+    // {
+    //     auto deriv = headatomDerivatives_.getAtomDerivativeByIndex(i);
+
+    //     std::cout << "For atom index " << deriv.index << ":";
+    //     for (int j=0;j<3;j++)
+    //     {
+    //         std::cout << deriv.derivatives[j] << " ";
+    //     }
+    //     std::cout << "\n";
+    // }
+}
+
+std::pair<P2::Real3,P2::Real3> P2::dP2dr(Real N, Real norm, Real3& eigvec, Real3& director)
+{
+    std::pair<Real3,Real3> pair_;
+
+    // (v1 \dot u)
+    Real dotproduct = Qtensor::vec_dot(eigvec, director);
+    Real factor = - 6.0/(N*norm);
+
+    Real3 output;
+    output.fill(0);
+
+    for (int i=0;i<3;i++)
+    {
+        output[i] += eigvec[i] - director[i]*dotproduct;
+    }
+
+    output = Qtensor::vec_mult(factor, output);
+    Real3 output2 = Qtensor::vec_mult(-1.0, output);
+
+    pair_.first = output;
+    pair_.second = output2;
+
+    return pair_;
 }
 
 void P2::update()

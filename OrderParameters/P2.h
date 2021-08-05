@@ -18,6 +18,7 @@ class P2: public OrderParameters
         virtual ~P2(){};
         virtual void calculate() override;
         virtual void update() override;
+        std::pair<Real3,Real3> dP2dr(Real N, Real norm, Real3& eigvec, Real3& director);
 
         Real getP2() const {return P2_OP_;}
         Real getv1x() const {return v1_[0];}
@@ -39,6 +40,9 @@ class P2: public OrderParameters
         Real P2_OP_;
         Real3 v1_;
         Matrix Qtensor_;
+
+        std::vector<Real3> uij_;
+        std::vector<Real> norms_;
 
         OpenMP::OpenMP_buffer<Matrix> Qtensor_buffer_;
 };
