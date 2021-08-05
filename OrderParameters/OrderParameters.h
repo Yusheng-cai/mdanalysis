@@ -36,6 +36,15 @@ class OrderParameters
         const OutputValue& getOutput(std::string name_) const;
         void addAtomGroup(std::string name);
 
+        // clear the derivatives stored in DerivativeOutputs
+        void clearDerivativesOutputs();
+
+        // clear a specific derivative for a specific atom group
+        void clearDerivative(std::string& name);
+
+        // get the index of the atom group
+        int getAtomGroupIndex(std::string& name) const;
+
         // getters 
         Real getValue() const {return value;};
         std::string getName() const {return name_;}
