@@ -4,8 +4,8 @@ namespace XdrFiles
     registry_<XtcFile> register_Xtc("xtc");
 }
 
-XtcFile::XtcFile(const ParameterPack& pack)
-:XdrWrapper(pack)
+XtcFile::XtcFile(const XdrInput& input)
+:XdrWrapper(input)
 {}
 
 void XtcFile::readNumAtoms()

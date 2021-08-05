@@ -1,3 +1,5 @@
+#pragma once
+
 #include "SimulationState.h"
 #include "OrderParameters.h"
 #include "ProbeVolume.h"
@@ -10,6 +12,8 @@
 #include "Output_values.h"
 #include "Output_files.h"
 #include "xdr/GroFile.h"
+#include "tools/CommandLineArguments.h"
+#include "tools/FileSystem.h"
 
 #include <string>
 #include <memory>
@@ -28,7 +32,7 @@ class Driver
         using VectorReal3    = CommonTypes::VectorReal3;
         using outputptr      = std::unique_ptr<OutputStream>;
 
-        Driver(std::string filename);
+        Driver(std::string filename, CommandLineArguments& cmd);
         ~Driver(){};
 
         void initializeXdr(const ParameterPack*);
@@ -77,4 +81,7 @@ class Driver
         GroFile grofile_;
 
         bool is_Active_ = true;
+
+        // absolute path of the current working directory
+        std::string apath_;
 };

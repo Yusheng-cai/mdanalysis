@@ -10,11 +10,18 @@
 #include "tools/CommonTypes.h"
 #include "tools/InputParser.h"
 #include "GroFile.h"
+#include "tools/FileSystem.h"
 
 #include <string>
 #include <vector>
 #include <iostream>
 
+struct XdrInput
+{
+    const ParameterPack& pack;
+    // the absolute path
+    std::string apath_;
+};
 
 class XdrWrapper
 {
@@ -27,7 +34,7 @@ class XdrWrapper
             Read, Write, Append
         };
 
-        XdrWrapper(const ParameterPack& pack);    
+        XdrWrapper(const XdrInput&);    
         void open();
         virtual ~XdrWrapper();
 
@@ -63,7 +70,8 @@ class XdrWrapper
         Frame frame_;
         int nframes_=0;
 
-        ParameterPack& pack_;
+        const ParameterPack& pack_;
+        std::string apath_;
 };
 
 namespace XdrFiles
@@ -71,9 +79,9 @@ namespace XdrFiles
     using Key  = std::string;
     using Base = XdrWrapper;
 
-    using factory = GenericFactory<Base, Key, const ParameterPack&>;
+    using factory = GenericFactory<Base, Key, const XdrInput&>;
 
     template<class D>
-    using registry_ = RegisterInFactory<Base, D, Key, const ParameterPack&>;
+    using registry_ = RegisterInFactory<Base, D, Key, const XdrInput&>;
 };
 #endif

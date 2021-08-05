@@ -1,8 +1,12 @@
 #include "XdrWrapper.h"
-XdrWrapper::XdrWrapper(const ParameterPack& pack)
-:pack_(const_cast<ParameterPack&>(pack))
+XdrWrapper::XdrWrapper(const XdrInput& input)
+:pack_(input.pack), apath_(input.apath_)
 {
     pack_.ReadString("path", ParameterPack::KeyType::Required, path_);
+    path_ = FileSystem::joinPath(apath_, path_);
+
+    std::cout << "path = " << path_ << std::endl;
+
     bool readmode = pack_.ReadString("mode", ParameterPack::KeyType::Optional, operation_mode_);
  
 

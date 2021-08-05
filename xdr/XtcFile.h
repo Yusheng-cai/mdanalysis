@@ -4,7 +4,7 @@
 class XtcFile:public XdrWrapper
 {
     public:
-        XtcFile(const ParameterPack& pack);
+        XtcFile(const XdrInput& input);
         virtual ~XtcFile(){};
 
         virtual bool readNextFrame() override;

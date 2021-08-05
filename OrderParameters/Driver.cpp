@@ -1,7 +1,11 @@
 #include "Driver.h"
 
-Driver::Driver(std::string filename)
+Driver::Driver(std::string filename, CommandLineArguments& cmd)
 {
+    // Check if path is provided, if so, then all the relative paths in the input file follows rpath
+    apath_ =  FileSystem::getCurrentPath();
+    cmd.readString("apath", CommandLineArguments::Keys::Optional,apath_);
+
     InputParser ip;
     ip.ParseFile(filename, pack_);
 
@@ -95,11 +99,12 @@ void Driver::initializeGroFile(const ParameterPack* gropack)
 {
     if (gropack != nullptr)
     {
-        std::string groname_;
-        gropack->ReadString("name", ParameterPack::KeyType::Required,groname_);
+        std::string gropath_;
+        gropack->ReadString("path", ParameterPack::KeyType::Required,gropath_);
 
+        std::string groAbsPath = FileSystem::joinPath(apath_, gropath_);
 
-        grofile_.Open(groname_);
+        grofile_.Open(groAbsPath);
     }
 }
 
@@ -114,11 +119,12 @@ void Driver::initializeXdr(const ParameterPack* xdrpack)
     xdrpack->ReadString("path", ParameterPack::KeyType::Required, path);
 
     // split the path to obtain the type of xdr file we are working with, i.e test.xtc
-    int found = path.find_first_of(".");
+    int found = path.find_last_of(".");
     std::string type = path.substr(found+1);
 
     // Create a pointer to the Xdr file that we are working with
-    Xdr_ = XdrPtr(XdrFiles::factory::instance().create(type, *xdrpack));
+    XdrInput input = { *xdrpack, apath_};
+    Xdr_ = XdrPtr(XdrFiles::factory::instance().create(type, input));
     Xdr_->open();
 
     total_atom_positions_.reserve(Xdr_->getNumAtoms());

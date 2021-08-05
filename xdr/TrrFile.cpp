@@ -5,8 +5,8 @@ namespace XdrFiles
     static const registry_<TrrFile> register_trrfile("trr");
 }
 
-TrrFile::TrrFile(const ParameterPack& pack)
-:XdrWrapper(pack)
+TrrFile::TrrFile(const XdrInput& input)
+:XdrWrapper(input)
 {};
 
 bool TrrFile::readNextFrame()
