@@ -25,11 +25,14 @@ class P2tilde: public OrderParameters
         Real getQxz() const {return Qtensor_[0][2];}
         Real getQyy() const {return Qtensor_[1][1];}
         Real getQyz() const {return Qtensor_[1][2];}
+        Real getN() const {return N_;}
+        Real getNtilde() const {return Ntilde_;}
 
     private:
         Matrix Qtensor_;
 
         Real p2tilde_;
+        Real3 v1_;
 
         // obtain the registry for probevolume
         ProbeVolumeRegistry& pv_;
