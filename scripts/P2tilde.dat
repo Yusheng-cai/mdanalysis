@@ -1,0 +1,34 @@
+xdrfile = {
+	path = LC.xtc
+}
+
+atomgroup = {
+	name = head
+	selection = [ atom_index 1-9500:19 ]
+}
+
+atomgroup = {
+	name = tail
+	selection = [ atom_index 2-9500:19 ]
+}
+
+probevolume = {
+	name = v
+	type = box
+	xrange =  [ 0 4 ]
+	yrange =  [ 0 4 ]
+	zrange =  [ 0 4 ]
+}
+
+orderparameter = {
+    name = a
+    type = p2tilde
+    tailgroup = tail 
+    headgroup = head
+    probevolume = v
+}
+
+outputfile = {
+    name = LC.out
+    value = [ a.p2tilde a.ntilde a.n a.qxx a.qxy a.qxz a.qyy a.qyz ] 
+}
