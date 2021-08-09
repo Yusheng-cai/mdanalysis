@@ -18,8 +18,9 @@ class liquid_crystal: public OrderParameters
         virtual ~liquid_crystal(){};
 
         void getUij();
+        void calcQtensor();
 
-    private:
+    protected:
         std::string tailgroupname_;
         std::size_t tailgroupsize_;
 
@@ -29,8 +30,8 @@ class liquid_crystal: public OrderParameters
         Real P2_OP_;
         Real3 v1_;
 
+        Matrix Qtensor_;
+
         std::vector<Real3> uij_;
         std::vector<Real> norms_;
-
-        OpenMP::OpenMP_buffer<Matrix> Qtensor_buffer_;
 };
