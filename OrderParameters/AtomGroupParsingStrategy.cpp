@@ -251,7 +251,7 @@ void ResidueNameParsing::Parse(std::vector<int>& indices)
     {
         std::string resname = grofile_.getResidueName(i);
 
-        bool found = (std::find(ResidueNames.begin(), ResidueNames.end(), resname) == ResidueNames.end());
+        bool found = ! (std::find(ResidueNames.begin(), ResidueNames.end(), resname) == ResidueNames.end());
 
         if (found)
         {
