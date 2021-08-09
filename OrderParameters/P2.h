@@ -3,11 +3,12 @@
 #include "Qtensor.h"
 #include "tools/CommonTypes.h"
 #include "parallel/OpenMP_buffer.h"
+#include "liquid_crystal.h"
 
 #include <string>
 #include <vector>
 
-class P2: public OrderParameters
+class P2: public liquid_crystal
 {
     public:
         using Matrix = CommonTypes::Matrix;
@@ -31,18 +32,6 @@ class P2: public OrderParameters
         Real getQyz() const {return Qtensor_[1][2];}
 
     private:
-        std::string tailgroupname_;
-        std::size_t tailgroupsize_;
-
-        std::string headgroupname_;
-        std::size_t headgroupsize_;
-
         Real P2_OP_;
         Real3 v1_;
-        Matrix Qtensor_;
-
-        std::vector<Real3> uij_;
-        std::vector<Real> norms_;
-
-        OpenMP::OpenMP_buffer<Matrix> Qtensor_buffer_;
 };
