@@ -27,9 +27,6 @@ class liquid_crystal: public OrderParameters
         std::string headgroupname_;
         std::size_t headgroupsize_;
 
-        Real P2_OP_;
-        Real3 v1_;
-
         Matrix Qtensor_;
 
         std::vector<Real3> uij_;
