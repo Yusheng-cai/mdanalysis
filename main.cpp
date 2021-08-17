@@ -23,12 +23,15 @@ int main(int argc, char** argv)
     ASSERT((!fname.empty()), "Missing input file.");
 
     Driver d(fname,cmd);
+    int step = 0;
 
     auto start = std::chrono::high_resolution_clock::now();
-    for(int i=0;i<d.getNframes();i++)
+    while (! d.readNextFrame())
     {
         d.update();
         d.calculate();
+        step ++;
+        std::cout << "step = " << step << std::endl;
     }
     auto end = std::chrono::high_resolution_clock::now();
 
