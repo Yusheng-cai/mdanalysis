@@ -204,12 +204,12 @@ void Driver::update()
     for (int i=0;i<OP_.size();i++)
     {
         auto& op = OP_[i];
-        auto start = std::chrono::high_resolution_clock::now();
+        //auto start = std::chrono::high_resolution_clock::now();
         op->update();
-        auto stop = std::chrono::high_resolution_clock::now();
+        //auto stop = std::chrono::high_resolution_clock::now();
 
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-        std::cout << "Time it took for op update is " << duration.count() << " microseconds" << std::endl;
+        // auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+        // std::cout << "Time it took for op update is " << duration.count() << " microseconds" << std::endl;
     }
 }
 
