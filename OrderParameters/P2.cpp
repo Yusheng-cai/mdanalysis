@@ -60,7 +60,6 @@ void P2::calculate()
     headatomDerivatives_.CombineAndClearOMPBuffer();
     tailatomDerivatives_.CombineAndClearOMPBuffer();
 
-    std::cout << "headatomDerivatives.size() = " << headatomDerivatives_.size() << std::endl;
     // for (int i=0;i<headatomDerivatives_.size();i++)
     // {
     //     auto deriv = headatomDerivatives_.getAtomDerivativeByIndex(i);
