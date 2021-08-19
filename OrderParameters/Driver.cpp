@@ -22,6 +22,7 @@ Driver::Driver(std::string filename, CommandLineArguments& cmd)
     // Read the xdr file inputted, this must be provided
     initializeXdr(xdr_pack);
     initializeGroFile(gro_pack);
+    initializeDriverPack(Driver_pack);
 
     if (ag_pack.size() != 0)
     {
@@ -51,7 +52,7 @@ bool Driver::isValidStep(int step)
 {
     if (step > startingFrame_)
     {
-        int a = (step - startingFrame_)%(step+1);
+        int a = (step - startingFrame_ - 1)%(step+1);
         if (a == 0)
         {
             return true;
