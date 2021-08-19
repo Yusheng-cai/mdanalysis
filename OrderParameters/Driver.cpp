@@ -52,7 +52,7 @@ bool Driver::isValidStep(int step)
 {
     if (step > startingFrame_)
     {
-        int a = (step - startingFrame_ - 1)%(step+1);
+        int a = (step - startingFrame_ - 1)%(skip_+1);
         if (a == 0)
         {
             return true;
