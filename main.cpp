@@ -35,7 +35,6 @@ int main(int argc, char** argv)
             std::cout << "step " << step << " is calculated." << std::endl;
         }
         step ++;
-        std::cout << "step = " << step << std::endl;
     }
     auto end = std::chrono::high_resolution_clock::now();
 
