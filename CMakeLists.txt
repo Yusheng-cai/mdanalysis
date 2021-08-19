@@ -35,7 +35,6 @@ add_subdirectory(tools)
 add_subdirectory(OrderParameters)
 add_subdirectory(parallel)
 add_subdirectory(test)
-add_subdirectory(Eigen)
 
 add_executable(mdanalysis main.cpp)
 
