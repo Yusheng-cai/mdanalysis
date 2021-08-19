@@ -28,8 +28,12 @@ int main(int argc, char** argv)
     auto start = std::chrono::high_resolution_clock::now();
     while (! d.readNextFrame())
     {
-        d.update();
-        d.calculate();
+        if (d.isValidStep(step))
+        {
+            d.update();
+            d.calculate();
+            std::cout << "step " << step << " is calculated." << std::endl;
+        }
         step ++;
         std::cout << "step = " << step << std::endl;
     }
