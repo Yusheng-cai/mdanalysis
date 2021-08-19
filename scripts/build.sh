@@ -4,7 +4,9 @@ export CC=gcc
 export CXX=g++
 
 # specify the build directory
+build_type=RELEASE
 build_dir=$PWD/build
+install_dir=${PWD}/program
 
 # remove build_dir if it already exists
 if [ -d $build_dir ] 
@@ -22,7 +24,10 @@ mkdir -p $build_dir
 
 # configure the build with cmake
 cd $build_dir
-cmake .. \
+cmake .. -DCMAKE_BUILD_TYPE=${build_type} \
+         -DCMAKE_INSTALL_PREFIX=${install_dir}
 
 # make with 8 threads
 make -j 8 
+
+make install
