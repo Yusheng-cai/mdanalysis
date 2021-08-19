@@ -334,8 +334,6 @@ TokenStream::Status InputParser::ParseNextToken(TokenStream& toks, ParameterPack
         status = ParseParamPack(toks, new_param);
 
         ASSERT((status == TokenStream::Status::Close_Brace), "Missing Ending Brace.");
-
-        return status;
     }
     else if (value == "[")
     {

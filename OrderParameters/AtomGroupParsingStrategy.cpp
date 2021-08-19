@@ -6,6 +6,7 @@ namespace AtomGroupParsingRegistry
     registry_<ResidueNumberParsing> registerResidueParsing("resnum");
     registry_<AtomTypeParsing> registerAtomType("atomtype");
     registry_<ResidueNameParsing> registerResidueName("resname");
+    registry_<IndexFileParsing> registerIndexFile("indexfile");
 }
 
 void AtomGroupParsingStrategy::SortAndCheckNoDuplicate(std::vector<int>& indices)
@@ -251,7 +252,7 @@ void ResidueNameParsing::Parse(std::vector<int>& indices)
     {
         std::string resname = grofile_.getResidueName(i);
 
-        bool found = (std::find(ResidueNames.begin(), ResidueNames.end(), resname) == ResidueNames.end());
+        bool found = ! (std::find(ResidueNames.begin(), ResidueNames.end(), resname) == ResidueNames.end());
 
         if (found)
         {
@@ -261,4 +262,73 @@ void ResidueNameParsing::Parse(std::vector<int>& indices)
 
     // sort the indices vector
     SortAndCheckNoDuplicate(indices);
+}
+
+IndexFileParsing::IndexFileParsing(AtomGroupParsingInput& input)
+:AtomGroupParsingStrategy(input)
+{
+    ASSERT(( selection_str_.size() == 2), "Only 1 file name can be provided at this point.");
+
+    // obtain the filename
+    fileName_ = selection_str_[1];
+
+    ifs_.open(fileName_);
+    ASSERT((isOpen()), "The file with name " << selection_str_[1] << " is not opened.");
+
+    std::string sentence;
+    while(std::getline(ifs_, sentence))
+    {
+        int found = sentence.find_first_of(comment_symbol);
+        if (found == std::string::npos)
+        {
+            ss_.str(sentence);
+            int index;
+            std::vector<int> index_for_sentence;
+
+            // The first one is always the time index
+            ss_ >> index;
+            Frames_.push_back(index);
+
+            while (ss_ >> index)
+            {
+                index_for_sentence.push_back(index);
+            }
+
+            SortAndCheckNoDuplicate(index_for_sentence);
+
+            Fileindices_.push_back(index_for_sentence);
+
+            ss_.clear();
+        }
+    }
+    ifs_.close(); 
+
+    totalFrames_ = Fileindices_.size();
+
+    frame_count = 0;
+}
+
+bool IndexFileParsing::isOpen()
+{
+    return ifs_.is_open();
+}
+
+void IndexFileParsing::Parse(std::vector<int>& indices)
+{
+    indices.clear();
+
+    indices.insert(indices.end(),Fileindices_[0].begin(), Fileindices_[0].end());
+
+    //frame_count ++;
+}
+
+void IndexFileParsing::update(std::vector<int>& indices)
+{
+    ASSERT((frame_count < totalFrames_), "Out of range frame for Index File " << selection_str_[0]);
+
+    indices.clear();
+
+    indices.insert(indices.end(), Fileindices_[frame_count].begin(), Fileindices_[frame_count].end());
+
+    frame_count++;
 }

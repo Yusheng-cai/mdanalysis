@@ -6,27 +6,96 @@ namespace OrderParametersRegistry
 }
 
 P2cos::P2cos(const OrderParametersInput& input)
-:OrderParameters(input)
+:liquid_crystal(input)
 {
-    input.pack_.ReadString("tailgroup", ParameterPack::KeyType::Required, tailgroupname_);
-    input.pack_.ReadString("headgroup", ParameterPack::KeyType::Required, headgroupname_);
     input.pack_.ReadArrayNumber<Real,3>("director", ParameterPack::KeyType::Required, n_);
-
-    addAtomGroup(headgroupname_);
-    addAtomGroup(tailgroupname_);
-
-    auto& tailAG = getAtomGroup(tailgroupname_);
-    auto& headAG = getAtomGroup(headgroupname_);
-
-    tailgroupsize_ = tailAG.getAtomGroupIndices().size();
-    headgroupsize_ = headAG.getAtomGroupIndices().size();
-
-    ASSERT((tailgroupsize_ == headgroupsize_), "The number of atoms passed in for headgroup is less than that of tail group.");
 
     registerOutput("p2",[this](void)-> Real {return this->getP2cos();});
 }
 
 void P2cos::calculate()
 {
+    getUij();
 
+    #pragma omp parallel
+    {
+        Real P2cos_local_ = 0.0;
+        #pragma omp for
+        for (int i=0;i<tailgroupsize_;i++)
+        {
+            Real3 AtomDirector = uij_[i];
+
+            Real dot_product = Qtensor::vec_dot(AtomDirector, n_);
+
+            P2cos_local_ += 1.5*std::pow(dot_product,2.0) - 0.5;
+        }
+
+        #pragma omp critical
+        {
+            P2cos_OP_  += P2cos_local_;
+        }
+    }
+
+    P2cos_OP_ = 1/tailgroupsize_*P2cos_OP_;
+
+    // clear derivatives
+    clearDerivativesOutputs();
+
+    auto& headAG = getAtomGroup(headgroupname_);
+    auto& tailAG = getAtomGroup(tailgroupname_);
+    auto& headatoms_ = headAG.getAtoms();
+    auto& tailatoms_ = tailAG.getAtoms();
+
+    auto& head_derivatives = accessDerivatives(headgroupname_);
+    auto& tail_derivatives = accessDerivatives(tailgroupname_);
+    Real N = tailgroupsize_;
+
+    #pragma omp parallel
+    {
+        #pragma omp for
+        for (int i=0;i<tailgroupsize_;i++)
+        {
+            auto headatom = headatoms_[i];
+            auto tailatom = tailatoms_[i];
+
+            auto director = uij_[i];
+            auto norm = norms_[i];
+
+            auto derivatives = dP2cosdr(N, norm, director, n_);
+
+            head_derivatives.insertOMP(headatom.index, derivatives.first);
+            tail_derivatives.insertOMP(tailatom.index, derivatives.second);
+        }
+    }
+
+    head_derivatives.CombineAndClearOMPBuffer();
+    tail_derivatives.CombineAndClearOMPBuffer();
+}
+
+void P2cos::update()
+{
+
+}
+
+std::pair<P2cos::Real3,P2cos::Real3> P2cos::dP2cosdr(Real N, Real norm, Real3& director, Real3& n)
+{
+    std::pair<Real3,Real3> output;
+
+    Real dot_product = Qtensor::vec_dot(director, n);
+    Real factor = 3.0/(N*norm)*dot_product;
+    Real3 derivative;
+
+    for (int i=0;i<3;i++)
+    {
+        derivative[i] = n[i] - director[i]*dot_product;
+    }
+
+    derivative = Qtensor::vec_mult(factor, derivative);
+
+    Real3 secondD = Qtensor::vec_mult(-1.0, derivative);
+
+    output.first = derivative;
+    output.second = secondD;
+
+    return output;
 }

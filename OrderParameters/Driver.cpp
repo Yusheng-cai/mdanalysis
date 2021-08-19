@@ -163,14 +163,21 @@ void Driver::initializeOP(const std::vector<const ParameterPack*>& OPpack)
     }
 }
 
-void Driver::update()
+bool Driver::readNextFrame()
 {
     bool read = Xdr_->readNextFrame();
     if (read)
     {
-        is_Active_ = false;
+        return true;
     }
+    else
+    {
+        return false;
+    }
+}
 
+void Driver::update()
+{
     const auto& total_atom_positions_ = Xdr_->getPositions();
 
     for (int i=0;i<VectorAgNames_.size();i++)
@@ -197,12 +204,12 @@ void Driver::update()
     for (int i=0;i<OP_.size();i++)
     {
         auto& op = OP_[i];
-        auto start = std::chrono::high_resolution_clock::now();
+        //auto start = std::chrono::high_resolution_clock::now();
         op->update();
-        auto stop = std::chrono::high_resolution_clock::now();
+        //auto stop = std::chrono::high_resolution_clock::now();
 
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-        std::cout << "Time it took for op update is " << duration.count() << " microseconds" << std::endl;
+        // auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+        // std::cout << "Time it took for op update is " << duration.count() << " microseconds" << std::endl;
     }
 }
 
@@ -211,21 +218,17 @@ void Driver::calculate()
     for (int i = 0;i<OP_.size();i++)
     {
         auto& op = OP_[i];
-        auto start = std::chrono::high_resolution_clock::now();
+        //auto start = std::chrono::high_resolution_clock::now();
         op ->calculate();
-        auto stop = std::chrono::high_resolution_clock::now();
+        //auto stop = std::chrono::high_resolution_clock::now();
 
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-        std::cout << "Time it took for OP calculation is " << duration.count() << " microseconds" << std::endl;
+        //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+        //std::cout << "Time it took for OP calculation is " << duration.count() << " microseconds" << std::endl;
     }
 
-    auto start = std::chrono::high_resolution_clock::now();
     for (int i=0; i< OutputFiles_.size();i++)
     {
         auto& out = OutputFiles_[i];
         out ->printIfOnStep();
     }
-    auto stop = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop-start);
-    std::cout << "Time it took for writing file is " << duration.count() << " microseconds" << std::endl;
 }

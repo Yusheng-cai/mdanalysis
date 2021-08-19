@@ -56,7 +56,7 @@ SimulationBox::Real3 SimulationBox::calculateShift(const Real3& x1, const Real3&
         Real dist = x1[i] - ref[i];
 
         if (dist < mhlength_[i]) { shift[i] = length_[i]; }
-        else if (dist > mhlength_[i]) { shift[i] = -length_[i];}
+        else if (dist > hlength_[i]) { shift[i] = -length_[i];}
         else {shift[i] = 0.0;}
     }
 

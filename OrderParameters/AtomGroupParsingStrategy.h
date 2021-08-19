@@ -4,8 +4,10 @@
 
 #include <vector>
 #include <string>
+#include <sstream>
 #include <map>
 #include <algorithm>
+#include <iostream>
 
 struct AtomGroupParsingInput
 {
@@ -20,6 +22,7 @@ class AtomGroupParsingStrategy
         virtual ~AtomGroupParsingStrategy(){};
 
         virtual void Parse(std::vector<int>& indices) = 0;
+        virtual void update(std::vector<int>& indices){};
 
         void SortAndCheckNoDuplicate(std::vector<int>& indices);
     protected:
@@ -63,6 +66,34 @@ class ResidueNameParsing:public AtomGroupParsingStrategy
         virtual ~ResidueNameParsing(){};
 
         virtual void Parse(std::vector<int>& indices);
+};
+
+class IndexFileParsing: public AtomGroupParsingStrategy
+{
+    public:
+        IndexFileParsing(AtomGroupParsingInput& input);
+        virtual ~IndexFileParsing(){};
+
+        virtual void update(std::vector<int>& indices);
+        virtual void Parse(std::vector<int>& indices);
+
+        bool isOpen();
+
+    private:
+        std::string fileName_;
+
+        std::ifstream ifs_;
+        std::stringstream ss_;
+
+        std::vector<std::vector<int>> Fileindices_;
+
+        std::string comment_symbol = "#";
+
+        int frame_count = 0;
+
+        int totalFrames_;
+
+        std::vector<int> Frames_;
 };
 
 namespace AtomGroupParsingRegistry

@@ -48,7 +48,7 @@ void XdrWrapper::open()
     int est_nframes = 0;
     int64_t* offsets = nullptr;
 
-    readNframes();
+    // readNframes();
 }
 
 
