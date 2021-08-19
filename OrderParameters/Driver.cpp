@@ -17,6 +17,7 @@ Driver::Driver(std::string filename, CommandLineArguments& cmd)
     auto ag_pack = pack_.findParamPacks("atomgroup", ParameterPack::KeyType::Optional);
     auto output_pack = pack_.findParamPacks("outputfile", ParameterPack::KeyType::Optional);
     auto gro_pack= pack_.findParamPack("grofile", ParameterPack::KeyType::Optional);
+    auto Driver_pack = pack_.findParamPack("driver", ParameterPack::KeyType::Optional);
 
     // Read the xdr file inputted, this must be provided
     initializeXdr(xdr_pack);
@@ -43,6 +44,33 @@ Driver::Driver(std::string filename, CommandLineArguments& cmd)
     if (output_pack.size() != 0)
     {
         initializeOutputFiles(output_pack);
+    }
+}
+
+bool Driver::isValidStep(int step)
+{
+    if (step > startingFrame_)
+    {
+        int a = (step - startingFrame_)%(step+1);
+        if (a == 0)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    return false;
+}
+
+void Driver::initializeDriverPack(const ParameterPack* driverpack)
+{
+    if(driverpack != nullptr)
+    {
+        driverpack -> ReadNumber("startingframe", ParameterPack::KeyType::Optional, startingFrame_);
+        driverpack -> ReadNumber("skip", ParameterPack::KeyType::Optional, skip_);
     }
 }
 

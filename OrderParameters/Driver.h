@@ -41,9 +41,13 @@ class Driver
         void initializeAtomGroups(const std::vector<const ParameterPack*>&);
         void initializeOutputFiles(const std::vector<const ParameterPack*>&);
         void initializeGroFile(const ParameterPack*);
+        void initializeDriverPack(const ParameterPack*);
 
         void RegisterOuputValues();
         const OutputValue& getOutputValue(std::string name) const;
+
+        // function that checks whether or not a step is used to be calculated
+        bool isValidStep(int step);
 
         Real getTime() const {return Xdr_->getTime();}
         int getStep() const {return Xdr_->getStep();}
@@ -85,4 +89,7 @@ class Driver
 
         // absolute path of the current working directory
         std::string apath_;
+
+        int startingFrame_ = 1;
+        int skip_ = 0;
 };
