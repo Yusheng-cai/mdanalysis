@@ -23,24 +23,22 @@ int main(int argc, char** argv)
     ASSERT((!fname.empty()), "Missing input file.");
 
     Driver d(fname,cmd);
-    int step = 1;
 
-    auto start = std::chrono::high_resolution_clock::now();
-    while (! d.readNextFrame())
+    auto starttot = std::chrono::high_resolution_clock::now();
+    for (int i=0;i<d.getNframes();i++)
     {
-        if (d.isValidStep(step))
+        if (d.isValidStep(i))
         {
-            d.update();
+            d.readFrame(i);
+            d.update(); 
             d.calculate();
-            std::cout << "step " << step << " is calculated." << std::endl;
         }
-        step ++;
     }
-    auto end = std::chrono::high_resolution_clock::now();
+    auto endtot = std::chrono::high_resolution_clock::now();
 
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    auto durationtot = std::chrono::duration_cast<std::chrono::microseconds>(endtot- starttot);
 
-    std::cout << "Entire operation took " << duration.count() << " microseconds"<< std::endl;
+    std::cout << "Entire operation took " << durationtot.count() << " microseconds"<< std::endl;
  
     return 0;
 };
