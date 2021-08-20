@@ -9,7 +9,16 @@ TrrFile::TrrFile(const XdrInput& input)
 :XdrWrapper(input)
 {};
 
-bool TrrFile::readNextFrame()
+void TrrFile::readNframes()
+{
+    int est_nframes=0;
+    int64_t* offsets=nullptr;
+
+    read_trr_n_frames(const_cast<char*>(path_.c_str()),&nframes_, &est_nframes, &offsets);
+    offsets_.insert(offsets_.end(),offsets, offsets+nframes_);
+}
+
+bool TrrFile::readFrame(int FrameNum)
 {
     ASSERT((isOpen()), "The file is not opened.");
 
@@ -28,6 +37,8 @@ bool TrrFile::readNextFrame()
     int step;
     Frame::Real time, lambda; 
     int has_prop;
+
+    xdr_seek(file_, offsets_[FrameNum], 0);
     int ret = read_trr(file_, natoms_, &step, &time, &lambda, box, position_ptr, velocities_ptr, forces_ptr, &has_prop);
 
     frame_.setTime(time);
