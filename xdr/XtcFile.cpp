@@ -23,11 +23,16 @@ void XtcFile::readNframes()
     int64_t* offsets=nullptr;
 
     read_xtc_n_frames(const_cast<char*>(path_.c_str()),&nframes_, &est_nframes, &offsets);
+    offsets_.insert(offsets_.end(),offsets, offsets+nframes_);
 }
 
-bool XtcFile::readNextFrame()
+bool XtcFile::readFrame(int FrameNum)
 {
     ASSERT((isOpen()), "The file is not opened.");
+    if (FrameNum > nframes_)
+    {
+        return true;
+    }
 
     auto& positions_ = frame_.accessPositions();
     ASSERT((positions_.size() == natoms_), "The shape of positions is not of natoms size.");
@@ -38,7 +43,10 @@ bool XtcFile::readNextFrame()
     Frame::Matrix matrix_box_;
 
     auto positions_ptr_ = (rvec*)positions_.data();
+
+    xdr_seek(file_,offsets_[FrameNum], 0);
     int ret = read_xtc(file_, natoms_, &step, &time, box_, positions_ptr_, &precision_);
+
     ASSERT((ret == exdrOK || ret == exdrENDOFFILE), "The reading operation in xtc file is not sucessful.");
 
     for(int i=0;i<3;i++)
