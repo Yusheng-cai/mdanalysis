@@ -72,8 +72,8 @@ void Driver::initializeDriverPack(const ParameterPack* driverpack)
     {
         driverpack -> ReadNumber("startingframe", ParameterPack::KeyType::Optional, startingFrame_);
         driverpack -> ReadNumber("skip", ParameterPack::KeyType::Optional, skip_);
-        startingFrame_ -= 1;
     }
+    startingFrame_ -= 1;
 }
 
 void Driver::initializeOutputFiles(const std::vector<const ParameterPack*>& output_pack)
