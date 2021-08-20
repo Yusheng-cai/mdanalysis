@@ -53,7 +53,7 @@ class Driver
         int getStep() const {return Xdr_->getStep();}
         int getNframes() const {return Xdr_->getNframes();}
 
-        bool readNextFrame();
+        bool readFrame(int FrameNum);
         void update();
         void calculate();
 

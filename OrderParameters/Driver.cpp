@@ -72,6 +72,7 @@ void Driver::initializeDriverPack(const ParameterPack* driverpack)
     {
         driverpack -> ReadNumber("startingframe", ParameterPack::KeyType::Optional, startingFrame_);
         driverpack -> ReadNumber("skip", ParameterPack::KeyType::Optional, skip_);
+        startingFrame_ -= 1;
     }
 }
 
@@ -192,9 +193,9 @@ void Driver::initializeOP(const std::vector<const ParameterPack*>& OPpack)
     }
 }
 
-bool Driver::readNextFrame()
+bool Driver::readFrame(int FrameNum)
 {
-    bool read = Xdr_->readNextFrame();
+    bool read = Xdr_->readFrame(FrameNum);
     if (read)
     {
         return true;
