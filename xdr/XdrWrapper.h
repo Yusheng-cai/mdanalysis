@@ -46,7 +46,7 @@ class XdrWrapper
 
         int getNumAtoms() const {return natoms_;}
 
-        virtual bool readNextFrame() = 0;
+        virtual bool readFrame(int FrameNum) = 0;
         virtual void readNumAtoms()  = 0;
         virtual void readNframes(){};
         const Frame::VectorReal3& getPositions() const{return frame_.getPositions();}

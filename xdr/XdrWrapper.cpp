@@ -5,8 +5,6 @@ XdrWrapper::XdrWrapper(const XdrInput& input)
     pack_.ReadString("path", ParameterPack::KeyType::Required, path_);
     path_ = FileSystem::joinPath(apath_, path_);
 
-    std::cout << "path = " << path_ << std::endl;
-
     bool readmode = pack_.ReadString("mode", ParameterPack::KeyType::Optional, operation_mode_);
  
 
@@ -44,11 +42,7 @@ void XdrWrapper::open()
 
     frame_.setNumAtoms(natoms_);
 
-    int nframes = 0;
-    int est_nframes = 0;
-    int64_t* offsets = nullptr;
-
-    // readNframes();
+    readNframes();
 }
 
 
