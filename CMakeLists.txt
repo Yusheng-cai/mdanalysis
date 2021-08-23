@@ -40,7 +40,7 @@ add_executable(mdanalysis main.cpp)
 
 target_include_directories(mdanalysis PUBLIC ${CMAKE_SOURCE_DIR})
 
-target_link_libraries(mdanalysis PUBLIC OrderParameters xdr tools parallel)
+target_link_libraries(mdanalysis PUBLIC mdaOrderParameters mdaxdr mdatools mdaparallel)
 
 install(TARGETS mdanalysis DESTINATION bin)
     

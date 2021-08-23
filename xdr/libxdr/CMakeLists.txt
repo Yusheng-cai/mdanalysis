@@ -1,6 +1,6 @@
-add_library(xdrC SHARED)
+add_library(mdaxdrC SHARED)
 
-target_sources(xdrC PRIVATE 
+target_sources(mdaxdrC PRIVATE 
                 "trr_seek.c"
                 "xdrfile_trr.c"
                 "xdrfile_xtc.c"
@@ -8,7 +8,7 @@ target_sources(xdrC PRIVATE
                 "xtc_seek.c"
 )
 
-set(XDRC_HEADER
+set(mdaXDRC_HEADER
     "trr_seek.h"
     "xdrfile_trr.h"
     "xdrfile_xtc.h"
@@ -17,9 +17,9 @@ set(XDRC_HEADER
 )
 
 # Add source files
-target_include_directories(xdrC PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(mdaxdrC PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 include(InstallLibraryWithStandardSetup)
-InstallLibraryWithStandardSetup(xdrC 
-    INCLUDE_SUBDIR xdrC
-    INCLUDES ${XDRC_HEADER})
+InstallLibraryWithStandardSetup(mdaxdrC 
+    INCLUDE_SUBDIR mdaxdrC
+    INCLUDES ${mdaXDRC_HEADER})

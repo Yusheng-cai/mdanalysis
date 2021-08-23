@@ -1,6 +1,6 @@
 include(TestSetup)
 
-set(_core_libs OrderParameters parallel tools xdr)
+set(_core_libs mdaOrderParameters mdaparallel mdatools mdaxdr)
 
 set(TESTS_NAMES "")
 

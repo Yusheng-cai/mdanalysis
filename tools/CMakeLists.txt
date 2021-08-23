@@ -1,13 +1,13 @@
-add_library(tools SHARED)
+add_library(mdatools SHARED)
 
-target_sources(tools PRIVATE
+target_sources(mdatools PRIVATE
     "RandomNumber.cpp"
     "InputParser.cpp"
     "CommandLineArguments.cpp"
     "FileSystem.cpp"
 )
 
-set(TOOLS_HEADER
+set(mdaTOOLS_HEADER
     "Assert.h"
     "CommonTypes.h"
     "GenericFactory.h"
@@ -18,16 +18,16 @@ set(TOOLS_HEADER
     "FileSystem.h"
 )
 
-target_include_directories(tools
+target_include_directories(mdatools
                         PUBLIC 
                         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
                         $<INSTALL_INTERFACE:${PROJECT_BINARY_DIR}/include>
 )
-# target_compile_options(tools PRIVATE -fPIC)
+# target_compile_options(mdatools PRIVATE -fPIC)
 
 
 include(InstallLibraryWithStandardSetup)
-InstallLibraryWithStandardSetup(tools 
-    INCLUDE_SUBDIR tools
-    INCLUDES ${TOOLS_HEADER})
+InstallLibraryWithStandardSetup(mdatools 
+    INCLUDE_SUBDIR mdatools
+    INCLUDES ${mdaTOOLS_HEADER})
 

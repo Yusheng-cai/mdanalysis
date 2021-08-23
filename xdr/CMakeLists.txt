@@ -1,7 +1,7 @@
 add_subdirectory(libxdr)
-add_library(xdr SHARED)
+add_library(mdaxdr SHARED)
 
-target_sources(xdr PRIVATE
+target_sources(mdaxdr PRIVATE
     "XdrWrapper.cpp"
     "TrrFile.cpp"
     "Frame.cpp"
@@ -9,11 +9,11 @@ target_sources(xdr PRIVATE
     "GroFile.cpp"
 )
 
-target_include_directories(xdr
+target_include_directories(mdaxdr
                         PUBLIC ${CMAKE_SOURCE_DIR})
 
 
-set(XDR_HEADER
+set(mdaXDR_HEADER
     "Frame.h"
     "TrrFile.h"
     "XdrWrapper.h"
@@ -21,9 +21,9 @@ set(XDR_HEADER
     "GroFile.h"
 )
 
-target_link_libraries(xdr PRIVATE tools xdrC)
+target_link_libraries(mdaxdr PRIVATE mdatools mdaxdrC)
 
 include(InstallLibraryWithStandardSetup)
-InstallLibraryWithStandardSetup(xdr 
-    INCLUDE_SUBDIR xdr
-    INCLUDES ${XDR_HEADER})
+InstallLibraryWithStandardSetup(mdaxdr 
+    INCLUDE_SUBDIR mdaxdr
+    INCLUDES ${mdaXDR_HEADER})

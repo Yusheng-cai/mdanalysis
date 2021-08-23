@@ -1,6 +1,6 @@
-add_library(OrderParameters SHARED)
+add_library(mdaOrderParameters SHARED)
 
-target_sources(OrderParameters PRIVATE
+target_sources(mdaOrderParameters PRIVATE
     "IndicatorFunction.cpp"
     "IndicatorFunction1d.cpp"
     "IndicatorFunction2d.cpp"
@@ -25,7 +25,7 @@ target_sources(OrderParameters PRIVATE
     "AtomDerivativesSet.cpp"
 )
 
-set(OrderParameters_HEADER
+set(mdaOrderParameters_HEADER
     "IndicatorFunction.h"
     "IndicatorFunction1d.h"
     "IndicatorFunction2d.h"
@@ -49,15 +49,15 @@ set(OrderParameters_HEADER
     "AtomDerivativesSet.h"
 )
 
-target_include_directories(OrderParameters
+target_include_directories(mdaOrderParameters
                         PUBLIC 
                         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
                         $<INSTALL_INTERFACE:${PROJECT_BINARY_DIR}/include>
 )
 
-target_link_libraries(OrderParameters PUBLIC tools xdr parallel)
+target_link_libraries(mdaOrderParameters PUBLIC mdatools mdaxdr mdaparallel)
 
 include(InstallLibraryWithStandardSetup)
-InstallLibraryWithStandardSetup(OrderParameters 
-    INCLUDE_SUBDIR OrderParameters
-    INCLUDES ${OrderParameters_HEADER})
+InstallLibraryWithStandardSetup(mdaOrderParameters 
+    INCLUDE_SUBDIR mdaOrderParameters
+    INCLUDES ${mdaOrderParameters_HEADER})
