@@ -132,7 +132,7 @@ void TopologyReader::print()
     }
 }
 
-TopologyReader::Real TopologyReader::getMassFromAtomName(std::string& atomname)
+TopologyReader::Real TopologyReader::getMassFromAtomName(const std::string& atomname)
 {
     auto it = AtomNameToMassMap_.find(atomname);
 

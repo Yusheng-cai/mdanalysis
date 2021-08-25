@@ -1,3 +1,4 @@
+#pragma once
 #include "tools/Assert.h"
 #include "tools/CommonTypes.h"
 #include "tools/InputParser.h"
@@ -33,7 +34,7 @@ class TopologyReader
         // make map from atomName to mass
         void MakeAtomNameToMassMap();
 
-        Real getMassFromAtomName(std::string& atomName);
+        Real getMassFromAtomName(const std::string& atomName);
 
         enum TopIdx
         {
