@@ -28,6 +28,12 @@ add_unit_test("TestTools/TestCmdArguments"
              LIBS ${_core_libs}
              ARGS -number 1 2 3 -str a b c -flag true true false)
 
+add_unit_test("TestXdr/"
+             "TestTop"
+             SOURCES main.cpp 
+             LIBS ${_core_libs}
+             ARGS ${CMAKE_CURRENT_LIST_DIR}/SampleTrajectory/5CB.itp)
+
 # Now add the test which tests the main program (only test if they run) 
 set(OMP_THREADS 1 4 8)
 set(OP_TEST "")
