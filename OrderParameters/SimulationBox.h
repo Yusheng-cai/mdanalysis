@@ -30,6 +30,9 @@ class SimulationBox
         // get the 3 sides of the cubic box
         Real3 getSides() const {return length_;}
 
+        // get the center of the box
+        Real3 getCenter() const {return center_;}
+
     private:
         Matrix box_;
 
@@ -41,4 +44,7 @@ class SimulationBox
 
         // minus half of the length of the box 
         Real3 mhlength_;
+
+        // center of the box
+        Real3 center_;
 };

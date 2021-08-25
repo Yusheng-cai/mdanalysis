@@ -75,6 +75,11 @@ void SimulationBox::setBoxMatrix(const Matrix& box)
 
     for (int i=0;i<3;i++)
     {
+        center_[i] = box[i][i] * 0.5;
+    }
+
+    for (int i=0;i<3;i++)
+    {
         length_[i] = box[i][i];
         hlength_[i] = 0.5*length_[i];
         mhlength_[i] = -hlength_[i];
