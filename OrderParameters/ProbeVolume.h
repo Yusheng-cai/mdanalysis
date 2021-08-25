@@ -63,7 +63,8 @@ class ProbeVolume
         Real ac_=0.02;
 
         // default Dynamic to be false
-        bool isDynamic_=false;
+        bool isDynamic_;
+
         SimulationState& simstate_;
         SimulationBox& simbox_;
 
