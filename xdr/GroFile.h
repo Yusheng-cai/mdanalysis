@@ -10,6 +10,7 @@
 #include <sstream>
 #include <set>
 #include <algorithm>
+#include <map>
 
 namespace xdr
 {
@@ -19,6 +20,12 @@ namespace xdr
         std::string residueName_;
         std::string atomName_;
         int atomNumber_;
+    };
+
+    struct residue
+    {
+        std::vector<Atom> atoms_;
+        std::string name_;
     };
 }
 
@@ -31,6 +38,9 @@ class GroFile
         void Open(std::string Name);
         void ParseFile();
         void ReadLines();
+        void CorrectMinAtomNumber(int minNum);
+        void CorrectMinResidueNumber(std::set<int>& ResidueSet);
+        void constructResidues();
 
         // getters
         int getResidueNumber(int i)const {return atomsinfo_[i].residueNumber_;}
@@ -42,6 +52,7 @@ class GroFile
         int getNumUniqueResidues() const {return numUniqueResidues_;}
         const std::set<std::string> getAtomTypes() const {return AtomTypes_;}
         const std::set<std::string> getResidueNames() const {return ResidueNames_;}
+        const std::vector<xdr::residue>& getResidues() const {return ResidueGroup_;}
 
         // booleans that tells others whether or not the GroFile is read
         bool isEmpty() const {return empty_;}
@@ -71,4 +82,13 @@ class GroFile
 
         // Number of unique residues 
         int numUniqueResidues_;
+
+        // residues
+        std::vector<xdr::residue> ResidueGroup_;
+
+        // residue map index to name
+        std::map<int, std::string> MapIndexToResidueName_;
+
+        // residue name map to index
+        std::map<std::string, int> MapResidueNameToIndex_;
 };

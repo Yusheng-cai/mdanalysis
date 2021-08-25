@@ -50,8 +50,10 @@ void GroFile::Open(std::string filename)
 void GroFile::ParseFile()
 { 
     atomsinfo_.clear();
-    long long minAtomNumber = 1000000000;
     std::set<int> ResidueSet;
+
+    // minimum atom number
+    long long minAtomNumber_ = 10000000;
 
     for (int i=0; i< lines_.size() ;i++)
     {
@@ -89,19 +91,28 @@ void GroFile::ParseFile()
         AtomTypes_.insert(atomName);
         ResidueNames_.insert(residueName);
 
-        if (atomNumber < minAtomNumber)
+        if (atomNumber < minAtomNumber_)
         {
-            minAtomNumber = atomNumber;
+            minAtomNumber_ = atomNumber;
         }
     }
+
+    CorrectMinAtomNumber(minAtomNumber_);
 
     numResidues_ = ResidueSet.size();
     numUniqueResidues_ = ResidueNames_.size();
 
+    // Correct for the minimum residue number
+    CorrectMinResidueNumber(ResidueSet);
+    constructResidues();
+}
+
+void GroFile::CorrectMinAtomNumber(int minNum)
+{
     // correct for atom Number, we make it such that it always starts with 1 
-    if (minAtomNumber != 1)
+    if (minNum != 1)
     {
-        int diff = 1 - minAtomNumber;
+        int diff = 1 - minNum;
 
         for (int i=0;i<atomsinfo_.size();i++)
         {
@@ -109,7 +120,10 @@ void GroFile::ParseFile()
             atom.atomNumber_ += diff;
         }
     }
+}
 
+void GroFile::CorrectMinResidueNumber(std::set<int>& ResidueSet)
+{
     // Check for the minimum of the residue number if residue Set is not empty
     if ( ! ResidueSet.empty())
     {
@@ -124,6 +138,29 @@ void GroFile::ParseFile()
                 auto atom = atomsinfo_[i];
                 atom.residueNumber_ += diff;
             }
+        }
+    }
+}
+
+void GroFile::constructResidues()
+{
+    ResidueGroup_.resize(numResidues_);
+
+    // construct the Residue Group
+    for (int i=0;i<atomsinfo_.size();i++)
+    {
+        auto& A = atomsinfo_[i];
+        int resNum = A.residueNumber_;
+
+        ResidueGroup_[resNum].atoms_.push_back(A);
+    }
+
+
+    for (int i=0;i<ResidueGroup_.size();i++)
+    {
+        for (int j=1;j<ResidueGroup_[i].atoms_.size();j++)
+        {
+            ASSERT((ResidueGroup_[i].atoms_[j].atomNumber_ > ResidueGroup_[i].atoms_[j-1].atomNumber_), "The atom Number are not sorted.");
         }
     }
 }
