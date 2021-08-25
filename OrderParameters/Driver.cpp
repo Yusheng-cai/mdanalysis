@@ -11,6 +11,7 @@ Driver::Driver(std::string filename, CommandLineArguments& cmd)
 
     auto pv_pack = pack_.findParamPacks("probevolume", ParameterPack::KeyType::Optional);
     auto op_pack = pack_.findParamPacks("orderparameter", ParameterPack::KeyType::Optional);
+    auto c_pack  = pack_.findParamPacks("calculation", ParameterPack::KeyType::Optional);
 
     // Make sure that there is only one xdr file
     auto xdr_pack= pack_.findParamPack("xdrfile", ParameterPack::KeyType::Required);
@@ -18,10 +19,16 @@ Driver::Driver(std::string filename, CommandLineArguments& cmd)
     auto output_pack = pack_.findParamPacks("outputfile", ParameterPack::KeyType::Optional);
     auto gro_pack= pack_.findParamPack("grofile", ParameterPack::KeyType::Optional);
     auto Driver_pack = pack_.findParamPack("driver", ParameterPack::KeyType::Optional);
+    auto Top_Pack = pack_.findParamPack("topology", ParameterPack::KeyType::Optional);
 
     // Read the xdr file inputted, this must be provided
     initializeXdr(xdr_pack);
+
+    // read the topology and gro file inputted, these are optional
     initializeGroFile(gro_pack);
+    initializeTop(Top_Pack);
+
+    // initialize the driver, this is optional
     initializeDriverPack(Driver_pack);
 
     if (ag_pack.size() != 0)
@@ -46,6 +53,33 @@ Driver::Driver(std::string filename, CommandLineArguments& cmd)
     {
         initializeOutputFiles(output_pack);
     }
+}
+
+void Driver::initializeCalculation(const std::vector<const ParameterPack*>& calcPack)
+{
+    if (calcPack.size() != 0)
+    {
+        for (int i=0;i<calcPack.size();i++)
+        {
+            std::string type;
+            calcPack[i] -> ReadString("type", ParameterPack::KeyType::Required, type);
+            CalculationInput input = {const_cast<ParameterPack&>(*calcPack[i]),simstate_,top_,grofile_};
+
+            Calc_.push_back(calcptr(CalculationRegistry::Factory::instance().create(type, input)));
+        }
+    }
+}
+
+void Driver::initializeTop(const ParameterPack* topPack)
+{
+    if (topPack != nullptr)
+    {
+        std::string topPath_;
+        topPack->ReadString("path", ParameterPack::KeyType::Required, topPath_);
+
+        top_.Parse(topPath_);
+    }
+
 }
 
 bool Driver::isValidStep(int step)
@@ -170,6 +204,7 @@ void Driver::initializeProbeVolume(const std::vector<const ParameterPack*>& PVpa
         pack->ReadString("type", ParameterPack::KeyType::Required, pv_type);
         pack->ReadString("name", ParameterPack::KeyType::Required, pv_name);
 
+        // TODO: change the PV input initialization
         ProbeVolumeInput PV_input{*pack, simstate_}; 
         auto pv_ptr = ProbeVolumes::Factory::instance().create(pv_type, PV_input);
 
@@ -241,6 +276,12 @@ void Driver::update()
         // auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
         // std::cout << "Time it took for op update is " << duration.count() << " microseconds" << std::endl;
     }
+
+    // update the calculation
+    for (int i=0;i<Calc_.size();i++)
+    {
+        Calc_[i] -> update();
+    }
 }
 
 void Driver::calculate()
@@ -254,6 +295,11 @@ void Driver::calculate()
 
         //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
         //std::cout << "Time it took for OP calculation is " << duration.count() << " microseconds" << std::endl;
+    }
+
+    for (int i=0;i<Calc_.size();i++)
+    {
+        Calc_[i] -> calculate();
     }
 
     for (int i=0; i< OutputFiles_.size();i++)

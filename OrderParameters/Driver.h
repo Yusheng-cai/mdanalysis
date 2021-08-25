@@ -14,6 +14,7 @@
 #include "xdr/GroFile.h"
 #include "tools/CommandLineArguments.h"
 #include "tools/FileSystem.h"
+#include "Calculations/Calculation.h"
 
 #include <string>
 #include <memory>
@@ -26,6 +27,7 @@ class Driver
     public:
         using ProbeVolumePtr = std::unique_ptr<ProbeVolume>;
         using OPptr          = std::unique_ptr<OrderParameters>;
+        using calcptr        = std::unique_ptr<Calculation>;
         using XdrPtr         = std::unique_ptr<XdrWrapper>;
         using Real           = CommonTypes::Real;
         using Real3          = CommonTypes::Real3;
@@ -35,8 +37,17 @@ class Driver
         Driver(std::string filename, CommandLineArguments& cmd);
         ~Driver(){};
 
+        // initialize the xdr file
         void initializeXdr(const ParameterPack*);
+
+        // initialize the topology file
+        void initializeTop(const ParameterPack*);
+
+        // initialize OrderParameters
         void initializeOP(const std::vector<const ParameterPack*>&);
+
+        // initialize the calculations
+        void initializeCalculation(const std::vector<const ParameterPack*>&);
         void initializeProbeVolume(const std::vector<const ParameterPack*>&);
         void initializeAtomGroups(const std::vector<const ParameterPack*>&);
         void initializeOutputFiles(const std::vector<const ParameterPack*>&);
@@ -63,8 +74,11 @@ class Driver
         ParameterPack pack_;
         std::map<std::string, ProbeVolumePtr> MapName2PV_;
 
-        // Vector of Order Parameters
+        // Vector of OrderParameters
         std::vector<OPptr> OP_;
+
+        // Vector of calculation objects
+        std::vector<calcptr> Calc_;
 
         // Xdr file pointer
         XdrPtr Xdr_;
@@ -92,4 +106,7 @@ class Driver
 
         int startingFrame_ = 1;
         int skip_ = 0;
+
+        // Topolgy obj
+        TopologyReader top_;
 };
