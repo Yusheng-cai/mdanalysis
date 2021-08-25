@@ -14,7 +14,8 @@
 #include "xdr/GroFile.h"
 #include "tools/CommandLineArguments.h"
 #include "tools/FileSystem.h"
-#include "Calculations/Calculation.h"
+#include "Calculation.h"
+#include "ResidueGroup.h"
 
 #include <string>
 #include <memory>
@@ -53,6 +54,7 @@ class Driver
         void initializeOutputFiles(const std::vector<const ParameterPack*>&);
         void initializeGroFile(const ParameterPack*);
         void initializeDriverPack(const ParameterPack*);
+        void initializeResidueGroups(const std::vector<const ParameterPack*>&);
 
         void RegisterOuputValues();
         const OutputValue& getOutputValue(std::string name) const;
@@ -92,6 +94,7 @@ class Driver
         VectorReal3 total_atom_positions_;
 
         std::vector<std::string> VectorAgNames_;
+        std::vector<std::string> VectorResNames_;
 
         Registry<std::string, OutputValue> outputValueRegistry_;
 

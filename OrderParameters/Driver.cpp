@@ -20,6 +20,7 @@ Driver::Driver(std::string filename, CommandLineArguments& cmd)
     auto gro_pack= pack_.findParamPack("grofile", ParameterPack::KeyType::Optional);
     auto Driver_pack = pack_.findParamPack("driver", ParameterPack::KeyType::Optional);
     auto Top_Pack = pack_.findParamPack("topology", ParameterPack::KeyType::Optional);
+    auto res_pack = pack_.findParamPacks("residuegroup", ParameterPack::KeyType::Optional);
 
     // Read the xdr file inputted, this must be provided
     initializeXdr(xdr_pack);
@@ -34,6 +35,11 @@ Driver::Driver(std::string filename, CommandLineArguments& cmd)
     if (ag_pack.size() != 0)
     {
         initializeAtomGroups(ag_pack);
+    }
+
+    if (res_pack.size() != 0)
+    {
+        initializeResidueGroups(res_pack);
     }
 
 
@@ -55,6 +61,26 @@ Driver::Driver(std::string filename, CommandLineArguments& cmd)
     }
 }
 
+void Driver::initializeResidueGroups(const std::vector<const ParameterPack*>& resPack)
+{
+    if (resPack.size()!=0)
+    {
+        for (int i=0;i<resPack.size();i++)
+        {
+            const auto res = resPack[i];
+            std::string resname;
+            res -> ReadString("name", ParameterPack::KeyType::Required,resname);
+            VectorResNames_.push_back(resname);
+
+            ResidueInput input = {const_cast<ParameterPack&>(*res), grofile_, top_};
+
+            ResidueGroup resgroup(input);
+
+            simstate_.registerResidueGroup(resname, resgroup);
+        }
+    }
+}
+
 void Driver::initializeCalculation(const std::vector<const ParameterPack*>& calcPack)
 {
     if (calcPack.size() != 0)
@@ -63,7 +89,7 @@ void Driver::initializeCalculation(const std::vector<const ParameterPack*>& calc
         {
             std::string type;
             calcPack[i] -> ReadString("type", ParameterPack::KeyType::Required, type);
-            CalculationInput input = {const_cast<ParameterPack&>(*calcPack[i]),simstate_,top_,grofile_};
+            CalculationInput input = {const_cast<ParameterPack&>(*calcPack[i]),simstate_};
 
             Calc_.push_back(calcptr(CalculationRegistry::Factory::instance().create(type, input)));
         }
@@ -256,6 +282,13 @@ void Driver::update()
 
         // auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
         //std::cout << "Time it took for ag update is " << duration.count() << " microseconds" << std::endl;
+    }
+
+    for (int i=0;i<VectorResNames_.size();i++)
+    {
+        auto& res = simstate_.getResidueGroup(VectorResNames_[i]);
+
+        res.update(total_atom_positions_);
     }
 
 
