@@ -2,6 +2,7 @@
 #include "tools/CommonTypes.h"
 #include "SimulationBox.h"
 #include "AtomGroup.h"
+#include "ResidueGroup.h"
 
 #include <string>
 #include <map>
@@ -31,10 +32,19 @@ class SimulationState
         // registers AtomGroups
         void registerAtomGroup(std::string name, AtomGroup& ag);
 
+        // registers ResidueGroups
+        void registerResidueGroup(std::string name, ResidueGroup& res);
+
         // get AtomGroup reference by name
         const AtomGroup& getAtomGroup(std::string name) const;
         AtomGroup& getAtomGroup(std::string name);
         const std::map<std::string, AtomGroup>& getAtomGroupRegistry() const{ return MapName2AtomGroup_;}
+
+        // get ResidueGroups by name
+        const ResidueGroup& getResidueGroup(std::string name) const;
+        ResidueGroup& getResidueGroup(std::string name);
+        const std::map<std::string, ResidueGroup>& getResidueGroupRegistry() const {return MapName2ResidueGroup_;}
+        
 
     private:
         Real time_;
@@ -42,4 +52,5 @@ class SimulationState
 
         SimulationBox box_;
         std::map<std::string,AtomGroup> MapName2AtomGroup_;
+        std::map<std::string,ResidueGroup> MapName2ResidueGroup_;
 };

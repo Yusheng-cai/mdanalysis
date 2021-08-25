@@ -23,3 +23,26 @@ AtomGroup& SimulationState::getAtomGroup(std::string name)
 
     return it -> second;
 }
+
+void SimulationState::registerResidueGroup(std::string name, ResidueGroup& res)
+{
+    MapName2ResidueGroup_.emplace(name, std::move(res));
+}
+
+const ResidueGroup& SimulationState::getResidueGroup(std::string name) const
+{
+    auto it = MapName2ResidueGroup_.find(name);
+
+    ASSERT((it != MapName2ResidueGroup_.end()), "The name of ResidueGroup: " << name << " is not registered in SimulationState.");
+
+    return it -> second;
+}
+
+ResidueGroup& SimulationState::getResidueGroup(std::string name)
+{
+    auto it = MapName2ResidueGroup_.find(name);
+
+    ASSERT((it != MapName2ResidueGroup_.end()), "The name of ResidueGroup: " << name << " is not registered in SimulationState.");
+
+    return it -> second;
+}
