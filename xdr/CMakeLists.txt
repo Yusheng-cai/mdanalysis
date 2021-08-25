@@ -7,6 +7,7 @@ target_sources(mdaxdr PRIVATE
     "Frame.cpp"
     "XtcFile.cpp"
     "GroFile.cpp"
+    "TopologyReader.cpp"
 )
 
 target_include_directories(mdaxdr
@@ -19,6 +20,7 @@ set(mdaXDR_HEADER
     "XdrWrapper.h"
     "XtcFile.h"
     "GroFile.h"
+    "TopologyReader.h"
 )
 
 target_link_libraries(mdaxdr PRIVATE mdatools mdaxdrC)
