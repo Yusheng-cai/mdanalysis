@@ -55,7 +55,7 @@ target_include_directories(mdaOrderParameters
                         $<INSTALL_INTERFACE:${PROJECT_BINARY_DIR}/include>
 )
 
-target_link_libraries(mdaOrderParameters PUBLIC mdatools mdaxdr mdaparallel)
+target_link_libraries(mdaOrderParameters PUBLIC mdatools mdaxdr mdaparallel mdaCalculation)
 
 include(InstallLibraryWithStandardSetup)
 InstallLibraryWithStandardSetup(mdaOrderParameters 
