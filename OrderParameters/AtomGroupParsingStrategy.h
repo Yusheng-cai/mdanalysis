@@ -24,7 +24,7 @@ class AtomGroupParsingStrategy
 
         virtual void Parse(std::vector<int>& indices) = 0;
         virtual void update(std::vector<int>& indices){};
-        std::set<int>& getResidueIndices() {return ResidueIndices_;}
+        const std::set<int>& getResidueIndices() const {return ResidueIndices_;}
 
         void SortAndCheckNoDuplicate(std::vector<int>& indices);
     protected:
