@@ -1,16 +1,16 @@
+#pragma once
 #include "tools/Assert.h"
 #include "tools/InputParser.h"
 #include "tools/CommonTypes.h"
 #include "xdr/GroFile.h"
 #include "xdr/TopologyReader.h"
 #include "AtomGroupParsingStrategy.h"
+#include "xdr/MoleculeStructs.h"
 
 #include <vector>
 #include <string>
 #include <array>
 #include <memory>
-
-class ResidueGroup;
 
 struct ResidueInput
 {
@@ -19,7 +19,7 @@ struct ResidueInput
     TopologyReader& top_;
 };
 
-// AtomGroup is responsible for reading the input parameter pack and figuring out the correct indices for this particular AGroup
+// ResidueGroup have the positions of all the atoms, the masses of all the masses and the atom indices of the atoms in that residue
 class ResidueGroup
 {
     public:
@@ -35,14 +35,8 @@ class ResidueGroup
 
         // getters
         std::string getName() const{return name_;}
+        const std::vector<Molecule::residue> getResidues() const {return Residues_;}
 
-        // a residue would have information of all the atom positions as well as the masses & atomNumbers_
-        struct residue
-        {
-            std::vector<Real3> atomPositions_;
-            std::vector<Real>  atomMasses_;
-            std::vector<int>   atomNumbers_;
-        };
 
     private:
         std::vector<int> AtomGroupGlobalIndices_;
@@ -63,7 +57,7 @@ class ResidueGroup
         std::vector<std::string> index_str_;
 
         // The residues
-        std::vector<residue> Residues_;
+        std::vector<Molecule::residue> Residues_;
 
         // strategy for parsing
         stratptr strat_;
@@ -73,6 +67,9 @@ class ResidueGroup
 
         // The topology reader
         TopologyReader& top_;
+
+        // sizes of each of the residues (number of atoms)
+        std::vector<int> AtomsPerResidue_;
 
         // pointer to the atomgroup parsing strategy
         // mainly for resname and residue index
