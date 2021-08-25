@@ -8,6 +8,7 @@
 #include <map>
 #include <algorithm>
 #include <iostream>
+#include <set>
 
 struct AtomGroupParsingInput
 {
@@ -23,12 +24,14 @@ class AtomGroupParsingStrategy
 
         virtual void Parse(std::vector<int>& indices) = 0;
         virtual void update(std::vector<int>& indices){};
+        std::set<int>& getResidueIndices() {return ResidueIndices_;}
 
         void SortAndCheckNoDuplicate(std::vector<int>& indices);
     protected:
         GroFile& grofile_;
         std::vector<std::string>& selection_str_;
         std::vector<std::string> index_str_;
+        std::set<int> ResidueIndices_;
 };
 
 class AtomIndexParsing:public AtomGroupParsingStrategy

@@ -175,6 +175,7 @@ void ResidueNumberParsing::Parse(std::vector<int>& indices)
                 if (found)
                 {
                     indices.push_back(grofile_.getAtomNumber(j)-1);
+                    ResidueIndices_.insert(grofile_.getResidueNumber(j)-1);
                 }
             }
         }
@@ -256,7 +257,11 @@ void ResidueNameParsing::Parse(std::vector<int>& indices)
 
         if (found)
         {
+            // atom number is 1 based, while indices here are 0 based
             indices.push_back(grofile_.getAtomNumber(i) - 1);
+
+            // insert into residue number
+            ResidueIndices_.insert(grofile_.getResidueNumber(i) - 1);
         }
     }
 
