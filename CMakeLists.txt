@@ -35,12 +35,11 @@ add_subdirectory(tools)
 add_subdirectory(OrderParameters)
 add_subdirectory(parallel)
 add_subdirectory(test)
-add_subdirectory(Calculations)
 
 add_executable(mdanalysis main.cpp)
 
 target_include_directories(mdanalysis PUBLIC ${CMAKE_SOURCE_DIR})
 
-target_link_libraries(mdanalysis PUBLIC mdaOrderParameters mdaxdr mdatools mdaparallel mdaCalculation)
+target_link_libraries(mdanalysis PUBLIC mdaOrderParameters mdaxdr mdatools mdaparallel)
 
 install(TARGETS mdanalysis DESTINATION bin)
