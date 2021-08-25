@@ -23,6 +23,13 @@ target_sources(mdaOrderParameters PRIVATE
     "P2cos.cpp"
     "AtomGroupParsingStrategy.cpp"
     "AtomDerivativesSet.cpp"
+    "ResidueGroup.cpp"
+    "Bin.cpp"
+    "Calculation.cpp"
+    "CalculationTools.cpp"
+    "DataFileParser.cpp"
+    "QtensorZ.cpp"
+    "Timeseries.cpp"
 )
 
 set(mdaOrderParameters_HEADER
@@ -47,6 +54,13 @@ set(mdaOrderParameters_HEADER
     "P2cos.h"
     "AtomGroupParsingStrategy.h"
     "AtomDerivativesSet.h"
+    "ResidueGroup.h"
+    "Bin.h"
+    "Calculation.h"
+    "CalculationTools.h"
+    "DataFileParser.h"
+    "QtensorZ.h"
+    "Timeseries.h"
 )
 
 target_include_directories(mdaOrderParameters
@@ -55,7 +69,7 @@ target_include_directories(mdaOrderParameters
                         $<INSTALL_INTERFACE:${PROJECT_BINARY_DIR}/include>
 )
 
-target_link_libraries(mdaOrderParameters PUBLIC mdatools mdaxdr mdaparallel mdaCalculation)
+target_link_libraries(mdaOrderParameters PUBLIC mdatools mdaxdr mdaparallel)
 
 include(InstallLibraryWithStandardSetup)
 InstallLibraryWithStandardSetup(mdaOrderParameters 
