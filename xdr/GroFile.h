@@ -2,6 +2,7 @@
 #include "tools/Assert.h"
 #include "tools/CommonTypes.h"
 #include "tools/InputParser.h"
+#include "MoleculeStructs.h"
 
 #include <string>
 #include <vector>
@@ -11,23 +12,6 @@
 #include <set>
 #include <algorithm>
 #include <map>
-
-namespace xdr
-{
-    struct Atom
-    {
-        int residueNumber_;
-        std::string residueName_;
-        std::string atomName_;
-        int atomNumber_;
-    };
-
-    struct residue
-    {
-        std::vector<Atom> atoms_;
-        std::string name_;
-    };
-}
 
 class GroFile
 {
@@ -52,7 +36,7 @@ class GroFile
         int getNumUniqueResidues() const {return numUniqueResidues_;}
         const std::set<std::string> getAtomTypes() const {return AtomTypes_;}
         const std::set<std::string> getResidueNames() const {return ResidueNames_;}
-        const std::vector<xdr::residue>& getResidues() const {return ResidueGroup_;}
+        const std::vector<Molecule::residue>& getResidues() const {return ResidueGroup_;}
 
         // booleans that tells others whether or not the GroFile is read
         bool isEmpty() const {return empty_;}
@@ -61,7 +45,7 @@ class GroFile
         std::string filename_;
         std::string Cformat_ = "%5d%-5s%5s%5d%8.3f%8.3f%8.3f%8.4f%8.4f%8.4f";
 
-        std::vector<xdr::Atom> atomsinfo_;
+        std::vector<Molecule::atom> atomsinfo_;
 
         std::ifstream ifs_;
 
@@ -84,7 +68,7 @@ class GroFile
         int numUniqueResidues_;
 
         // residues
-        std::vector<xdr::residue> ResidueGroup_;
+        std::vector<Molecule::residue> ResidueGroup_;
 
         // residue map index to name
         std::map<int, std::string> MapIndexToResidueName_;
