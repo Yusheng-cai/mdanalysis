@@ -12,7 +12,7 @@ project(mdanalysis)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_FLAGS_DEBUG_INIT "-O0 -Wall -g")
-set(CMAKE_CXX_FLAGS_RELEASE_INIT "-O3 -Wall")
+set(CMAKE_CXX_FLAGS_RELEASE_INIT "-O3 -Wall -ffast-math")
 
 # Requires OpenMP
 find_package(OpenMP REQUIRED)
@@ -35,12 +35,12 @@ add_subdirectory(tools)
 add_subdirectory(OrderParameters)
 add_subdirectory(parallel)
 add_subdirectory(test)
+add_subdirectory(Calculations)
 
 add_executable(mdanalysis main.cpp)
 
 target_include_directories(mdanalysis PUBLIC ${CMAKE_SOURCE_DIR})
 
-target_link_libraries(mdanalysis PUBLIC mdaOrderParameters mdaxdr mdatools mdaparallel)
+target_link_libraries(mdanalysis PUBLIC mdaOrderParameters mdaxdr mdatools mdaparallel mdaCalculation)
 
 install(TARGETS mdanalysis DESTINATION bin)
-    
