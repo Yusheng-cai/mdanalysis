@@ -1,5 +1,5 @@
 xdrfile = {
-	path = LC.xtc
+	path = lc.xtc
 }
 
 atomgroup = {
@@ -20,6 +20,6 @@ orderparameter = {
 }
 
 outputfile = {
-    name = LC.out
+    name = lc.out
     value = [ a.p2 a.qxx a.qxy a.qxz a.qyy a.qyz ] 
 }

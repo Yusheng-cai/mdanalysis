@@ -1,0 +1,31 @@
+xdrfile = {
+	path = LC.xtc
+}
+
+grofile = {
+    path = test.gro
+}
+
+topology = {
+    path = 5CB.itp
+}
+
+residuegroup = {
+	name = lc
+	selection = [ resname 5CB ]
+}
+
+calculation = {
+    type = qtensorZ
+    residuegroup = lc
+    bin = {
+        range = [ 0 15 ]
+        numbins = 100
+    }
+    headindex = 1
+    tailindex = 2
+}
+
+
+
+
