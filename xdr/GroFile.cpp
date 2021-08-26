@@ -121,7 +121,7 @@ void GroFile::CorrectMinAtomNumber(int minNum)
 
         for (int i=0;i<atomsinfo_.size();i++)
         {
-            auto atom = atomsinfo_[i];
+            auto& atom = atomsinfo_[i];
             atom.atomNumber_ += diff;
         }
     }
@@ -140,7 +140,7 @@ void GroFile::CorrectMinResidueNumber(std::set<int>& ResidueSet)
 
             for (int i=0;i<atomsinfo_.size();i++)
             {
-                auto atom = atomsinfo_[i];
+                auto& atom = atomsinfo_[i];
                 atom.residueNumber_ += diff;
             }
         }
@@ -154,8 +154,10 @@ void GroFile::constructResidues()
     // construct the Residue Group
     for (int i=0;i<atomsinfo_.size();i++)
     {
-        auto& A = atomsinfo_[i];
-        int resNum = A.residueNumber_;
+        auto A = atomsinfo_[i];
+
+        // residue number is 1 based
+        int resNum = A.residueNumber_ - 1;
 
         ResidueGroup_[resNum].atoms_.push_back(A);
     }
