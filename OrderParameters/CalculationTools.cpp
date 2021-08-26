@@ -33,8 +33,9 @@ std::vector<CalculationTools::Real3> CalculationTools::getCOM(const std::vector<
             COM_pos[j] = COM_pos[j]/massTot + pos1[j];
         }
 
-        // check if it is outside of the box, if it is, then move inside the box
+        // check if it is outside of the box, if it is, then move it inside the box
         Real3 shift = simbox.calculateShift(COM_pos, simbox.getCenter());
+
         for (int j=0;j<3;j++)
         {
             COM_pos[j] += shift[j];
