@@ -39,6 +39,8 @@ int main(int argc, char** argv)
     auto durationtot = std::chrono::duration_cast<std::chrono::microseconds>(endtot- starttot);
 
     std::cout << "Entire operation took " << durationtot.count() << " microseconds"<< std::endl;
+
+    d.finishCalculate();
  
     return 0;
 };
