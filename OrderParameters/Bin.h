@@ -20,7 +20,6 @@ class Bin
         Range getRange() const {return range_;}
         int getNumbins() const {return numbins_;}
         Real getStep() const {return step_;}
-        int getDimension() const {return dimension_;}
         Real getLocationOfBin(int binNum) const;
 
 
@@ -29,6 +28,5 @@ class Bin
 
         Range range_;
         int numbins_;
-        int dimension_ = 1;
         Real step_;
 };

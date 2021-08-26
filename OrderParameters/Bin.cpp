@@ -4,7 +4,6 @@ Bin::Bin(const ParameterPack& pack)
 {
     pack.ReadArrayNumber("range", ParameterPack::KeyType::Required, range_);
     pack.ReadNumber("numbins", ParameterPack::KeyType::Required,numbins_);
-    pack.ReadNumber("dimension", ParameterPack::KeyType::Optional, dimension_);
 
     step_ = (range_[1] - range_[0])/numbins_;
 }
