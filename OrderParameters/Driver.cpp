@@ -40,6 +40,7 @@ Driver::Driver(std::string filename, CommandLineArguments& cmd)
     if (res_pack.size() != 0)
     {
         initializeResidueGroups(res_pack);
+        std::cout << "ALL DONE" << std::endl;
     }
 
 
@@ -53,6 +54,12 @@ Driver::Driver(std::string filename, CommandLineArguments& cmd)
         initializeOP(op_pack);
         // only register output values
         RegisterOuputValues();
+    }
+
+    if (c_pack.size() != 0)
+    {
+        std::cout << "cpack = " << c_pack.size() << std::endl;
+        initializeCalculation(c_pack);
     }
 
     if (output_pack.size() != 0)
@@ -75,7 +82,7 @@ void Driver::initializeResidueGroups(const std::vector<const ParameterPack*>& re
             ResidueInput input = {const_cast<ParameterPack&>(*res), grofile_, top_};
 
             ResidueGroup resgroup(input);
-
+            
             simstate_.registerResidueGroup(resname, resgroup);
         }
     }
@@ -339,5 +346,13 @@ void Driver::calculate()
     {
         auto& out = OutputFiles_[i];
         out ->printIfOnStep();
+    }
+}
+
+void Driver::finishCalculate()
+{
+    for (int i=0;i<Calc_.size();i++)
+    {
+        Calc_[i] ->finishCalculate();
     }
 }

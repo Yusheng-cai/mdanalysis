@@ -69,6 +69,7 @@ class Driver
         bool readFrame(int FrameNum);
         void update();
         void calculate();
+        void finishCalculate();
 
         bool isActive(){return is_Active_;}
 
