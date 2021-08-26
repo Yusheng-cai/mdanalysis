@@ -24,6 +24,7 @@ class AtomGroupParsingStrategy
 
         virtual void Parse(std::vector<int>& indices) = 0;
         virtual void update(std::vector<int>& indices){};
+        std::string getType() const {return type_;}
         const std::set<int>& getResidueIndices() const {return ResidueIndices_;}
 
         void SortAndCheckNoDuplicate(std::vector<int>& indices);
@@ -32,6 +33,8 @@ class AtomGroupParsingStrategy
         std::vector<std::string>& selection_str_;
         std::vector<std::string> index_str_;
         std::set<int> ResidueIndices_;
+
+        std::string type_;
 };
 
 class AtomIndexParsing:public AtomGroupParsingStrategy
@@ -65,7 +68,7 @@ class AtomTypeParsing:public AtomGroupParsingStrategy
 class ResidueNameParsing:public AtomGroupParsingStrategy
 {
     public:
-        ResidueNameParsing(AtomGroupParsingInput& input):AtomGroupParsingStrategy(input){};
+        ResidueNameParsing(AtomGroupParsingInput& input):AtomGroupParsingStrategy(input){type_ = "ResidueName";};
         virtual ~ResidueNameParsing(){};
 
         virtual void Parse(std::vector<int>& indices);
