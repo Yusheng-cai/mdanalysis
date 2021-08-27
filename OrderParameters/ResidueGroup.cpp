@@ -18,6 +18,8 @@ ResidueGroup::ResidueGroup(const ResidueInput& input)
 
     // get all the indices of the residues from parsing strategy
     const auto& residueIndices = strat_->getResidueIndices();
+    size_ = residueIndices.size();
+
     Residues_.resize(residueIndices.size());
     AtomsPerResidue_.resize(residueIndices.size());
     int index=0;

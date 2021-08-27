@@ -36,6 +36,7 @@ class ResidueGroup
         // getters
         std::string getName() const{return name_;}
         const std::vector<Molecule::residue> getResidues() const {return Residues_;}
+        int getsize() const {return size_;}
 
 
     private:
@@ -71,6 +72,6 @@ class ResidueGroup
         // sizes of each of the residues (number of atoms)
         std::vector<int> AtomsPerResidue_;
 
-        // pointer to the atomgroup parsing strategy
-        // mainly for resname and residue index
+        // number of residues in the residue group
+        int size_;
 };
