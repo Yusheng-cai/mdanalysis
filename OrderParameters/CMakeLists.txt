@@ -30,6 +30,7 @@ target_sources(mdaOrderParameters PRIVATE
     "DataFileParser.cpp"
     "QtensorZ.cpp"
     "Timeseries.cpp"
+    "RDFresidue.cpp"
 )
 
 set(mdaOrderParameters_HEADER
@@ -61,6 +62,7 @@ set(mdaOrderParameters_HEADER
     "DataFileParser.h"
     "QtensorZ.h"
     "Timeseries.h"
+    "RDFresidue.h"
 )
 
 target_include_directories(mdaOrderParameters
