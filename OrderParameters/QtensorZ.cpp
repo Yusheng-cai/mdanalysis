@@ -12,7 +12,7 @@ QtensorZ::QtensorZ(const CalculationInput& input)
     input.pack_.ReadString("direction", ParameterPack::KeyType::Optional, direction_);
     input.pack_.ReadNumber("headindex", ParameterPack::KeyType::Required, headIndex_);
     input.pack_.ReadNumber("tailindex", ParameterPack::KeyType::Required, tailIndex_);
-    input.pack_.ReadVectorNumber("comIndices", ParameterPack::KeyType::Optional, COMIndices_);
+    COMIndex_provided_ = input.pack_.ReadVectorNumber("COMindices", ParameterPack::KeyType::Optional, COMIndices_);
 
     headIndex_ --;
     tailIndex_ --;
@@ -46,9 +46,34 @@ void QtensorZ::calculate()
 {
     // obtain the residue group by its name
     const auto& res = getResidueGroup(residueName_).getResidues();
+    COM_.clear();
+    COM_.resize(res.size());
 
-    // obtain the COM
-    std::vector<Real3> COM = CalculationTools::getCOM(res,simstate_);
+    for (int i=0;i<res.size();i++)
+    {
+        int residueSize = res[i].atoms_.size();
+        Real3 COMperAtom_;
+        if (! COMIndex_provided_)
+        {
+            std::vector<int> chosen_indices_;
+            chosen_indices_.resize(residueSize);
+            std::iota(chosen_indices_.begin(), chosen_indices_.end(), 0);
+
+            COMperAtom_ = CalculationTools::getCOM(res[i], simstate_, chosen_indices_);
+        }
+        else
+        {
+            COMperAtom_ = CalculationTools::getCOM(res[i], simstate_, COMIndices_);
+        }
+        COM_[i] = COMperAtom_;
+
+        std::cout << "COM for residue " << i << std::endl;
+        for (int j=0;j<3;j++)
+        {
+            std::cout << COMperAtom_[j] << " ";
+        }
+        std::cout << "\n";
+    }
 
     // make all the matrix in vector zero
     Matrix zeroMatrix;
@@ -69,9 +94,9 @@ void QtensorZ::calculate()
     std::fill(NumResPerBin_.begin(), NumResPerBin_.end(),0);
 
     // Bin the COMs
-    for (int i=0;i<COM.size();i++)
+    for (int i=0;i<COM_.size();i++)
     {
-        Real num = COM[i][index_];
+        Real num = COM_[i][index_];
 
         int binNum = bin_ -> findBin(num);
 
