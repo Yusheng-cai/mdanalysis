@@ -15,5 +15,5 @@ namespace CalculationTools
     using Real  = CommonTypes::Real;
     using Real3 = CommonTypes::Real3;
 
-    std::vector<Real3> getCOM(const std::vector<Molecule::residue>& residues, const SimulationState& simstate);
+    Real3 getCOM(const Molecule::residue& residues, const SimulationState& simstate, std::vector<int>& indices_);
 };
