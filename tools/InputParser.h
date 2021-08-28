@@ -161,10 +161,11 @@ template <typename T>
 bool ParameterPack::ReadVectorNumber(const std::string& key, const ParameterPack::KeyType keytype, std::vector<T>& vecval) const
 {
     auto vecstr = findVector(key, keytype);
-    vecval.clear();
 
+    // only clear the vector if the vector is found
     if (vecstr != nullptr)
     {
+        vecval.clear();
         for (int i =0; i< vecstr->size();i++)
         {
             T val  = StringTools::StringToType<T>(vecstr->at(i));
