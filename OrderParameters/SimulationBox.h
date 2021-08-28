@@ -27,6 +27,14 @@ class SimulationBox
         // get simulation box
         const Matrix& getBox() const {return box_;}
 
+        // get the volume of the box
+        Real getVolume() const
+        {
+            Real3 sides = getSides();
+
+            return sides[0]*sides[1]*sides[2];
+        }
+
         // get the 3 sides of the cubic box
         Real3 getSides() const {return length_;}
 
