@@ -29,7 +29,7 @@ int main(int argc, char** argv)
     {
         if (d.isValidStep(i))
         {
-            std::cout << "----------FRAME1---------" << std::endl;
+            std::cout << "----------FRAME" << i << "---------" << std::endl;
             d.readFrame(i);
             d.update(); 
             auto start = std::chrono::high_resolution_clock::now();
