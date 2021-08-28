@@ -20,12 +20,12 @@ class Bin
         Range getRange() const {return range_;}
         int getNumbins() const {return numbins_;}
         Real getStep() const {return step_;}
-        Real getLocationOfBin(int binNum) const;
+        Real getCenterLocationOfBin(int binNum) const;
+        Real getLeftLocationOfBin(int binNum) const;
+        Real getRightLocationOfBin(int binNum) const;
 
 
     private:
-        std::vector<Real> bins_;
-
         Range range_;
         int numbins_;
         Real step_;

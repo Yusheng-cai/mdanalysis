@@ -27,7 +27,17 @@ bool Bin::isInRange(Real data)
     }
 }
 
-Bin::Real Bin::getLocationOfBin(int binNum) const 
+Bin::Real Bin::getCenterLocationOfBin(int binNum) const 
 {
     return range_[0] + (binNum + 0.5) * step_;
+}
+
+Bin::Real Bin::getLeftLocationOfBin(int binNum) const 
+{
+    return range_[0] + binNum * step_;
+}
+
+Bin::Real Bin::getRightLocationOfBin(int binNum) const 
+{
+    return range_[0] + (binNum + 1) * step_; 
 }
