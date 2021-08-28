@@ -33,6 +33,7 @@ class Calculation
         virtual void update(){};
         virtual void calculate() = 0;
         virtual void finishCalculate() = 0;
+        virtual void printOutput() {};
 
         void addAtomgroup(std::string name);
         void addResidueGroup(std::string name);
