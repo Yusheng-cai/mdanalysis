@@ -10,11 +10,26 @@ RDFresidue::RDFresidue(const CalculationInput& input)
 {
     input.pack_.ReadString("residue1", ParameterPack::KeyType::Required, resname1_);
     input.pack_.ReadString("residue2", ParameterPack::KeyType::Required, resname2_);
+    bool readOutput = input.pack_.ReadString("output", ParameterPack::KeyType::Optional, outputName_);
+
+    if (readOutput)
+    {
+        outputofs_.open(outputName_);
+    }
+
     auto binPack = input.pack_.findParamPack("bin", ParameterPack::KeyType::Required);
 
     bins_ = Binptr(new Bin(*binPack));
-    numCountsPerBin_.resize(bins_->getNumbins());
-    std::fill(numCountsPerBin_.begin(), numCountsPerBin_.end(),0);
+    // initialize the volume 
+    volume_.resize(bins_->getNumbins());
+    Real dr = bins_ -> getStep();
+    volume_[0] = 4.0/3.0*Constants::PI*std::pow(dr,3.0);
+
+    for (int i=1;i<bins_->getNumbins();i++)
+    {
+        Real r = bins_ -> getLeftLocationOfBin(i);
+        volume_[i] = 4.0*Constants::PI*std::pow(r,2.0)*dr;
+    }
 
     // add the residue groups
     addResidueGroup(resname1_);
@@ -22,15 +37,31 @@ RDFresidue::RDFresidue(const CalculationInput& input)
 
     auto& res1 = getResidueGroup(resname1_).getResidues();
     auto& res2 = getResidueGroup(resname2_).getResidues();
-    COMIndices1_.resize(res1.size());
-    COMIndices2_.resize(res2.size());
-    std::iota(COMIndices1_.begin(), COMIndices1_.end(),0);
-    std::iota(COMIndices2_.begin(), COMIndices2_.end(),0);
+    COMIndices1_.resize(res1[0].atoms_.size());
+    COMIndices2_.resize(res2[0].atoms_.size());
+    std::iota(COMIndices1_.begin(), COMIndices1_.end(),1);
+    std::iota(COMIndices2_.begin(), COMIndices2_.end(),1);
+    
 
     input.pack_.ReadVectorNumber("comIndices1", ParameterPack::KeyType::Optional, COMIndices1_);
     input.pack_.ReadVectorNumber("comIndices2", ParameterPack::KeyType::Optional, COMIndices2_);
 
     ASSERT((res1.size() == res2.size()), "The size of residue 1 does not match that of residue 2");
+
+    // user input should be 1 based
+    for (int i=0;i<COMIndices1_.size();i++)
+    {
+        COMIndices1_[i] -=1;
+        COMIndices2_[i] -=1;
+    }
+
+    for (int i=0;i<COMIndices1_.size();i++)
+    {
+        std::cout << "COMIndices1 = " << COMIndices1_[i] << std::endl;
+    }
+
+    // resize rdf vector to be same lengths as number of bins
+    rdf_.resize(bins_->getNumbins());
 }
 
 void RDFresidue::calculate()
@@ -42,13 +73,15 @@ void RDFresidue::calculate()
     distanceBuffer_.clearBuffer();
     distanceBuffer_.set_master_object(distance_);
 
+    int N = res1.size();
+
+    Real rho = res1.size()/simstate_.getSimulationBox().getVolume();
+
     COM1_.clear();
     COM1_.resize(res1.size());
     COM2_.clear();
     COM2_.resize(res2.size());
 
-    // The size is half of N1*N2
-    // distance_.resize(res1.size()*res2.size()*0.5);
 
     #pragma omp parallel for
     for (int i=0;i<COM1_.size();i++)
@@ -58,6 +91,11 @@ void RDFresidue::calculate()
 
         COM1_[i] = C1;
         COM2_[i] = C2;
+    }
+
+    for (int i=0;i<res1.size();i++)
+    {
+        std::cout << "Residue " << i << ". COM = " << COM1_[i][0] << " " << COM1_[i][1] << " " << COM1_[i][2] << std::endl;
     }
 
     #pragma omp parallel
@@ -77,6 +115,7 @@ void RDFresidue::calculate()
         }
     }
 
+
     int size = distance_.size();
     for (auto it = distanceBuffer_.beginworker();it != distanceBuffer_.endworker(); it++)
     {
@@ -90,9 +129,55 @@ void RDFresidue::calculate()
         distance_.insert(distance_.end(), it -> begin(), it -> end());
     }
 
+    std::vector<int> NumCountsPerBin(bins_->getNumbins(), 0);
+
     for (int i=0;i<distance_.size();i++)
     {
-        int binNum = bins_->findBin(distance_[i]);
-        numCountsPerBin_[binNum] += 1;
+        if (bins_->isInRange(distance_[i]))
+        {
+            int binNum = bins_->findBin(distance_[i]);
+
+            NumCountsPerBin[binNum] += 1;
+        }
     }
+
+    for (int i=0;i<rdf_.size();i++)
+    {
+        rdf_[i] = rdf_[i] + 2.0*NumCountsPerBin[i]/(rho*volume_[i]*N); 
+    }
+
+}
+
+void RDFresidue::finishCalculate()
+{
+    // The differential r is the step in the bins
+    Real dr = bins_->getStep();
+    int numBins = bins_->getNumbins();
+
+    // normalize the numCountsPerBin By the number of frames first
+    int numFrames_ = simstate_.getTotalFrames();
+
+    for (int i=0;i<rdf_.size();i++)
+    {
+        rdf_[i] = rdf_[i]/numFrames_;
+    }
+
+    for (int i=0;i<rdf_.size();i++)
+    {
+        std::cout << "rdf " << i << " = " << rdf_[i] << std::endl;
+    }
+}
+
+void RDFresidue::printOutput()
+{
+    if (outputofs_.is_open())
+    {
+        outputofs_ << "# bins\trdf\n";
+        for (int i=0;i<rdf_.size();i++)
+        {
+            outputofs_ << bins_->getLeftLocationOfBin(i) << "\t" << rdf_[i] << std::endl;
+        }
+        outputofs_.close();
+    }
+
 }

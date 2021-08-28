@@ -2,6 +2,7 @@
 #include "CalculationTools.h"
 #include "Bin.h"
 #include "parallel/OpenMP_buffer.h"
+#include "tools/Constants.h"
 
 #include <vector>
 #include <algorithm>
@@ -19,7 +20,8 @@ class RDFresidue : public Calculation
         RDFresidue(const CalculationInput& input);
     
         virtual void calculate() override;
-        virtual void finishCalculate() override {};
+        virtual void finishCalculate() override;
+        virtual void printOutput() override;
 
     private:
         std::string resname1_;
@@ -27,9 +29,6 @@ class RDFresidue : public Calculation
 
         std::vector<int> COMIndices1_;
         std::vector<int> COMIndices2_;
-
-        bool COMIndices1Read_=false;
-        bool COMIndices2Read_=false;
 
         std::vector<Real3> COM1_;
         std::vector<Real3> COM2_;
@@ -40,5 +39,10 @@ class RDFresidue : public Calculation
 
         OpenMP::OpenMP_buffer<std::vector<Real>> distanceBuffer_;
 
-        std::vector<int> numCountsPerBin_;
+        std::vector<Real> rdf_;
+
+        std::vector<Real> volume_;
+
+        std::string outputName_;
+        std::ofstream outputofs_;
 };
