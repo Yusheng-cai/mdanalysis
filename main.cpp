@@ -29,9 +29,14 @@ int main(int argc, char** argv)
     {
         if (d.isValidStep(i))
         {
+            std::cout << "----------FRAME1---------" << std::endl;
             d.readFrame(i);
             d.update(); 
+            auto start = std::chrono::high_resolution_clock::now();
             d.calculate();
+            auto end   = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end-start);
+            std::cout << "calc took " << duration.count() << " microseconds." << std::endl;
         }
     }
     auto endtot = std::chrono::high_resolution_clock::now();
@@ -41,6 +46,7 @@ int main(int argc, char** argv)
     std::cout << "Entire operation took " << durationtot.count() << " microseconds"<< std::endl;
 
     d.finishCalculate();
+    d.printOutput();
  
     return 0;
 };
