@@ -10,7 +10,7 @@ Bin::Bin(const ParameterPack& pack)
 
 int Bin::findBin(Real x)
 {
-    int index = std::floor((x - range_[0])/step_);
+    int index = std::ceil((x - range_[0])/step_) - 1;
 
     return index;
 }
