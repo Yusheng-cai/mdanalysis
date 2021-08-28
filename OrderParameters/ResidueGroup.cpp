@@ -41,13 +41,13 @@ void ResidueGroup::update(const VectorReal3& total_atoms_)
 {
     for (int i=0;i<Residues_.size();i++)
     { 
-        std::cout << "------Residue " << i << "-------" << std::endl;
+        //std::cout << "------Residue " << i << "-------" << std::endl;
         for (int j=0;j<Residues_[i].atoms_.size();j++)
         {
             // be careful, atomNumber is 1 based
             Residues_[i].atoms_[j].positions_ = total_atoms_[Residues_[i].atoms_[j].atomNumber_-1];
-            std::cout << "Atom " << j << ": " << Residues_[i].atoms_[j].positions_[0] << " " << Residues_[i].atoms_[j].positions_[1] << \
-            " " << Residues_[i].atoms_[j].positions_[2] << std::endl;
+            //std::cout << "Atom " << j << ": " << Residues_[i].atoms_[j].positions_[0] << " " << Residues_[i].atoms_[j].positions_[1] << \
+            //" " << Residues_[i].atoms_[j].positions_[2] << std::endl;
         }
 
     }
