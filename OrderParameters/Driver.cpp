@@ -140,7 +140,18 @@ void Driver::initializeDriverPack(const ParameterPack* driverpack)
         driverpack -> ReadNumber("startingframe", ParameterPack::KeyType::Optional, startingFrame_);
         driverpack -> ReadNumber("skip", ParameterPack::KeyType::Optional, skip_);
     }
+    int nframes = Xdr_ -> getNframes();
+
+    int frames = 1;
+    int numframes = 0;
+    while (frames <= nframes)
+    {
+        numframes ++;
+        frames += skip_ + 1;
+    }
+
     startingFrame_ -= 1;
+    simstate_.setTotalFrames(numframes);
 }
 
 void Driver::initializeOutputFiles(const std::vector<const ParameterPack*>& output_pack)
@@ -354,5 +365,13 @@ void Driver::finishCalculate()
     for (int i=0;i<Calc_.size();i++)
     {
         Calc_[i] ->finishCalculate();
+    }
+}
+
+void Driver::printOutput()
+{
+    for (int i=0;i<Calc_.size();i++)
+    {
+        Calc_[i] -> printOutput();
     }
 }

@@ -70,6 +70,7 @@ class Driver
         void update();
         void calculate();
         void finishCalculate();
+        void printOutput();
 
         bool isActive(){return is_Active_;}
 
