@@ -28,6 +28,7 @@ class QtensorZ : public Calculation
 
         virtual void calculate() override;
         virtual void finishCalculate() override;
+        virtual void printOutput() override;
 
         std::vector<Real>& getP2() {return P2_;}
 
@@ -43,6 +44,10 @@ class QtensorZ : public Calculation
         std::string direction_ = "z";
         int index_;
 
+        // name of the output
+        std::string p2ZOutput_;
+        std::ofstream p2zofs_;
+
         // Map direction string to index
         std::map<std::string, int> MapNameToDirection = 
         {
@@ -52,6 +57,9 @@ class QtensorZ : public Calculation
         };
 
         Binptr bin_;
+
+        // record total number of residue per bin throughout simulation
+        std::vector<int> NumResPerBin_;
 
         std::vector<Matrix> BinnedMatrix_;
 
