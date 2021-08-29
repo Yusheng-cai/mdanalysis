@@ -40,7 +40,6 @@ Driver::Driver(std::string filename, CommandLineArguments& cmd)
     if (res_pack.size() != 0)
     {
         initializeResidueGroups(res_pack);
-        std::cout << "ALL DONE" << std::endl;
     }
 
 
@@ -58,7 +57,6 @@ Driver::Driver(std::string filename, CommandLineArguments& cmd)
 
     if (c_pack.size() != 0)
     {
-        std::cout << "cpack = " << c_pack.size() << std::endl;
         initializeCalculation(c_pack);
     }
 
@@ -109,8 +107,10 @@ void Driver::initializeTop(const ParameterPack* topPack)
     {
         std::string topPath_;
         topPack->ReadString("path", ParameterPack::KeyType::Required, topPath_);
+        
+        std::string topAbsPath = FileSystem::joinPath(apath_, topPath_);
 
-        top_.Parse(topPath_);
+        top_.Parse(topAbsPath);
     }
 
 }
