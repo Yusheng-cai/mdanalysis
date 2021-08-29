@@ -12,6 +12,8 @@
 #include <string>
 #include <cmath>
 #include <memory>
+#include <iomanip>
+#include <chrono>
 
 class RDFresidue : public Calculation
 {
@@ -45,4 +47,6 @@ class RDFresidue : public Calculation
 
         std::string outputName_;
         std::ofstream outputofs_;
+
+        int precision_ = 3;
 };

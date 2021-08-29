@@ -55,10 +55,6 @@ RDFresidue::RDFresidue(const CalculationInput& input)
         COMIndices2_[i] -=1;
     }
 
-    for (int i=0;i<COMIndices1_.size();i++)
-    {
-        std::cout << "COMIndices1 = " << COMIndices1_[i] << std::endl;
-    }
 
     // resize rdf vector to be same lengths as number of bins
     rdf_.resize(bins_->getNumbins());
@@ -75,6 +71,7 @@ void RDFresidue::calculate()
 
     int N = res1.size();
 
+    // obtain the density (num Residues/ nm3)
     Real rho = res1.size()/simstate_.getSimulationBox().getVolume();
 
     COM1_.clear();
@@ -83,7 +80,6 @@ void RDFresidue::calculate()
     COM2_.resize(res2.size());
 
 
-    #pragma omp parallel for
     for (int i=0;i<COM1_.size();i++)
     {
         Real3 C1 = CalculationTools::getCOM(res1[i], simstate_, COMIndices1_);
@@ -93,10 +89,6 @@ void RDFresidue::calculate()
         COM2_[i] = C2;
     }
 
-    for (int i=0;i<res1.size();i++)
-    {
-        std::cout << "Residue " << i << ". COM = " << COM1_[i][0] << " " << COM1_[i][1] << " " << COM1_[i][2] << std::endl;
-    }
 
     #pragma omp parallel
     {
@@ -131,13 +123,27 @@ void RDFresidue::calculate()
 
     std::vector<int> NumCountsPerBin(bins_->getNumbins(), 0);
 
-    for (int i=0;i<distance_.size();i++)
-    {
-        if (bins_->isInRange(distance_[i]))
-        {
-            int binNum = bins_->findBin(distance_[i]);
+    #pragma omp parallel
+    {    
+        std::vector<int> NumberCountsLocal(bins_->getNumbins(),0);
 
-            NumCountsPerBin[binNum] += 1;
+        #pragma omp for
+        for (int i=0;i<distance_.size();i++)
+        {
+            if (bins_->isInRange(distance_[i]))
+            {
+                int binNum = bins_->findBin(distance_[i]);
+
+                NumberCountsLocal[binNum] += 1;
+            }
+        }
+
+        #pragma omp critical
+        {
+            for (int i=0;i<bins_->getNumbins();i++)
+            {
+                NumCountsPerBin[i] += NumberCountsLocal[i];
+            }
         }
     }
 
@@ -161,21 +167,19 @@ void RDFresidue::finishCalculate()
     {
         rdf_[i] = rdf_[i]/numFrames_;
     }
-
-    for (int i=0;i<rdf_.size();i++)
-    {
-        std::cout << "rdf " << i << " = " << rdf_[i] << std::endl;
-    }
 }
 
 void RDFresidue::printOutput()
 {
     if (outputofs_.is_open())
     {
+        outputofs_ << std::fixed << std::setprecision(precision_);
         outputofs_ << "# bins\trdf\n";
+
         for (int i=0;i<rdf_.size();i++)
         {
-            outputofs_ << bins_->getLeftLocationOfBin(i) << "\t" << rdf_[i] << std::endl;
+            outputofs_ << bins_->getLeftLocationOfBin(i) << " "; 
+            outputofs_ << rdf_[i] << "\n";
         }
         outputofs_.close();
     }
