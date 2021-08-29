@@ -39,6 +39,8 @@ set(OMP_THREADS 1 4 8)
 set(OP_TEST "")
 list(APPEND MAIN_TESTS "TestOP/TestIndus")
 list(APPEND MAIN_TESTS "TestOP/TestP2")
+list(APPEND MAIN_TESTS "TestOP/TestP2tilde")
+list(APPEND MAIN_TESTS "TestCalculation/TestRdfResidue")
 
 set(PROGRAM_PATH "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mdanalysis")
 set(TEST_RUN_SCRIPT "${CMAKE_CURRENT_LIST_DIR}/run_test.sh")
