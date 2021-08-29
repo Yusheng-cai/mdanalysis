@@ -1,0 +1,32 @@
+xdrfile = {
+	path = LC.xtc
+}
+
+grofile = {
+    path = test.gro
+}
+
+topology = {
+    path = 5CB.itp
+}
+
+residuegroup = {
+	name = lc1
+	selection = [ resname 5CB ]
+}
+
+residuegroup = {
+	name = lc2
+	selection = [ resname 5CB ]
+}
+
+calculation = {
+    type = RDFresidue
+    residue1 = lc1
+    residue2 = lc2
+    bin = {
+        range = [ 0 3 ]
+        numbins = 100
+    }
+    output = op.out
+}
