@@ -338,17 +338,25 @@ std::pair<Qtensor::Real3,Qtensor::Matrix> Qtensor::eig_Qtensor(const Matrix& Q){
 }
 
 std::pair<Qtensor::Real,Qtensor::Real3> Qtensor::OP_Qtensor(const Matrix& Q){
-	std::pair<Real3,Matrix> e = Qtensor::eig_Qtensor(Q);	
-	Real3 eigval = e.first;
-	Matrix eigvec = e.second;
-	std::pair<Real,Real3> p;
+	Eigen::Map<Eigen::Matrix3f> Qeigen(const_cast<Real*>(Q[0].data()),3,3);
+	Eigen::EigenSolver<Eigen::Matrix3f> eigensolver_;
+	eigensolver_.compute(Qeigen);
+
+	Eigen::Vector3f eigenvalue = eigensolver_.eigenvalues().real();
+	Eigen::Matrix3f eigenvec   = eigensolver_.eigenvectors().real();
+	Real3 eigval;
+	for (int i=0;i<3;i++)
+	{
+		eigval[i] = eigenvalue[i];
+	}
 
 	std::vector<size_t> order = Qtensor::argsort(eigval);
 	Real P2 = -2.0*eigval[order[1]];
 	Real3 v1;
+	std::pair<Real,Real3> p;
 
 	for(int i=0;i<3;i++){
-		v1[i] = eigvec[i][order[1]];
+		v1[i] = eigenvec(i, order[1]);
 	}
 
 	p.first = P2;

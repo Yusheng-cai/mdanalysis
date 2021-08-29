@@ -7,6 +7,8 @@
 #include <vector>
 #include <numeric> 
 #include <cmath>
+#include "Eigen/Core"
+#include "Eigen/Dense"
 #include "tools/CommonTypes.h"
 #include "tools/Assert.h"
 
