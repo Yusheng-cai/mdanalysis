@@ -63,4 +63,9 @@ class Pcostz : public Calculation
         std::ofstream ofs_;
         std::string outputName_;
         int precision_ = 3;
+
+        // number of residues per bin
+        std::vector<Real> numResiduePerBin_;
+
+        int ignoreBelow_ = 0;
 };

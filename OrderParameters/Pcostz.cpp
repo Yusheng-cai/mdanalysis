@@ -16,6 +16,7 @@ Pcostz::Pcostz(const CalculationInput& input)
     input.pack_.ReadString("direction", ParameterPack::KeyType::Optional, direction_);
     input.pack_.ReadArrayNumber("array", ParameterPack::KeyType::Optional, arr_);
     input.pack_.ReadNumber("precision", ParameterPack::KeyType::Optional, precision_);
+    input.pack_.ReadNumber("ignorebelow", ParameterPack::KeyType::Optional, ignoreBelow_);
     bool outputRead = input.pack_.ReadString("output", ParameterPack::KeyType::Optional,outputName_);
 
     if(outputRead)
@@ -51,6 +52,10 @@ Pcostz::Pcostz(const CalculationInput& input)
 
     // resize the molecular director size
     uij_.resize(res.size());
+
+    // resize the number of residues to size of residue
+    numResiduePerBin_.resize(res.size());
+    std::fill(numResiduePerBin_.begin(), numResiduePerBin_.end(),0);
 }
 
 void Pcostz::calculate()
@@ -85,6 +90,8 @@ void Pcostz::calculate()
 
 
             histogram2d_[zbinNum][tbinNum] += 1;
+
+            numResiduePerBin_[zbinNum] += 1;
         }
     }
 }
@@ -93,11 +100,45 @@ void Pcostz::finishCalculate()
 {
     int Numframes = simstate_.getTotalFrames();
 
+    for (int i=0;i<numResiduePerBin_.size();i++)
+    {
+        numResiduePerBin_[i] /= Numframes;
+    }
+
     for (int i=0;i<histogram2d_.size();i++)
     {
         for (int j=0;j<histogram2d_[0].size();j++)
         {
             histogram2d_[i][j] /= Numframes;
+
+            if (numResiduePerBin_[i] < ignoreBelow_)
+            {
+                histogram2d_[i][j] = 0;
+            }
+        }
+    }
+
+    std::vector<Real> Rowsum_(histogram2d_.size(),0);
+
+    for (int i=0;i<histogram2d_.size();i++)
+    {
+        Real sum = 0;
+        for (int j=0;j<histogram2d_[0].size();j++)
+        {
+            sum += histogram2d_[i][j];
+        }
+        Rowsum_[i] = sum;
+    }
+
+    // normalize each row by the sum if sum is not 0
+    for (int i=0;i<histogram2d_.size();i++)
+    {
+        if (Rowsum_[i] != 0)
+        {
+            for (int j=0;j<histogram2d_[0].size();j++)
+            {
+                histogram2d_[i][j] /= Rowsum_[i];
+            }
         }
     }
 }
