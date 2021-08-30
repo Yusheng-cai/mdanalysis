@@ -37,6 +37,7 @@ void TopologyReader::Parse(std::string& name)
     }
 
     std::stringstream ss;
+    std::vector<int> startIndices_;
     int start = 0;
 
     for (int i=0;i<contents.size();i++)
@@ -59,44 +60,46 @@ void TopologyReader::Parse(std::string& name)
             // if the word is atoms, then we start parsing
             if (words[1] == "atoms")
             {
-                start = i;
-                break;
+                startIndices_.push_back(i);
             }
         }
     }
 
-    for (int i=start+1;i<contents.size();i++)
+    for (int i =0;i<startIndices_.size();i++)
     {
-        if (contents[i][0] == '[')
+        int start = startIndices_[i];
+        for (int j=start+1;j<contents.size();j++)
         {
-            break;
-        }
-        else
-        {
-            ss.clear();
-            ss.str(contents[i]);
-
-            std::string word;
-            std::vector<std::string> words;
-
-            while (ss >> word)
+            if (contents[j][0] == '[')
             {
-                words.push_back(word);
+                break;
             }
+            else
+            {
+                ss.clear();
+                ss.str(contents[j]);
 
-            ASSERT((words.size() == linenum_), "The size of the line in [ atoms ] directive is " << words.size() << " while it should be " << linenum_);
+                std::string word;
+                std::vector<std::string> words;
 
-            // topology file and gro file are usually needed at the same time
-            AtomType a;
-            a.atomName_ = words[TopIdx::atomName];
-            a.charge_   = StringTools::StringToType<Real>(words[TopIdx::charge]);
-            a.mass_     = StringTools::StringToType<Real>(words[TopIdx::mass]);
-            a.resname_  = words[TopIdx::resname];
-            a.type_     = words[TopIdx::atomtype];
+                while (ss >> word)
+                {
+                    words.push_back(word);
+                }
 
-            atomtypes_.push_back(a);
-        }
-    }        
+                ASSERT((words.size() == linenum_), "The size of the line in [ atoms ] directive is " << words.size() << " while it should be " << linenum_);
+
+                AtomType a;
+                a.atomName_ = words[TopIdx::atomName];
+                a.charge_   = StringTools::StringToType<Real>(words[TopIdx::charge]);
+                a.mass_     = StringTools::StringToType<Real>(words[TopIdx::mass]);
+                a.resname_  = words[TopIdx::resname];
+                a.type_     = words[TopIdx::atomtype];
+
+                atomtypes_.push_back(a);
+            }
+        }        
+    }
 
     MakeAtomNameToMassMap();
     MakeAtomNameToTypeMap();
