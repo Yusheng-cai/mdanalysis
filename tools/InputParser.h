@@ -185,10 +185,9 @@ bool ParameterPack::ReadArrayNumber(const std::string& key, const ParameterPack:
     std::vector<T> vecval;
     bool vecNum = ReadVectorNumber<T>(key,keytype, vecval);
 
-    ASSERT((vecval.size() == dim), "In readArrayNumber, the read vector for key= " << key << " is " << vecval.size() << " while the required size is " << dim);
-
     if (vecNum == true)
     {
+        ASSERT((vecval.size() == dim), "In readArrayNumber, the read vector for key= " << key << " is " << vecval.size() << " while the required size is " << dim);
         for (int i=0;i<dim;i++)
         {
             arrval[i] = vecval[i];
