@@ -34,7 +34,9 @@
 # build folders
 build/
 debug/
+DEBUG/
 build.sh
 .DS_Store
 .vscode/
 program/
+RELEASE/
