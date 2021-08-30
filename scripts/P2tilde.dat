@@ -1,24 +1,33 @@
 xdrfile = {
-	path = LC.xtc
+	path = 5CBSAM.xtc
 }
 
 atomgroup = {
 	name = head
-	selection = [ atom_index 1-9500:19 ]
+	selection = [ atom_index 1-24700:19 ]
 }
 
 atomgroup = {
 	name = tail
-	selection = [ atom_index 2-9500:19 ]
+	selection = [ atom_index 2-24700:19 ]
 }
 
 probevolume = {
 	name = v
 	type = box
-	xrange =  [ 0 4 ]
-	yrange =  [ 0 4 ]
-	zrange =  [ 0 4 ]
+	xrange =  [ 0 7.0 ]
+	yrange =  [ 0 7.0 ]
+	zrange =  [ 2.5 5.0 ]
 }
+
+probevolume = {
+	name = v2
+	type = box
+	xrange =  [ 0 7.0 ]
+	yrange =  [ 0 7.0 ]
+	zrange =  [ 5.0 14.0 ]
+}
+
 
 orderparameter = {
     name = a
@@ -28,7 +37,16 @@ orderparameter = {
     probevolume = v
 }
 
+orderparameter = {
+    name = a2
+    type = p2tilde
+    tailgroup = tail 
+    headgroup = head
+    probevolume = v2
+}
+
+
 outputfile = {
-    name = LC.out
-    value = [ a.p2tilde a.ntilde a.n a.qxx a.qxy a.qxz a.qyy a.qyz ] 
+    name = op.out
+    value = [ a.p2tilde a.ntilde a.n a2.p2tilde a2.ntilde a2.n ] 
 }
