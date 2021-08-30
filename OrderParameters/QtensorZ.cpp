@@ -136,6 +136,7 @@ void QtensorZ::calculate()
 
             auto result = Qtensor::OP_Qtensor(BinnedMatrix_[i]);
             P2_[i] += result.first;
+            std::cout << "Bin " << i << ", P2 = " << result.first << std::endl;
         }
     }
 }
