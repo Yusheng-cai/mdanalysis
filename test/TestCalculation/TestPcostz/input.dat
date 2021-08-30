@@ -1,0 +1,32 @@
+xdrfile = {
+	path = 5CBSAM.xtc
+}
+
+grofile = {
+    path = 5CBSAM.gro
+}
+
+topology = {
+    path = 5CB.itp
+}
+
+residuegroup = {
+	name = lc
+	selection = [ resname 5CB ]
+}
+
+calculation = {
+    type = pcostz
+    residue = lc
+    zbin = {
+        range = [ 2.5 15 ]
+        numbins = 50
+    }
+    tbin = {
+        range = [ -1 1 ]
+        numbins = 30
+    }
+    headindex = 1
+    tailindex = 2
+    output = op.out
+}
