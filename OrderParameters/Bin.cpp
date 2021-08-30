@@ -10,7 +10,18 @@ Bin::Bin(const ParameterPack& pack)
 
 int Bin::findBin(Real x)
 {
-    int index = std::ceil((x - range_[0])/step_) - 1;
+    int index;
+
+    if ( x == range_[0])
+    {
+        index = std::ceil((x - range_[0])/step_);
+    }
+    else
+    {
+        index = std::ceil((x-range_[0])/step_) - 1;
+    }
+
+    ASSERT((index >= 0 && index < numbins_), "Bin index out of range, it is equal to " << index);
 
     return index;
 }
