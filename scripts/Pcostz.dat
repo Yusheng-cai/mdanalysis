@@ -1,0 +1,31 @@
+xdrfile = {
+	path = LC.xtc
+}
+
+grofile = {
+    path = test.gro
+}
+
+topology = {
+    path = 5CB.itp
+}
+
+residuegroup = {
+	name = lc
+	selection = [ resname 5CB ]
+}
+
+calculation = {
+    type = pcostz
+    residue = lc
+    zbin = {
+        range = [ 0 15 ]
+        numbins = 100
+    }
+    tbin = {
+        range = [ 0 1 ]
+        numbins = 50
+    }
+    headIndex = 1
+    tailIndex = 2
+}
