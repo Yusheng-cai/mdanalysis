@@ -59,7 +59,7 @@ class QtensorZ : public Calculation
         Binptr bin_;
 
         // record total number of residue per bin throughout simulation
-        std::vector<int> NumResPerBin_;
+        std::vector<Real> NumResPerBin_;
 
         std::vector<Matrix> BinnedMatrix_;
 
@@ -75,4 +75,7 @@ class QtensorZ : public Calculation
         // Which atoms do you want to perform COM calculations over
         std::vector<int> COMIndex_;
         bool COMIndex_provided_=false;
+
+        // ignore the P2 if the average N is less than this number
+        Real ignoreP2LessThan_ = 0.0;
 };

@@ -12,6 +12,8 @@ QtensorZ::QtensorZ(const CalculationInput& input)
     input.pack_.ReadString("direction", ParameterPack::KeyType::Optional, direction_);
     input.pack_.ReadNumber("headindex", ParameterPack::KeyType::Required, headIndex_);
     input.pack_.ReadNumber("tailindex", ParameterPack::KeyType::Required, tailIndex_);
+    input.pack_.ReadNumber("ignorelessthan", ParameterPack::KeyType::Optional, ignoreP2LessThan_);
+
     bool readP2z =input.pack_.ReadString("p2zOutput", ParameterPack::KeyType::Optional, p2ZOutput_);
 
     if (readP2z)
@@ -149,6 +151,11 @@ void QtensorZ::finishCalculate()
     {
         P2_[i] /= totalFrames;
         NumResPerBin_[i] /= totalFrames;
+
+        if ( NumResPerBin_[i] < ignoreP2LessThan_ )
+        {
+            P2_[i] = 0.0;
+        }
     }
 }
 
@@ -164,5 +171,4 @@ void QtensorZ::printOutput()
         }
         p2zofs_.close();
     }
-
 }
