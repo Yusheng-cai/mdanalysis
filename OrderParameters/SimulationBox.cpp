@@ -65,6 +65,7 @@ SimulationBox::Real3 SimulationBox::calculateShift(const Real3& x1, const Real3&
 
 void SimulationBox::setBoxMatrix(const Matrix& box)
 {
+    // set the simulation matrix
     for (int i=0;i<3;i++)
     {
         for (int j=0;j<3;j++)
@@ -73,11 +74,13 @@ void SimulationBox::setBoxMatrix(const Matrix& box)
         }
     }
 
+    // set the center of the box
     for (int i=0;i<3;i++)
     {
         center_[i] = box[i][i] * 0.5;
     }
 
+    // set the length/half lengths of the box
     for (int i=0;i<3;i++)
     {
         length_[i] = box[i][i];
