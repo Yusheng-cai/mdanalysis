@@ -8,6 +8,7 @@
 #include "Qtensor.h"
 
 #include <vector>
+#include <iomanip>
 #include <array>
 #include <string>
 #include <memory>
@@ -78,4 +79,10 @@ class QtensorZ : public Calculation
 
         // ignore the P2 if the average N is less than this number
         Real ignoreP2LessThan_ = 0.0;
+
+        int precision_ = 3;
+
+
+        // nx^2, ny^2, nz^2 for the eigenvectors
+        std::vector<Real3> eigvec_;
 };
