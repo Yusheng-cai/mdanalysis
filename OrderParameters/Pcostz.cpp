@@ -83,6 +83,8 @@ void Pcostz::calculate()
     {
         Real dist = COM_[i][directionIndex_];
         Real cost = Qtensor::vec_dot(uij_[i], arr_);
+
+        ASSERT((cost >= -1 && cost <= 1), "cosine(theta) is not within range of -1 and 1");
         if (zBin_->isInRange(dist) && costBin_->isInRange(cost))
         {  
             int zbinNum = zBin_->findBin(dist);
