@@ -161,7 +161,7 @@ void QtensorZ::calculate()
             {
                 eigvec_[i][k] += std::pow(ev[k][0],2.0);
             }
-            std::cout << "Bin " << i << ", P2 = " << result.first << std::endl;
+            // std::cout << "Bin " << i << ", P2 = " << result.first << std::endl;
         }
     }
 
@@ -188,6 +188,7 @@ void QtensorZ::finishCalculate()
     }
 
     // average the Qtensor over time
+    P2avg_.resize(bin_->getNumbins());
     for (int i=0;i<BinnedMatrix_.size();i++)
     {
         Qtensor::matrix_mult_inplace(BinnedMatrix_[i], 1.0/totalFrames);
@@ -195,6 +196,8 @@ void QtensorZ::finishCalculate()
         {
             Qtensor::matrix_mult_inplace(BinnedMatrix_[i], 0.0);
         }
+        auto ans = Qtensor::OP_Qtensor(BinnedMatrix_[i]);
+        P2avg_[i] = ans.first;
     }
 
     // average the eigenvectors over time
@@ -233,7 +236,7 @@ void QtensorZ::printOutput()
     {
         p2zofs_ << std::fixed << std::setprecision(precision_);
 
-        p2zofs_ << "#z\tp2\tNumber\tQxx\tQxy\tQxz\tQyy\tQyz\tQzz\tnx\tny\tnz\n";
+        p2zofs_ << "#z\tp2\tNumber\tQxx\tQxy\tQxz\tQyy\tQyz\tQzz\tnx\tny\tnz\tp2avg\n";
 
         for (int i=0;i<P2_.size();i++)
         {
@@ -241,7 +244,8 @@ void QtensorZ::printOutput()
             p2zofs_ << "\t" << BinnedMatrix_[i][0][0] << "\t" << BinnedMatrix_[i][0][1] << "\t" << BinnedMatrix_[i][0][2]; 
             p2zofs_ << "\t" << BinnedMatrix_[i][1][1] << "\t" << BinnedMatrix_[i][1][2];
             p2zofs_ << "\t" << BinnedMatrix_[i][2][2];
-            p2zofs_ << "\t" << eigvec_[i][0] << "\t" << eigvec_[i][1] << "\t" << eigvec_[i][2] << "\n";
+            p2zofs_ << "\t" << eigvec_[i][0] << "\t" << eigvec_[i][1] << "\t" << eigvec_[i][2] << "\t";
+            p2zofs_ << P2avg_[i] << "\n";
         }
         p2zofs_.close();
     }

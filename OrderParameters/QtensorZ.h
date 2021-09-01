@@ -72,6 +72,7 @@ class QtensorZ : public Calculation
         std::vector<int> COMIndices_;
 
         std::vector<Real> P2_;
+        std::vector<Real> P2avg_;
 
         // Which atoms do you want to perform COM calculations over
         std::vector<int> COMIndex_;
