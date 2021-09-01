@@ -81,7 +81,7 @@ namespace Qtensor{
 
 	// Returns ordered eigenvector & eigenvalues from largest to smallest according to the absolute value of eigenvalue, 0 is largest, 2 is smallest
 	// in absolute language
-	std::pair<VectorReal3, Real3> orderedeig_Qtensor(const Matrix& Q);
+	std::pair<Matrix, Real3> orderedeig_Qtensor(const Matrix& Q);
 	Real3 normalize_director(const Real3&);
 }
 

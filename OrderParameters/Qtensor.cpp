@@ -365,22 +365,29 @@ std::pair<Qtensor::Real,Qtensor::Real3> Qtensor::OP_Qtensor(const Matrix& Q){
  	return p;	
 }
 
-std::pair<Qtensor::VectorReal3, Qtensor::Real3> Qtensor::orderedeig_Qtensor(const Matrix& Q){
-	std::pair<Real3,Matrix> eig = Qtensor::eig_Qtensor(Q);	
-	Real3 eigval  = eig.first;
-	Matrix eigvec = eig.second;
-	
+std::pair<Qtensor::Matrix, Qtensor::Real3> Qtensor::orderedeig_Qtensor(const Matrix& Q){
+	Eigen::Map<Eigen::Matrix3f> Qeigen(const_cast<Real*>(Q[0].data()));
+	Eigen::EigenSolver<Eigen::Matrix3f> eigensolver;
+	eigensolver.compute(Qeigen);
+
+	Eigen::Vector3f eigenvalue = eigensolver.eigenvalues().real();
+	Eigen::Matrix3f eigenvector = eigensolver.eigenvectors().real(); 
+
+	Real3 eigval;
+
+	for (int i=0;i<3;i++)
+	{
+		eigval[i] = eigenvalue[i];
+	}
 
 	std::vector<size_t> order = Qtensor::argsort(eigval);
-	std::pair<VectorReal3,Real3> ordered_eig;
+	std::pair<Matrix, Real3> ordered_eig;
 
 	for(int i=0;i<3;i++){
 		ordered_eig.second[i] = eigval[order[i]];
-		Real3 temp_eigvec;
 		for(int j=0;j<3;j++){
-			temp_eigvec[j] = eigvec[j][order[i]];
+			ordered_eig.first[j][i] = eigenvector(j,order[i]);
 		}
-		ordered_eig.first.push_back(temp_eigvec);
 	}
 
  	return ordered_eig;	
