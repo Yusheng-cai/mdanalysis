@@ -18,6 +18,7 @@ class RDFcost : public Calculation
         RDFcost(const CalculationInput& input);
 
         virtual void calculate() override;
+        virtual void finishCalculate() override;
         virtual void printOutput() override;
 
     private:
@@ -33,4 +34,7 @@ class RDFcost : public Calculation
 
         int headIndex_;
         int tailIndex_;
+
+        std::string outputName_;
+        std::ofstream ofs_;
 };

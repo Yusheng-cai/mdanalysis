@@ -6,6 +6,12 @@ RDFcost::RDFcost(const CalculationInput& input)
     input.pack_.ReadString("residue", ParameterPack::KeyType::Required, resName_);
     input.pack_.ReadNumber("headIndex", ParameterPack::KeyType::Required, headIndex_);
     input.pack_.ReadNumber("tailIndex", ParameterPack::KeyType::Required, tailIndex_);
+    bool readOutput = input.pack_.ReadString("output", ParameterPack::KeyType::Optional, outputName_);
+
+    if (readOutput)
+    {
+        ofs_.open(outputName_);
+    }
 
     addResidueGroup(resName_);
 
@@ -30,6 +36,8 @@ RDFcost::RDFcost(const CalculationInput& input)
 void RDFcost::calculate()
 {
     auto& res = getResidueGroup(resName_).getResidues();
+    std::vector<Real> gcostthetaIter_(bin_->getNumbins(),0.0);
+    std::vector<int> NumResiduePerBinIter_(bin_->getNumbins(),0);
 
     // first find the center of mass as well as the uij
     std::vector<Real3> COM(res.size());
@@ -69,8 +77,37 @@ void RDFcost::calculate()
                 int binNum = bin_ ->findBin(dist);
                 Real dot_product = Qtensor::vec_dot(uij_[i], uij_[j]);
 
-                gcostheta_[binNum] += dot_product;
+                gcostthetaIter_[binNum] += dot_product;
+                NumPerBinIter_[binNum] += 1;
             }
         }
+    }
+
+    for (int i=0;i<gcostheta_.size();i++)
+    {
+        gcostheta_[i] += gcostthetaIter_[i]/NumPerBinIter_[i];
+    }
+}
+
+void RDFcost::finishCalculate()
+{
+    int NumFrames_ = simstate_.getTotalFrames();
+
+    for (int i=0;i<gcostheta_.size();i++)
+    {
+        gcostheta_[i] /= NumFrames_;
+    }
+}
+
+void RDFcost::printOutput()
+{
+    if (ofs_.is_open())
+    {
+        ofs_ << "# BinNum\tBinLoc\tRDF\n";
+        for (int i=0;i<bin_->getNumbins();i++)
+        {
+            ofs_ << i << "\t" << bin_->getLeftLocationOfBin(i) << "\t" << gcostheta_[i] << "\n";
+        }
+        ofs_.close();
     }
 }
