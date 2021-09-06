@@ -1,0 +1,31 @@
+xdrfile = {
+	path = LC.xtc
+}
+
+atomgroup = {
+	name = a
+	selection = [ atom_index 1-24700 ]
+}
+
+probevolume = {
+	name = v
+	type = sphere
+	radius = 2
+	center = [ 2 2 2 ]
+	
+	sigma = 0.01
+	alpha_c = 0.02
+}
+
+orderparameter = {
+	name = g
+	type = indus
+	atomgroup = a
+	probevolume = v
+}
+
+outputfile = {
+    name = op.out
+    value = [ g.n g.ntilde ] 
+    precision = 1
+}
