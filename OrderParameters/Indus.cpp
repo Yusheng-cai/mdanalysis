@@ -19,6 +19,8 @@ Indus::Indus(const OrderParametersInput& input)
 
 void Indus::calculate()
 {
+    Ntilde_ = 0.0;
+    N_ = 0.0;
     auto& ag  = getAtomGroup(atomGroupName_);
     auto& atoms = ag.getAtoms();
     auto& pv  = pv_.getProbeVolume(pvName_);

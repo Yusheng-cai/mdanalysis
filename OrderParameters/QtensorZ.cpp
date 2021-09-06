@@ -112,10 +112,7 @@ void QtensorZ::calculate()
         // only perform these operations of num is in range of bin
         if (bin_->isInRange(num))
         {
-            //std::cout << "entier COM = " << COM_[i][0] << " " << COM_[i][1] << " " << COM_[i][2] << std::endl;
-            //std::cout << "COM = " << num << std::endl;
             int binNum = bin_ -> findBin(num);
-            //std::cout << "binNum = " << binNum << std::endl;
 
             Real3 headPos = res[i].atoms_[headIndex_].positions_;
             Real3 tailPos = res[i].atoms_[tailIndex_].positions_;
@@ -127,7 +124,6 @@ void QtensorZ::calculate()
 
             // normalize the director and calculate the dyad
             Real3 diffnorm = Qtensor::normalize_director(diff);
-            // std::cout << "normalized vector = " << diffnorm[0] << " " << diffnorm[1] << " " << diffnorm[2] << std::endl;
             Matrix dyad = Qtensor::vec_dyadic(diffnorm, diffnorm);
 
             Qtensor::matrix_mult_inplace(dyad, 3.0);
@@ -140,11 +136,6 @@ void QtensorZ::calculate()
         }
     }
 
-    int sum_ = 0;
-    for (int i=0;i<NumResPerBinIter_.size();i++)
-    {
-        sum_ += NumResPerBinIter_[i];
-    }
 
     for (int i=0;i<BinnedMatrixIter_.size();i++)
     {
@@ -214,7 +205,7 @@ void QtensorZ::finishCalculate()
             eigvec_[i][j] = ev[j][0];
         }
 
-        if (NumResPerBin_[i] == 0)
+        if (NumResPerBin_[i] == 0 || NumResPerBin_[i] < ignoreP2LessThan_)
         {
             eigvec_[i] = {{0,0,0}};
         }
