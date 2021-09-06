@@ -32,6 +32,7 @@ target_sources(mdaOrderParameters PRIVATE
     "Timeseries.cpp"
     "RDFresidue.cpp"
     "Pcostz.cpp"
+    "RDFcost.cpp"
 )
 
 set(mdaOrderParameters_HEADER
@@ -65,6 +66,7 @@ set(mdaOrderParameters_HEADER
     "Timeseries.h"
     "RDFresidue.h"
     "Pcostz.h"
+    "RDFcost.h"
 )
 
 target_include_directories(mdaOrderParameters
