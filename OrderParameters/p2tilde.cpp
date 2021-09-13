@@ -6,7 +6,7 @@ namespace OrderParametersRegistry
 }
 
 P2tilde::P2tilde(const OrderParametersInput& input)
-:OrderParameters(input), pv_(const_cast<ProbeVolumeRegistry&>(input.pv_registry_))
+:OrderParameters(input)
 {
     input.pack_.ReadString("probevolume", ParameterPack::KeyType::Required, pvname_);
     input.pack_.ReadString("headgroup", ParameterPack::KeyType::Required, headgroupname_);
@@ -26,7 +26,7 @@ void P2tilde::calculate()
 {
     Qtensor_.fill({});
 
-    auto& probeV = pv_.getProbeVolume(pvname_);
+    auto& probeV = simstate_.getProbeVolume(pvname_);
     auto& headAG = simstate_.getAtomGroup(headgroupname_);
     auto& tailAG = simstate_.getAtomGroup(tailgroupname_);
 
@@ -92,7 +92,7 @@ void P2tilde::calculate()
 
 void P2tilde::update()
 {
-    auto& probeV = pv_.accessProbeVolume(pvname_);
+    auto& probeV = simstate_.accessProbeVolume(pvname_);
     probeV.update();
 
     Qtensor_.fill({});

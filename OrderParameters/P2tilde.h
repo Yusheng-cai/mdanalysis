@@ -1,3 +1,4 @@
+#pragma once
 #include "OrderParameters.h"
 #include "Qtensor.h"
 #include "tools/CommonTypes.h"
@@ -33,9 +34,6 @@ class P2tilde: public OrderParameters
 
         Real p2tilde_;
         Real3 v1_;
-
-        // obtain the registry for probevolume
-        ProbeVolumeRegistry& pv_;
 
         // obtain the name of the probevolume
         std::string pvname_;
