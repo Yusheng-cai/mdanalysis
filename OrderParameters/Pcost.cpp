@@ -18,12 +18,17 @@ Pcost::Pcost(const CalculationInput& input)
     input.pack_.ReadNumber("precision", ParameterPack::KeyType::Optional, precision_);
     input.pack_.ReadString("probevolume", ParameterPack::KeyType::Required, ProbeVolumeName_);
 
+    bool AIRead = input.pack_.ReadString("AtomIndicesOutput", ParameterPack::KeyType::Optional, AtomIndicesName_);
     bool outputRead = input.pack_.ReadString("output", ParameterPack::KeyType::Optional,outputName_);
-
 
     if(outputRead)
     {
         ofs_.open(outputName_);
+    }
+
+    if (AIRead)
+    {
+        ofsAI_.open(AtomIndicesName_);
     }
 
     headIndex_--;
@@ -87,6 +92,17 @@ void Pcost::calculate()
             InsideIndices.push_back(i);
         }
     }
+
+    std::vector<int> AtomIndicesINPVIter;
+    // get the atom indices in the pv per iteration
+    for (int i=0;i<InsideIndices.size();i++)
+    {
+        for (int j=0;j<res[i].atoms_.size();j++)
+        {
+            AtomIndicesINPVIter.push_back(res[i].atoms_[j].atomNumber_);
+        }
+    }
+    AtomIndicesInPV_.push_back(AtomIndicesINPVIter);
     
     // starting binning 
     for (int i=0;i<InsideIndices.size();i++)

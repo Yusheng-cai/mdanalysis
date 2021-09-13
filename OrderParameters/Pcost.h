@@ -58,9 +58,18 @@ class Pcost : public Calculation
         std::string outputName_;
         int precision_ = 3;
 
+        // output Atom Indices
+        std::ofstream ofsAI_;
+
         // number of residues per bin
         std::vector<Real> numResiduePerBin_;
 
         // name of probe volume
         std::string ProbeVolumeName_;
+
+        // name of the atom Indices output
+        std::string AtomIndicesName_;
+
+        // keeps track of AtomIndicesInPV per frame
+        std::vector<std::vector<int>> AtomIndicesInPV_;
 };
