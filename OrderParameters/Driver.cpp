@@ -140,7 +140,9 @@ void Driver::initializeDriverPack(const ParameterPack* driverpack)
         driverpack -> ReadNumber("startingframe", ParameterPack::KeyType::Optional, startingFrame_);
         driverpack -> ReadNumber("skip", ParameterPack::KeyType::Optional, skip_);
     }
+
     int nframes = Xdr_ -> getNframes();
+    ASSERT((nframes > startingFrame_), "The starting frame specified " << startingFrame_ << " is more than the total number of frames " << nframes);
 
     int frames = 1;
     int numframes = 0;
@@ -275,6 +277,10 @@ void Driver::initializeOP(const std::vector<const ParameterPack*>& OPpack)
 bool Driver::readFrame(int FrameNum)
 {
     bool read = Xdr_->readFrame(FrameNum);
+
+    // set the frame number in simulation state
+    simstate_.setFrameNumber(FrameNum);
+
     if (read)
     {
         return true;
@@ -288,6 +294,7 @@ bool Driver::readFrame(int FrameNum)
 void Driver::update()
 {
     const auto& total_atom_positions_ = Xdr_->getPositions();
+    simstate_.setTotalNumberAtoms(total_atom_positions_.size());
 
     for (int i=0;i<VectorAgNames_.size();i++)
     {
@@ -348,9 +355,16 @@ void Driver::calculate()
         //std::cout << "Time it took for OP calculation is " << duration.count() << " microseconds" << std::endl;
     }
 
+    // perform calculations
     for (int i=0;i<Calc_.size();i++)
     {
         Calc_[i] -> calculate();
+    }
+
+    // output calculations
+    for (int i=0;i<Calc_.size();i++)
+    {
+        Calc_[i] -> printOutputOnStep();
     }
 
     for (int i=0; i< OutputFiles_.size();i++)
