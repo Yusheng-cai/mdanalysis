@@ -2,7 +2,6 @@
 #include "ProbeVolume.h"
 #include "tools/CommonTypes.h"
 #include "IndicatorFunction2d.h"
-#include "SimulationState.h"
 
 #include <array>
 #include <vector>
