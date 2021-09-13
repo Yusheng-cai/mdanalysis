@@ -252,7 +252,7 @@ void Driver::initializeProbeVolume(const std::vector<const ParameterPack*>& PVpa
         ProbeVolumeInput PV_input{*pack, simstate_}; 
         auto pv_ptr = ProbeVolumes::Factory::instance().create(pv_type, PV_input);
 
-        pv_registry_.registerProbeVolume(pv_name, pv_ptr);
+        simstate_.registerProbeVolume(pv_name, pv_ptr);
     }
 }
 
@@ -264,7 +264,7 @@ void Driver::initializeOP(const std::vector<const ParameterPack*>& OPpack)
         std::string op_type;
 
         pack -> ReadString("type", ParameterPack::KeyType::Required, op_type); 
-        OrderParametersInput OP_input{*pack, simstate_, pv_registry_};
+        OrderParametersInput OP_input{*pack, simstate_};
 
         OPptr op_pointer = OPptr(OrderParametersRegistry::Factory::instance().create(op_type, OP_input));
 
