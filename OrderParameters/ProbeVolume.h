@@ -3,13 +3,14 @@
 #include "tools/CommonTypes.h"
 #include "tools/InputParser.h"
 #include "tools/GenericFactory.h"
-#include "SimulationState.h"
 #include "SimulationBox.h"
 
 #include <vector>
 #include <array>
 #include <iostream>
 #include <string>
+
+class SimulationState;
 
 struct ProbeVolumeOutput
 {
@@ -36,7 +37,7 @@ class ProbeVolume
         using Real3= CommonTypes::Real3;
 
         // input for ProbeVolume 
-        ProbeVolume(ProbeVolumeInput& input):simstate_(input.simstate), simbox_(simstate_.getSimulationBox()){};
+        ProbeVolume(ProbeVolumeInput& input);
         virtual ~ProbeVolume(){};
 
         // Update the ProbeVolume as needed -> usually used for Dynamic Probe Volumes
