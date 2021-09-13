@@ -6,7 +6,7 @@ namespace OrderParametersRegistry
 }
 
 Indus::Indus(const OrderParametersInput& input)
-:OrderParameters(input), pv_(const_cast<ProbeVolumeRegistry&>(input.pv_registry_))
+:OrderParameters(input)
 {
     input.pack_.ReadString("probevolume", ParameterPack::KeyType::Required, pvName_);
     input.pack_.ReadString("atomgroup", ParameterPack::KeyType::Required, atomGroupName_);
@@ -23,7 +23,7 @@ void Indus::calculate()
     N_ = 0.0;
     auto& ag  = getAtomGroup(atomGroupName_);
     auto& atoms = ag.getAtoms();
-    auto& pv  = pv_.getProbeVolume(pvName_);
+    auto& pv  = simstate_.getProbeVolume(pvName_);
     IndusIndicesBuffer_.set_master_object(indusIndices_);
     clearDerivativesOutputs(); 
 
@@ -113,6 +113,6 @@ void Indus::update()
     IndusIndicesBuffer_.clearBuffer();
 
     // update the probeVolume as needed 
-    auto& ProbeV = pv_.accessProbeVolume(pvName_);
+    auto& ProbeV = simstate_.accessProbeVolume(pvName_);
     ProbeV.update();
 }

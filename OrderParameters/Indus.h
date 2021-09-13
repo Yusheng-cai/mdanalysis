@@ -28,7 +28,6 @@ class Indus:public OrderParameters
 
         std::string atomGroupName_;
         std::string pvName_;
-        ProbeVolumeRegistry& pv_;
 
         OpenMP::OpenMP_buffer<std::vector<int>> IndusIndicesBuffer_;
         std::vector<int> indusIndices_;
