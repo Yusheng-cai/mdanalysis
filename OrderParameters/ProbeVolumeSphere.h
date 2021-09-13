@@ -1,4 +1,6 @@
+#pragma once
 #include "ProbeVolume.h"
+#include "SimulationState.h"
 #include "IndicatorFunction1d.h"
 
 class ProbeVolumeSphere: public ProbeVolume
