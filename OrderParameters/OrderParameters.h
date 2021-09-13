@@ -15,7 +15,6 @@ struct OrderParametersInput
 {
     const ParameterPack& pack_;
     SimulationState& simstate;
-    const ProbeVolumeRegistry& pv_registry_;
 };
 
 class OrderParameters
