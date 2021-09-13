@@ -133,7 +133,7 @@ std::vector<const ParameterPack*> ParameterPack::findParamPacks(const std::strin
 
     if (num_matches == 0)
     {
-        ASSERT((keytype != ParameterPack::KeyType::Required), "The required key for ParamPack is not provided.");
+        ASSERT((keytype != ParameterPack::KeyType::Required), "The required key for ParamPack " << key << " is not provided.");
     }
 
     std::vector<const ParameterPack*> vec_param;
