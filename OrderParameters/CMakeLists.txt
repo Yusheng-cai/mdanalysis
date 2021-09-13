@@ -34,6 +34,8 @@ target_sources(mdaOrderParameters PRIVATE
     "Pcostz.cpp"
     "RDFcost.cpp"
     "Pcost.cpp"
+    "cost.cpp"
+    "BetaFactorWriter.cpp"
 )
 
 set(mdaOrderParameters_HEADER
@@ -69,6 +71,8 @@ set(mdaOrderParameters_HEADER
     "Pcostz.h"
     "RDFcost.h"
     "Pcost.h"
+    "cost.h"
+    "BetaFactorWriter.h"
 )
 
 target_include_directories(mdaOrderParameters
