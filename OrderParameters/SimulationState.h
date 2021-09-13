@@ -3,6 +3,7 @@
 #include "SimulationBox.h"
 #include "AtomGroup.h"
 #include "ResidueGroup.h"
+#include "ProbeVolume.h"
 
 #include <string>
 #include <map>
@@ -15,6 +16,7 @@ class SimulationState
         using Real = CommonTypes::Real;
         using Real3= CommonTypes::Real3;
         using Matrix=CommonTypes::Matrix;
+        using ProbeVolumePtr = std::unique_ptr<ProbeVolume>;
 
         SimulationState(){};
         ~SimulationState(){};
@@ -46,6 +48,13 @@ class SimulationState
         const ResidueGroup& getResidueGroup(std::string name) const;
         ResidueGroup& getResidueGroup(std::string name);
         const std::map<std::string, ResidueGroup>& getResidueGroupRegistry() const {return MapName2ResidueGroup_;}
+
+        // register probe volume
+        void registerProbeVolume(const std::string name, const ProbeVolume* pv_ptr);
+        const ProbeVolume& getProbeVolume(const std::string name) const;
+
+        ProbeVolume& accessProbeVolume(const std::string name);
+
         
 
     private:
@@ -55,6 +64,7 @@ class SimulationState
         SimulationBox box_;
         std::map<std::string,AtomGroup> MapName2AtomGroup_;
         std::map<std::string,ResidueGroup> MapName2ResidueGroup_;
+        std::map<std::string, ProbeVolumePtr> MapName2PV;  
 
         int totalframes_;
 };
