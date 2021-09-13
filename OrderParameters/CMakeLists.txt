@@ -33,6 +33,7 @@ target_sources(mdaOrderParameters PRIVATE
     "RDFresidue.cpp"
     "Pcostz.cpp"
     "RDFcost.cpp"
+    "Pcost.cpp"
 )
 
 set(mdaOrderParameters_HEADER
@@ -67,6 +68,7 @@ set(mdaOrderParameters_HEADER
     "RDFresidue.h"
     "Pcostz.h"
     "RDFcost.h"
+    "Pcost.h"
 )
 
 target_include_directories(mdaOrderParameters
