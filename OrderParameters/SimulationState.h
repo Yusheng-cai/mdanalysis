@@ -25,6 +25,8 @@ class SimulationState
         void setTime(Real time){time_ = time;}
         void setStep(int step){step_ = step;}
         void setTotalFrames(int totalFrames){totalframes_ = totalFrames;}
+        void setTotalNumberAtoms(int totalAtoms){totalNumberAtoms_=totalAtoms;}
+        void setFrameNumber(int FrameNum) {FrameNumber_ = FrameNum;}
 
         // getters
         SimulationBox& getSimulationBox(){return box_;}
@@ -32,6 +34,8 @@ class SimulationState
         int getTotalFrames() const {return totalframes_;}
         Real getTime() const{return time_;}
         int getStep() const {return step_;}
+        int getTotalNumberAtoms() const {return totalNumberAtoms_;}
+        int getFrameNumber() const {return FrameNumber_;}
 
         // registers AtomGroups
         void registerAtomGroup(std::string name, AtomGroup& ag);
@@ -67,4 +71,8 @@ class SimulationState
         std::map<std::string, ProbeVolumePtr> MapName2PV;  
 
         int totalframes_;
+
+        int totalNumberAtoms_;
+
+        int FrameNumber_;
 };
