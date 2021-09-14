@@ -50,7 +50,7 @@ void Cost::calculate()
     BetaFactors_.clear();
     int totalatomNumbers = simstate_.getTotalNumberAtoms();
     BetaFactors_.resize(totalatomNumbers);
-    std::fill(BetaFactors_.begin(), BetaFactors_.end(), 0.0);
+    std::fill(BetaFactors_.begin(), BetaFactors_.end(), -1.0);
 
     auto& res = getResidueGroup(residueGroupName_).getResidues();
     auto& pv  = simstate_.getProbeVolume(ProbeVolumeName_);
@@ -82,12 +82,6 @@ void Cost::calculate()
         }
     }
 
-    std::cout << "---------------------" << std::endl; 
-    for (int i=0;i<InsideIndices.size();i++)
-    {
-        std::cout << InsideIndices[i] << std::endl;
-    }
-    
     for (int i=0;i<InsideIndices.size();i++)
     {
         int k = InsideIndices[i];
