@@ -1,0 +1,42 @@
+xdrfile = {
+	path = 5CHSAM_295_0.1_pbc.xtc
+}
+
+grofile = {
+    path = 5CHSAM_295_0.1.gro
+}
+
+topology = {
+    path = 5CB.itp
+}
+
+probevolume = {
+	name = v
+	type = box
+	xrange =  [ 0 7.0 ]
+	yrange =  [ 0 7.0 ]
+	zrange =  [ 2.5 4.0 ]
+}
+residuegroup = {
+	name = lc
+	selection = [ resname 5CB ]
+}
+
+
+
+calculation = {
+    type = pcost
+    residue = lc
+    tbin = {
+        range = [ -1 1 ]
+        numbins = 100
+    }
+    headindex = 1
+    tailindex = 2
+    probevolume = v
+    output = p.out
+}
+
+driver = {
+	startingframe = 2000
+}
