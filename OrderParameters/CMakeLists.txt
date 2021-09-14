@@ -36,6 +36,7 @@ target_sources(mdaOrderParameters PRIVATE
     "Pcost.cpp"
     "cost.cpp"
     "BetaFactorWriter.cpp"
+    "ProbeVolumeSimBox.cpp"
 )
 
 set(mdaOrderParameters_HEADER
@@ -73,6 +74,7 @@ set(mdaOrderParameters_HEADER
     "Pcost.h"
     "cost.h"
     "BetaFactorWriter.h"
+    "ProbeVolumeSimBox.h"
 )
 
 target_include_directories(mdaOrderParameters
