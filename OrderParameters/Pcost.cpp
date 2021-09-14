@@ -38,12 +38,14 @@ Pcost::Pcost(const CalculationInput& input)
     addResidueGroup(residueGroupName_);
 
     costBin_ = Binptr(new Bin(*costBinPack));
-
+    
+    // obtain the center of mass indices of a residue
     auto& res = getResidueGroup(residueGroupName_).getResidues();
     COMIndices_.resize(res[0].atoms_.size());
     std::iota(COMIndices_.begin(), COMIndices_.end(), 1);
     input.pack_.ReadVectorNumber("COMIndices", ParameterPack::KeyType::Optional, COMIndices_);
 
+    // subtract the COM indices by 1 to get to 0-based counting 
     for (int i=0;i<COMIndices_.size();i++)
     {
         COMIndices_[i] -= 1;
