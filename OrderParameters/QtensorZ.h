@@ -30,6 +30,7 @@ class QtensorZ : public Calculation
         virtual void calculate() override;
         virtual void finishCalculate() override;
         virtual void printOutput() override;
+        virtual void printOutputOnStep() override;
 
         std::vector<Real>& getP2() {return P2_;}
 
@@ -83,7 +84,18 @@ class QtensorZ : public Calculation
 
         int precision_ = 3;
 
-
         // nx^2, ny^2, nz^2 for the eigenvectors
         std::vector<Real3> eigvec_;
+
+        // output per Iteration
+        std::ofstream perIterP2ofs_;
+        std::ofstream perItereVofs_;
+        std::string PerIterP2Name_;
+        std::string PerItereVName_;
+
+        // Per Iteration items
+        std::vector<Matrix> BinnedMatrixIter_;
+        std::vector<Real> NumResPerBinIter_;
+        std::vector<Real> P2PerIter_;
+        std::vector<Real3> evPerIter_;
 };

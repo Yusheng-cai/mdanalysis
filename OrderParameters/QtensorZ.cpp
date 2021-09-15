@@ -15,17 +15,28 @@ QtensorZ::QtensorZ(const CalculationInput& input)
     input.pack_.ReadNumber("ignorelessthan", ParameterPack::KeyType::Optional, ignoreP2LessThan_);
 
     bool readP2z =input.pack_.ReadString("p2zOutput", ParameterPack::KeyType::Optional, p2ZOutput_);
+    bool readP2PerIter = input.pack_.ReadString("perIterP2output", ParameterPack::KeyType::Optional, PerIterP2Name_);
+    bool readeVPerIter = input.pack_.ReadString("perIterevoutput", ParameterPack::KeyType::Optional, PerItereVName_);
+    
 
     if (readP2z)
     {
         p2zofs_.open(p2ZOutput_);
     }
 
+    if (readP2PerIter)
+    {
+        perIterP2ofs_.open(PerIterP2Name_);
+    }
+
+    if (readeVPerIter)
+    {
+        perItereVofs_.open(PerItereVName_);
+    }
+
     // add the residue group to the system
     addResidueGroup(residueName_);
-
     auto& res = getResidueGroup(residueName_);
-
     // COM Indices start with 1
     COMIndices_.resize(res.getResidues()[0].atoms_.size());
     std::iota(COMIndices_.begin(), COMIndices_.end(), 1.0);
@@ -76,6 +87,26 @@ void QtensorZ::calculate()
     COM_.clear();
     COM_.resize(res.size());
 
+    // initialize Per iter items
+    evPerIter_.clear();
+    P2PerIter_.clear();
+    BinnedMatrix_.clear();
+    NumResPerBinIter_.clear();
+    evPerIter_.resize(bin_ -> getNumbins(), {{0,0,0}});
+    P2PerIter_.resize(bin_ -> getNumbins(), 0.0);
+    // make all the matrix in vector zero
+    Matrix zeroMatrix;
+    for (int i=0;i<3;i++)
+    {
+        for (int j=0;j<3;j++)
+        {
+            zeroMatrix[i][j] = 0;
+        }
+    }
+    BinnedMatrixIter_.resize(bin_->getNumbins(), zeroMatrix);
+   // initialize number of residues per bin (Per iteration vector)
+    NumResPerBinIter_.resize(bin_->getNumbins(),0.0);
+
     // obtain the center of mass of each of the residues
     for (int i=0;i<res.size();i++)
     {
@@ -85,24 +116,6 @@ void QtensorZ::calculate()
         COMperAtom_ = CalculationTools::getCOM(res[i], simstate_, COMIndices_);
         COM_[i] = COMperAtom_;
     }
-
-    // make all the matrix in vector zero
-    std::vector<Matrix> BinnedMatrixIter_(bin_->getNumbins());
-    Matrix zeroMatrix;
-    for (int i=0;i<3;i++)
-    {
-        for (int j=0;j<3;j++)
-        {
-            zeroMatrix[i][j] = 0;
-        }
-    }
-    std::fill(BinnedMatrixIter_.begin(), BinnedMatrixIter_.end(), zeroMatrix);
-
-
-    // initialize number of residues per bin (Per iteration vector)
-    std::vector<int> NumResPerBinIter_;
-    NumResPerBinIter_.resize(bin_->getNumbins());
-    std::fill(NumResPerBinIter_.begin(), NumResPerBinIter_.end(),0);
 
     // Bin the COMs
     for (int i=0;i<COM_.size();i++)
@@ -147,18 +160,54 @@ void QtensorZ::calculate()
             auto ev     = Qtensor::orderedeig_Qtensor(BinnedMatrixIter_[i]).first;
 
             P2_[i] += result.first;
+            P2PerIter_[i] = result.first;
 
             for (int k=0;k<3;k++)
             {
-                eigvec_[i][k] += std::pow(ev[k][0],2.0);
+                Real value = std::pow(ev[k][0],2.0);
+                eigvec_[i][k] += value;
+                evPerIter_[i][k] = value;
             }
-            // std::cout << "Bin " << i << ", P2 = " << result.first << std::endl;
         }
     }
 
     for (int i=0;i<BinnedMatrixIter_.size();i++)
     {
         Qtensor::matrix_accum_inplace(BinnedMatrix_[i], BinnedMatrixIter_[i]);
+    }
+}
+
+void QtensorZ::printOutputOnStep()
+{
+    // first make those p2 which has less residue than specified to be 0
+    if (perIterP2ofs_.is_open() || perItereVofs_.is_open())
+    {
+        for (int i=0;i<NumResPerBinIter_.size();i++)
+        {
+            if (NumResPerBinIter_[i] < ignoreP2LessThan_)
+            {
+                P2PerIter_[i] = 0;
+                evPerIter_[i] = {{0,0,0}};
+            }
+        }
+
+        if (perItereVofs_.is_open())
+        {
+            for (int i=0;i<evPerIter_.size();i++)
+            {
+                perItereVofs_ << evPerIter_[i][0] << " " << evPerIter_[i][1] << " " << evPerIter_[i][2] << " ";
+            }
+            perItereVofs_ << "\n";
+        }
+
+        if (perIterP2ofs_.is_open())
+        {
+            for (int i=0;i<P2PerIter_.size();i++)
+            {
+                perIterP2ofs_ << P2PerIter_[i] << " ";
+            }
+            perIterP2ofs_ << "\n";
+        }
     }
 }
 
@@ -194,11 +243,6 @@ void QtensorZ::finishCalculate()
     // average the eigenvectors over time
     for (int i=0;i<eigvec_.size();i++)
     {
-        // for (int j=0;j<3;j++)
-        // {
-        //     eigvec_[i][j] /= totalFrames;
-        //     eigvec_[i][j] = std::sqrt(eigvec_[i][j]);
-        // }
         auto ev = Qtensor::orderedeig_Qtensor(BinnedMatrix_[i]).first;
         for (int j=0;j<3;j++)
         {
