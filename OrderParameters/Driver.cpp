@@ -144,7 +144,7 @@ void Driver::initializeDriverPack(const ParameterPack* driverpack)
     int nframes = Xdr_ -> getNframes();
     ASSERT((nframes > startingFrame_), "The starting frame specified " << startingFrame_ << " is more than the total number of frames " << nframes);
 
-    int frames = 1;
+    int frames = startingFrame_;
     int numframes = 0;
     while (frames <= nframes)
     {
