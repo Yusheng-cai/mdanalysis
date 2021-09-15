@@ -16,7 +16,7 @@ Pcostz::Pcostz(const CalculationInput& input)
     input.pack_.ReadString("direction", ParameterPack::KeyType::Optional, direction_);
     input.pack_.ReadArrayNumber("array", ParameterPack::KeyType::Optional, arr_);
     input.pack_.ReadNumber("precision", ParameterPack::KeyType::Optional, precision_);
-    input.pack_.ReadNumber("ignorebelow", ParameterPack::KeyType::Optional, ignoreBelow_);
+    input.pack_.ReadNumber("ignorelessthan", ParameterPack::KeyType::Optional, ignoreBelow_);
     bool outputRead = input.pack_.ReadString("output", ParameterPack::KeyType::Optional,outputName_);
     bool perIterOutputRead = input.pack_.ReadString("perIteroutput", ParameterPack::KeyType::Optional, PerIterName_);
 
