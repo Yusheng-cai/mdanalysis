@@ -48,14 +48,17 @@ Cost::Cost(const CalculationInput& input)
 void Cost::calculate()
 {
     BetaFactors_.clear();
-    int totalatomNumbers = simstate_.getTotalNumberAtoms();
-    BetaFactors_.resize(totalatomNumbers);
-    std::fill(BetaFactors_.begin(), BetaFactors_.end(), -1.0);
-
+    
     auto& res = getResidueGroup(residueGroupName_).getResidues();
     auto& pv  = simstate_.getProbeVolume(ProbeVolumeName_);
 
+    int totalatomNumbers = getResidueGroup(residueGroupName_).getAtomSize();
+    BetaFactors_.resize(totalatomNumbers);
+    std::fill(BetaFactors_.begin(), BetaFactors_.end(), -1.0);
+
+
     // find all the COM of the residues in the system
+    #pragma omp parallel for
     for (int i=0;i<res.size();i++)
     {
         Real3 com = CalculationTools::getCOM(res[i], simstate_, COMIndices_);
