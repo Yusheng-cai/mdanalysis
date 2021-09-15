@@ -10,7 +10,7 @@ Pcostz::Pcostz(const CalculationInput& input)
 {
     auto zbinPack = input.pack_.findParamPack("zbin", ParameterPack::KeyType::Required);
     auto costBinPack = input.pack_.findParamPack("tbin", ParameterPack::KeyType::Required);
-    input.pack_.ReadString("residue", ParameterPack::KeyType::Required, residueGroupName_);
+    input.pack_.ReadString("residuegroup", ParameterPack::KeyType::Required, residueGroupName_);
     input.pack_.ReadNumber("headindex", ParameterPack::KeyType::Required,headIndex_);
     input.pack_.ReadNumber("tailindex", ParameterPack::KeyType::Required,tailIndex_);
     input.pack_.ReadString("direction", ParameterPack::KeyType::Optional, direction_);
@@ -187,7 +187,7 @@ void Pcostz::printOutputOnStep()
         {
             for (int j=0;j<histogramIter_[0].size();j++)
             {
-                if (numResiduePerBinIter_[i] <= ignoreBelow_)
+                if (numResiduePerBinIter_[i] < ignoreBelow_)
                 {
                     histogramIter_[i][j] = 0;
                 }
