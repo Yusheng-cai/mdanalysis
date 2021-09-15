@@ -183,6 +183,7 @@ void Pcostz::printOutputOnStep()
     {
         int stepnum = simstate_.getFrameNumber();
 
+        std::cout << "numResiduePerBinIter[1] = " << numResiduePerBinIter_[1] << std::endl; 
         for (int i=0;i<histogramIter_.size();i++)
         {
             for (int j=0;j<histogramIter_[0].size();j++)
