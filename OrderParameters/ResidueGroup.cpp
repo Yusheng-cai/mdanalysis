@@ -24,6 +24,8 @@ ResidueGroup::ResidueGroup(const ResidueInput& input)
     AtomsPerResidue_.resize(residueIndices.size());
     int index=0;
 
+    atomSize_ = 0;
+
     // a set is always sorted in C++
     for (auto it = residueIndices.begin();it != residueIndices.end();it++)
     {
@@ -33,6 +35,9 @@ ResidueGroup::ResidueGroup(const ResidueInput& input)
         {
             Residues_[index].atoms_[i].mass_ = top_.getMassFromAtomName(Residues_[index].atoms_[i].atomName_);
         }
+
+        atomSize_ += Residues_[index].atoms_.size();
+
         index++;
     }
 }

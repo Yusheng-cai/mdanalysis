@@ -37,6 +37,7 @@ class ResidueGroup
         std::string getName() const{return name_;}
         const std::vector<Molecule::residue> getResidues() const {return Residues_;}
         int getsize() const {return size_;}
+        int getAtomSize() const {return atomSize_;}
 
 
     private:
@@ -74,4 +75,7 @@ class ResidueGroup
 
         // number of residues in the residue group
         int size_;
+
+        // number of total atoms in the system
+        int atomSize_;
 };
