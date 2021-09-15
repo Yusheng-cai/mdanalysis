@@ -70,7 +70,7 @@ QtensorZ::QtensorZ(const CalculationInput& input)
     // make all the matrix in vector zero
     Matrix zeroMatrix = {};
     std::fill(BinnedMatrix_.begin(), BinnedMatrix_.end(), zeroMatrix);
-    BinnedMatrix_.resize(bin_->getNumbins());
+    BinnedMatrix_.resize(bin_->getNumbins(),zeroMatrix);
 
     // resize the P2 to be number of bins size
     P2_.resize(bin_->getNumbins());
@@ -96,8 +96,9 @@ void QtensorZ::calculate()
     // initialize Per iter items
     evPerIter_.clear();
     P2PerIter_.clear();
-    BinnedMatrix_.clear();
+    BinnedMatrixIter_.clear();
     NumResPerBinIter_.clear();
+
     evPerIter_.resize(bin_ -> getNumbins(), {{0,0,0}});
     P2PerIter_.resize(bin_ -> getNumbins(), 0.0);
     // make all the matrix in vector zero
@@ -109,9 +110,8 @@ void QtensorZ::calculate()
             zeroMatrix[i][j] = 0;
         }
     }
-    BinnedMatrixIter_.resize(bin_->getNumbins(), zeroMatrix);
-   // initialize number of residues per bin (Per iteration vector)
-    NumResPerBinIter_.resize(bin_->getNumbins(),0.0);
+    BinnedMatrixIter_.resize(bin_ -> getNumbins(), zeroMatrix);
+    NumResPerBinIter_.resize(bin_ ->getNumbins(), 0.0);
 
     // obtain the center of mass of each of the residues
     for (int i=0;i<res.size();i++)
@@ -194,6 +194,7 @@ void QtensorZ::printOutputOnStep()
             {
                 P2PerIter_[i] = 0;
                 evPerIter_[i] = {{0,0,0}};
+                NumResPerBinIter_[i] = 0;
             }
         }
 
@@ -229,6 +230,7 @@ void QtensorZ::printOutputOnStep()
 void QtensorZ::finishCalculate()
 {
     int totalFrames = simstate_.getTotalFrames();
+    std::cout << "Total frame = " << totalFrames << std::endl;
 
     // average the p2 over time
     for (int i=0;i<P2_.size();i++)
