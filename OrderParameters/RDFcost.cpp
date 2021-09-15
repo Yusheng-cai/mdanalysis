@@ -6,6 +6,8 @@ RDFcost::RDFcost(const CalculationInput& input)
     input.pack_.ReadString("residue", ParameterPack::KeyType::Required, resName_);
     input.pack_.ReadNumber("headIndex", ParameterPack::KeyType::Required, headIndex_);
     input.pack_.ReadNumber("tailIndex", ParameterPack::KeyType::Required, tailIndex_);
+    input.pack_.ReadString("probevolume", ParameterPack::KeyType::Required, probeVolumeName_);
+
     bool readOutput = input.pack_.ReadString("output", ParameterPack::KeyType::Optional, outputName_);
 
     if (readOutput)

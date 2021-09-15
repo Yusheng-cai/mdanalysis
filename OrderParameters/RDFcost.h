@@ -37,4 +37,7 @@ class RDFcost : public Calculation
 
         std::string outputName_;
         std::ofstream ofs_;
+
+        // name of the probe volume
+        std::string probeVolumeName_;
 };
