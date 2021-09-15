@@ -24,6 +24,7 @@ class Pcostz : public Calculation
         virtual void calculate() override;
         virtual void finishCalculate() override;
         virtual void printOutput() override;
+        virtual void printOutputOnStep() override;
 
     private:
         Binptr costBin_;
@@ -47,6 +48,7 @@ class Pcostz : public Calculation
         std::vector<Real3> COM_;
 
         std::vector<std::vector<Real>> histogram2d_;
+        std::vector<std::vector<Real>> histogramIter_;
 
         int headIndex_;
         int tailIndex_;
@@ -64,8 +66,14 @@ class Pcostz : public Calculation
         std::string outputName_;
         int precision_ = 3;
 
+        std::ofstream PerIterofs_;
+        std::string PerIterName_;
+
         // number of residues per bin
         std::vector<Real> numResiduePerBin_;
+
+        // number of residues per bin per iteration
+        std::vector<Real> numResiduePerBinIter_;
 
         int ignoreBelow_ = 0;
 };
