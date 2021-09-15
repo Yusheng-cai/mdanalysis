@@ -90,8 +90,10 @@ class QtensorZ : public Calculation
         // output per Iteration
         std::ofstream perIterP2ofs_;
         std::ofstream perItereVofs_;
+        std::ofstream perIternumofs_;
         std::string PerIterP2Name_;
         std::string PerItereVName_;
+        std::string PerIternumName_;
 
         // Per Iteration items
         std::vector<Matrix> BinnedMatrixIter_;

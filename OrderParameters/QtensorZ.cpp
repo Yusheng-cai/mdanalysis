@@ -17,6 +17,7 @@ QtensorZ::QtensorZ(const CalculationInput& input)
     bool readP2z =input.pack_.ReadString("p2zOutput", ParameterPack::KeyType::Optional, p2ZOutput_);
     bool readP2PerIter = input.pack_.ReadString("perIterP2output", ParameterPack::KeyType::Optional, PerIterP2Name_);
     bool readeVPerIter = input.pack_.ReadString("perIterevoutput", ParameterPack::KeyType::Optional, PerItereVName_);
+    bool readnumPerIter = input.pack_.ReadString("perIternumoutput", ParameterPack::KeyType::Optional, PerIternumName_);
     
 
     if (readP2z)
@@ -32,6 +33,11 @@ QtensorZ::QtensorZ(const CalculationInput& input)
     if (readeVPerIter)
     {
         perItereVofs_.open(PerItereVName_);
+    }
+
+    if (readnumPerIter)
+    {
+        perIternumofs_.open(PerIternumName_);
     }
 
     // add the residue group to the system
@@ -208,6 +214,15 @@ void QtensorZ::printOutputOnStep()
             }
             perIterP2ofs_ << "\n";
         }
+
+        if (perIternumofs_.is_open())
+        {
+            for (int i=0;i<NumResPerBinIter_.size();i++)
+            {
+                perIternumofs_ << NumResPerBinIter_[i] << " ";
+            }
+            perIternumofs_ << "\n";
+        }
     }
 }
 
@@ -262,6 +277,21 @@ void QtensorZ::finishCalculate()
         {
             NumResPerBin_[i] = 0;
         }
+    }
+
+    if (perIterP2ofs_.is_open())
+    {
+        perIterP2ofs_.close();
+    }
+
+    if (perItereVofs_.is_open())
+    {
+        perItereVofs_.close();
+    }
+
+    if (perIternumofs_.is_open())
+    {
+        perIternumofs_.close();
     }
 }
 
