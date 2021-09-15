@@ -91,13 +91,18 @@ class QtensorZ : public Calculation
         std::ofstream perIterP2ofs_;
         std::ofstream perItereVofs_;
         std::ofstream perIternumofs_;
+        std::ofstream perIterQtensorofs_;
         std::string PerIterP2Name_;
         std::string PerItereVName_;
         std::string PerIternumName_;
+        std::string PerIterQtensorName_;
 
         // Per Iteration items
         std::vector<Matrix> BinnedMatrixIter_;
         std::vector<Real> NumResPerBinIter_;
         std::vector<Real> P2PerIter_;
         std::vector<Real3> evPerIter_;
+
+        // zero Matrix
+        Matrix zeroMatrix_ = {};
 };

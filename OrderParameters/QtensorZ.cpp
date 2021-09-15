@@ -18,6 +18,7 @@ QtensorZ::QtensorZ(const CalculationInput& input)
     bool readP2PerIter = input.pack_.ReadString("perIterP2output", ParameterPack::KeyType::Optional, PerIterP2Name_);
     bool readeVPerIter = input.pack_.ReadString("perIterevoutput", ParameterPack::KeyType::Optional, PerItereVName_);
     bool readnumPerIter = input.pack_.ReadString("perIternumoutput", ParameterPack::KeyType::Optional, PerIternumName_);
+    bool readQtensorPerIter = input.pack_.ReadString("perIterQtensoroutput", ParameterPack::KeyType::Optional, PerIterQtensorName_);
     
 
     if (readP2z)
@@ -38,6 +39,11 @@ QtensorZ::QtensorZ(const CalculationInput& input)
     if (readnumPerIter)
     {
         perIternumofs_.open(PerIternumName_);
+    }
+
+    if (readQtensorPerIter)
+    {
+        perIterQtensorofs_.open(PerIterQtensorName_);
     }
 
     // add the residue group to the system
@@ -195,6 +201,7 @@ void QtensorZ::printOutputOnStep()
                 P2PerIter_[i] = 0;
                 evPerIter_[i] = {{0,0,0}};
                 NumResPerBinIter_[i] = 0;
+                BinnedMatrixIter_[i] = zeroMatrix_;
             }
         }
 
@@ -223,6 +230,21 @@ void QtensorZ::printOutputOnStep()
                 perIternumofs_ << NumResPerBinIter_[i] << " ";
             }
             perIternumofs_ << "\n";
+        }
+
+        if (perIterQtensorofs_.is_open())
+        {
+            for (int i=0;i<BinnedMatrixIter_.size();i++)
+            {
+                for (int j=0;j<3;j++)
+                {
+                    for (int k=0;k<3;k++)
+                    {
+                        perIterQtensorofs_ << BinnedMatrixIter_[i][j][k] << " ";
+                    }
+                }
+            }
+            perIterQtensorofs_ << "\n";
         }
     }
 }
@@ -294,6 +316,11 @@ void QtensorZ::finishCalculate()
     if (perIternumofs_.is_open())
     {
         perIternumofs_.close();
+    }
+
+    if (perIterQtensorofs_.is_open())
+    {
+        perIterQtensorofs_.close();
     }
 }
 
