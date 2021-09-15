@@ -69,6 +69,7 @@ void Pcost::calculate()
     auto& pv  = simstate_.getProbeVolume(ProbeVolumeName_);
 
     // find all the COM of the residues in the system
+    #pragma omp parallel for
     for (int i=0;i<res.size();i++)
     {
         Real3 com = CalculationTools::getCOM(res[i], simstate_, COMIndices_);
