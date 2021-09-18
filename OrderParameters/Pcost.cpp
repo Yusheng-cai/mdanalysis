@@ -9,6 +9,7 @@ Pcost::Pcost(const CalculationInput& input)
 :Calculation(input)
 {
     auto costBinPack = input.pack_.findParamPack("tbin", ParameterPack::KeyType::Required);
+    costBin_ = Binptr(new Bin(*costBinPack));
 
     input.pack_.ReadString("residue", ParameterPack::KeyType::Required, residueGroupName_);
     input.pack_.ReadNumber("headindex", ParameterPack::KeyType::Required,headIndex_);
@@ -18,41 +19,14 @@ Pcost::Pcost(const CalculationInput& input)
     input.pack_.ReadNumber("precision", ParameterPack::KeyType::Optional, precision_);
     input.pack_.ReadString("probevolume", ParameterPack::KeyType::Required, ProbeVolumeName_);
 
-    bool AIRead = input.pack_.ReadString("AtomIndicesOutput", ParameterPack::KeyType::Optional, AtomIndicesName_);
-    bool outputRead = input.pack_.ReadString("output", ParameterPack::KeyType::Optional,outputName_);
-
-    if(outputRead)
-    {
-        ofs_.open(outputName_);
-    }
-
-    if (AIRead)
-    {
-        ofsAI_.open(AtomIndicesName_);
-    }
+    registerOutputFunction("histogram", [this](std::string name) -> void { this -> printHistogram(name);});
+    registerOutputFunction("AtomIndices", [this](std::string name) -> void { this -> printAtomIndices(name);});
 
     headIndex_--;
     tailIndex_--;
 
-    // add the residue group
-    addResidueGroup(residueGroupName_);
-
-    costBin_ = Binptr(new Bin(*costBinPack));
-    
-    // obtain the center of mass indices of a residue
-    auto& res = getResidueGroup(residueGroupName_).getResidues();
-    COMIndices_.resize(res[0].atoms_.size());
-    std::iota(COMIndices_.begin(), COMIndices_.end(), 1);
-    input.pack_.ReadVectorNumber("COMIndices", ParameterPack::KeyType::Optional, COMIndices_);
-
-    // subtract the COM indices by 1 to get to 0-based counting 
-    for (int i=0;i<COMIndices_.size();i++)
-    {
-        COMIndices_[i] -= 1;
-    }
-
-    COM_.resize(res.size());
-
+    initializeResidueGroup(residueGroupName_);
+    auto res = getResidueGroup(residueGroupName_).getResidues();
     std::vector<Real> Zero(costBin_->getNumbins(),0);
 
     // resize the molecular director size
@@ -132,16 +106,37 @@ void Pcost::finishCalculate()
     }
 }
 
-void Pcost::printOutput()
+void Pcost::printHistogram(std::string name)
 {
-    if (ofs_.is_open())
-    {
-        ofs_ << std::fixed << std::setprecision(precision_);
+    std::ofstream ofs;
+    ofs.open(name);
 
-        for (int i=0;i<histogram_.size();i++)
-        {
-            ofs_ << i << "\t" << histogram_[i] << "\n";
-        }
-        ofs_.close();
+    ofs << std::fixed << std::setprecision(precision_);
+
+    for (int i=0;i<histogram_.size();i++)
+    {
+        ofs << i << "\t" << histogram_[i] << "\n";
     }
+    ofs.close();
+}
+
+void Pcost::printAtomIndices(std::string name)
+{
+    std::ofstream ofs;
+    ofs.open(name);
+
+    ofs << std::fixed << std::setprecision(precision_);
+
+    for (int i=0;i<AtomIndicesInPV_.size();i++)
+    {
+        int size = AtomIndicesInPV_[i].size();
+
+        for (int j=0;j<size;j++)
+        {
+            ofs << AtomIndicesInPV_[i][j] << "\t";
+        }
+        ofs << "\n";
+    }
+
+    ofs.close();
 }

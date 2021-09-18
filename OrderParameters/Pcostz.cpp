@@ -17,41 +17,21 @@ Pcostz::Pcostz(const CalculationInput& input)
     input.pack_.ReadArrayNumber("array", ParameterPack::KeyType::Optional, arr_);
     input.pack_.ReadNumber("precision", ParameterPack::KeyType::Optional, precision_);
     input.pack_.ReadNumber("ignorelessthan", ParameterPack::KeyType::Optional, ignoreBelow_);
-    bool outputRead = input.pack_.ReadString("output", ParameterPack::KeyType::Optional,outputName_);
-    bool perIterOutputRead = input.pack_.ReadString("perIteroutput", ParameterPack::KeyType::Optional, PerIterName_);
 
-    if(outputRead)
-    {
-        ofs_.open(outputName_);
-    }
-
-    if(perIterOutputRead)
-    {
-        PerIterofs_.open(PerIterName_);
-    }
+    registerOutputFunction("pcostz", [this](std::string name)->void {this -> printHistogram(name);});
+    registerPerIterOutputFunction("pcostz", [this](std::ofstream& ofs)->void{this -> printHistogramPerIter(ofs);});
 
     headIndex_--;
     tailIndex_--;
 
+    // find the direction
     directionIndex_ = MapdirectionToIndex_.find(direction_) -> second;
-
-    // add the residue group
-    addResidueGroup(residueGroupName_);
-
     costBin_ = Binptr(new Bin(*costBinPack));
     zBin_    = Binptr(new Bin(*zbinPack));
 
-    auto& res = getResidueGroup(residueGroupName_).getResidues();
-    COMIndices_.resize(res[0].atoms_.size());
-    std::iota(COMIndices_.begin(), COMIndices_.end(), 1);
-    input.pack_.ReadVectorNumber("COMIndices", ParameterPack::KeyType::Optional, COMIndices_);
-
-    for (int i=0;i<COMIndices_.size();i++)
-    {
-        COMIndices_[i] -= 1;
-    }
-
-    COM_.resize(res.size());
+    // initialize residue group
+    initializeResidueGroup(residueGroupName_);
+    auto& res = getResidueGroup(residueGroupName_);
 
     std::vector<Real> Zero(costBin_->getNumbins(),0);
     histogram2d_.resize(zBin_->getNumbins(), Zero);
@@ -159,74 +139,71 @@ void Pcostz::finishCalculate()
     }
 }
 
-void Pcostz::printOutput()
+void Pcostz::printHistogram(std::string name)
 {
-    if (ofs_.is_open())
-    {
-        ofs_ << std::fixed << std::setprecision(precision_);
+    std::ofstream ofs;
+    ofs.open(name);
 
-        for (int i=0;i<histogram2d_.size();i++)
+    ofs << std::fixed << std::setprecision(precision_);
+
+    for (int i=0;i<histogram2d_.size();i++)
+    {
+        for (int j=0;j<histogram2d_[0].size();j++)
         {
-            for (int j=0;j<histogram2d_[0].size();j++)
-            {
-                ofs_ << i << "\t" << j << "\t" << histogram2d_[i][j] << "\n";
-            }
+            ofs << i << "\t" << j << "\t" << histogram2d_[i][j] << "\n";
         }
-        ofs_.close();
     }
+    ofs.close();
 }
 
-void Pcostz::printOutputOnStep()
+void Pcostz::printHistogramPerIter(std::ofstream& ofs)
 {
     // if the file is open, then we perform the calculations
-    if (PerIterofs_.is_open())
+    int stepnum = simstate_.getFrameNumber();
+
+    std::cout << "numResiduePerBinIter[1] = " << numResiduePerBinIter_[1] << std::endl; 
+    for (int i=0;i<histogramIter_.size();i++)
     {
-        int stepnum = simstate_.getFrameNumber();
-
-        std::cout << "numResiduePerBinIter[1] = " << numResiduePerBinIter_[1] << std::endl; 
-        for (int i=0;i<histogramIter_.size();i++)
+        for (int j=0;j<histogramIter_[0].size();j++)
         {
-            for (int j=0;j<histogramIter_[0].size();j++)
+            if (numResiduePerBinIter_[i] < ignoreBelow_)
             {
-                if (numResiduePerBinIter_[i] < ignoreBelow_)
-                {
-                    histogramIter_[i][j] = 0;
-                }
+                histogramIter_[i][j] = 0;
             }
         }
-
-        // perform row sum
-        std::vector<Real> RowSum(histogramIter_.size(),0.0);
-        for (int i=0;i<histogramIter_.size();i++)
-        {
-            Real sum_ = 0.0;
-            for (int j=0;j<histogramIter_[0].size();j++)
-            {
-                sum_ += histogramIter_[i][j];
-            }
-            RowSum[i] = sum_;
-        }
-       
-        // normalize each row
-        for (int i=0;i<histogramIter_.size();i++)
-        {
-            if (RowSum[i] > 0)
-            {
-                for (int j=0;j<histogramIter_[0].size();j++)
-                {
-                    histogramIter_[i][j] /= RowSum[i];
-                }
-            } 
-        }
-
-        for (int i=0;i<histogramIter_.size();i++)
-        {
-            for (int j=0;j<histogramIter_[0].size();j++)
-            {
-                PerIterofs_ << histogramIter_[i][j] << " ";
-            }
-        }
-
-        PerIterofs_ << "\n";
     }
+
+    // perform row sum
+    std::vector<Real> RowSum(histogramIter_.size(),0.0);
+    for (int i=0;i<histogramIter_.size();i++)
+    {
+        Real sum_ = 0.0;
+        for (int j=0;j<histogramIter_[0].size();j++)
+        {
+            sum_ += histogramIter_[i][j];
+        }
+        RowSum[i] = sum_;
+    }
+    
+    // normalize each row
+    for (int i=0;i<histogramIter_.size();i++)
+    {
+        if (RowSum[i] > 0)
+        {
+            for (int j=0;j<histogramIter_[0].size();j++)
+            {
+                histogramIter_[i][j] /= RowSum[i];
+            }
+        } 
+    }
+
+    for (int i=0;i<histogramIter_.size();i++)
+    {
+        for (int j=0;j<histogramIter_[0].size();j++)
+        {
+            ofs << histogramIter_[i][j] << " ";
+        }
+    }
+
+    ofs << "\n";
 }

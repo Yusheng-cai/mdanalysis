@@ -23,8 +23,9 @@ class Pcostz : public Calculation
 
         virtual void calculate() override;
         virtual void finishCalculate() override;
-        virtual void printOutput() override;
-        virtual void printOutputOnStep() override;
+
+        void printHistogram(std::string name);
+        void printHistogramPerIter(std::ofstream& ofs);
 
     private:
         Binptr costBin_;
@@ -38,14 +39,8 @@ class Pcostz : public Calculation
             {"z", 2}
         };
 
-        // the indices for calculating the center of mass
-        std::vector<int> COMIndices_;
-
         // the name of the residuegroup provided
         std::string residueGroupName_;
-
-        // The center of mass
-        std::vector<Real3> COM_;
 
         std::vector<std::vector<Real>> histogram2d_;
         std::vector<std::vector<Real>> histogramIter_;
@@ -62,12 +57,7 @@ class Pcostz : public Calculation
         std::array<Real,3> arr_ = {{0,0,1}};
 
         // output stream
-        std::ofstream ofs_;
-        std::string outputName_;
         int precision_ = 3;
-
-        std::ofstream PerIterofs_;
-        std::string PerIterName_;
 
         // number of residues per bin
         std::vector<Real> numResiduePerBin_;

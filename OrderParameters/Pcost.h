@@ -25,19 +25,15 @@ class Pcost : public Calculation
 
         virtual void calculate() override;
         virtual void finishCalculate() override;
-        virtual void printOutput() override;
+
+        void printHistogram(std::string name);
+        void printAtomIndices(std::string name);
 
     private:
         Binptr costBin_;
 
-        // the indices for calculating the center of mass
-        std::vector<int> COMIndices_;
-
         // the name of the residuegroup provided
         std::string residueGroupName_;
-
-        // The center of mass
-        std::vector<Real3> COM_;
 
         // histogram
         std::vector<Real> histogram_;
@@ -54,12 +50,7 @@ class Pcost : public Calculation
         std::array<Real,3> arr_ = {{0,0,1}};
 
         // output stream
-        std::ofstream ofs_;
-        std::string outputName_;
         int precision_ = 3;
-
-        // output Atom Indices
-        std::ofstream ofsAI_;
 
         // number of residues per bin
         std::vector<Real> numResiduePerBin_;

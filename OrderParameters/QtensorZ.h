@@ -29,8 +29,13 @@ class QtensorZ : public Calculation
 
         virtual void calculate() override;
         virtual void finishCalculate() override;
-        virtual void printOutput() override;
         virtual void printOutputOnStep() override;
+
+        void printP2z(std::string name);
+        void printPerIterP2z(std::ofstream& ofs);
+        void printPerIterev(std::ofstream& ofs);
+        void printPerIterNum(std::ofstream& ofs);
+        void printPerIterQtensor(std::ofstream& ofs);
 
         std::vector<Real>& getP2() {return P2_;}
 
@@ -45,10 +50,6 @@ class QtensorZ : public Calculation
         // The string that indicates the direction
         std::string direction_ = "z";
         int index_;
-
-        // name of the output
-        std::string p2ZOutput_;
-        std::ofstream p2zofs_;
 
         // Map direction string to index
         std::map<std::string, int> MapNameToDirection = 
@@ -88,12 +89,8 @@ class QtensorZ : public Calculation
         std::vector<Real3> eigvec_;
 
         // output per Iteration
-        std::ofstream perIterP2ofs_;
-        std::ofstream perItereVofs_;
         std::ofstream perIternumofs_;
         std::ofstream perIterQtensorofs_;
-        std::string PerIterP2Name_;
-        std::string PerItereVName_;
         std::string PerIternumName_;
         std::string PerIterQtensorName_;
 

@@ -14,37 +14,10 @@ QtensorZ::QtensorZ(const CalculationInput& input)
     input.pack_.ReadNumber("tailindex", ParameterPack::KeyType::Required, tailIndex_);
     input.pack_.ReadNumber("ignorelessthan", ParameterPack::KeyType::Optional, ignoreP2LessThan_);
 
-    bool readP2z =input.pack_.ReadString("p2zOutput", ParameterPack::KeyType::Optional, p2ZOutput_);
-    bool readP2PerIter = input.pack_.ReadString("perIterP2output", ParameterPack::KeyType::Optional, PerIterP2Name_);
-    bool readeVPerIter = input.pack_.ReadString("perIterevoutput", ParameterPack::KeyType::Optional, PerItereVName_);
-    bool readnumPerIter = input.pack_.ReadString("perIternumoutput", ParameterPack::KeyType::Optional, PerIternumName_);
-    bool readQtensorPerIter = input.pack_.ReadString("perIterQtensoroutput", ParameterPack::KeyType::Optional, PerIterQtensorName_);
-    
-
-    if (readP2z)
-    {
-        p2zofs_.open(p2ZOutput_);
-    }
-
-    if (readP2PerIter)
-    {
-        perIterP2ofs_.open(PerIterP2Name_);
-    }
-
-    if (readeVPerIter)
-    {
-        perItereVofs_.open(PerItereVName_);
-    }
-
-    if (readnumPerIter)
-    {
-        perIternumofs_.open(PerIternumName_);
-    }
-
-    if (readQtensorPerIter)
-    {
-        perIterQtensorofs_.open(PerIterQtensorName_);
-    }
+    registerOutputFunction("p2z", [this](std::string name) -> void{this -> printP2z(name);});
+    registerPerIterOutputFunction("p2z", [this](std::ofstream& ofs) -> void {this -> printPerIterP2z(ofs);});
+    registerPerIterOutputFunction("Qtensor", [this](std::ofstream& ofs) -> void {this -> printPerIterQtensor(ofs);});
+    registerPerIterOutputFunction("ev", [this](std::ofstream& ofs) -> void{this -> printPerIterev(ofs);});
 
     // add the residue group to the system
     addResidueGroup(residueName_);
@@ -192,61 +165,79 @@ void QtensorZ::calculate()
 void QtensorZ::printOutputOnStep()
 {
     // first make those p2 which has less residue than specified to be 0
-    if (perIterP2ofs_.is_open() || perItereVofs_.is_open())
+    for (int i=0;i<NumResPerBinIter_.size();i++)
     {
-        for (int i=0;i<NumResPerBinIter_.size();i++)
+        if (NumResPerBinIter_[i] < ignoreP2LessThan_)
         {
-            if (NumResPerBinIter_[i] < ignoreP2LessThan_)
-            {
-                P2PerIter_[i] = 0;
-                evPerIter_[i] = {{0,0,0}};
-                NumResPerBinIter_[i] = 0;
-                BinnedMatrixIter_[i] = zeroMatrix_;
-            }
-        }
-
-        if (perItereVofs_.is_open())
-        {
-            for (int i=0;i<evPerIter_.size();i++)
-            {
-                perItereVofs_ << evPerIter_[i][0] << " " << evPerIter_[i][1] << " " << evPerIter_[i][2] << " ";
-            }
-            perItereVofs_ << "\n";
-        }
-
-        if (perIterP2ofs_.is_open())
-        {
-            for (int i=0;i<P2PerIter_.size();i++)
-            {
-                perIterP2ofs_ << P2PerIter_[i] << " ";
-            }
-            perIterP2ofs_ << "\n";
-        }
-
-        if (perIternumofs_.is_open())
-        {
-            for (int i=0;i<NumResPerBinIter_.size();i++)
-            {
-                perIternumofs_ << NumResPerBinIter_[i] << " ";
-            }
-            perIternumofs_ << "\n";
-        }
-
-        if (perIterQtensorofs_.is_open())
-        {
-            for (int i=0;i<BinnedMatrixIter_.size();i++)
-            {
-                for (int j=0;j<3;j++)
-                {
-                    for (int k=0;k<3;k++)
-                    {
-                        perIterQtensorofs_ << BinnedMatrixIter_[i][j][k] << " ";
-                    }
-                }
-            }
-            perIterQtensorofs_ << "\n";
+            P2PerIter_[i] = 0;
+            evPerIter_[i] = {{0,0,0}};
+            NumResPerBinIter_[i] = 0;
+            BinnedMatrixIter_[i] = zeroMatrix_;
         }
     }
+}
+
+void QtensorZ::printP2z(std::string name)
+{
+    std::ofstream ofs;
+    ofs.open(name);
+
+    ofs << std::fixed << std::setprecision(precision_);
+
+    ofs << "#z\tp2\tNumber\tQxx\tQxy\tQxz\tQyy\tQyz\tQzz\tnx\tny\tnz\tp2avg\n";
+
+    for (int i=0;i<P2_.size();i++)
+    {
+        ofs << bin_->getLeftLocationOfBin(i) << "\t" << P2_[i] << "\t" << NumResPerBin_[i];
+        ofs << "\t" << BinnedMatrix_[i][0][0] << "\t" << BinnedMatrix_[i][0][1] << "\t" << BinnedMatrix_[i][0][2]; 
+        ofs << "\t" << BinnedMatrix_[i][1][1] << "\t" << BinnedMatrix_[i][1][2];
+        ofs << "\t" << BinnedMatrix_[i][2][2];
+        ofs << "\t" << eigvec_[i][0] << "\t" << eigvec_[i][1] << "\t" << eigvec_[i][2] << "\t";
+        ofs << P2avg_[i] << "\n";
+    }
+    ofs.close();
+}
+
+void QtensorZ::printPerIterP2z(std::ofstream& ofs)
+{
+    for (int i=0;i<P2PerIter_.size();i++)
+    {
+        ofs << P2PerIter_[i] << " ";
+    } 
+    ofs << "\n";
+}
+
+void QtensorZ::printPerIterNum(std::ofstream& ofs)
+{
+    for (int i=0;i<NumResPerBinIter_.size();i++)
+    {
+        ofs << NumResPerBinIter_[i] << " ";
+    }
+    ofs << "\n";
+}
+
+void QtensorZ::printPerIterQtensor(std::ofstream& ofs)
+{
+    for (int i=0;i<BinnedMatrixIter_.size();i++)
+    {
+        for (int j=0;j<3;j++)
+        {
+            for (int k=0;k<3;k++)
+            {
+                perIterQtensorofs_ << BinnedMatrixIter_[i][j][k] << " ";
+            }
+        }
+    }
+    perIterQtensorofs_ << "\n";
+}
+
+void QtensorZ::printPerIterev(std::ofstream& ofs)
+{
+    for (int i=0;i<evPerIter_.size();i++)
+    {
+        ofs << evPerIter_[i][0] << " " << evPerIter_[i][1] << " " << evPerIter_[i][2] << " ";
+    }
+    ofs << "\n";
 }
 
 void QtensorZ::finishCalculate()
@@ -301,46 +292,5 @@ void QtensorZ::finishCalculate()
         {
             NumResPerBin_[i] = 0;
         }
-    }
-
-    if (perIterP2ofs_.is_open())
-    {
-        perIterP2ofs_.close();
-    }
-
-    if (perItereVofs_.is_open())
-    {
-        perItereVofs_.close();
-    }
-
-    if (perIternumofs_.is_open())
-    {
-        perIternumofs_.close();
-    }
-
-    if (perIterQtensorofs_.is_open())
-    {
-        perIterQtensorofs_.close();
-    }
-}
-
-void QtensorZ::printOutput()
-{
-    if (p2zofs_.is_open())
-    {
-        p2zofs_ << std::fixed << std::setprecision(precision_);
-
-        p2zofs_ << "#z\tp2\tNumber\tQxx\tQxy\tQxz\tQyy\tQyz\tQzz\tnx\tny\tnz\tp2avg\n";
-
-        for (int i=0;i<P2_.size();i++)
-        {
-            p2zofs_ << bin_->getLeftLocationOfBin(i) << "\t" << P2_[i] << "\t" << NumResPerBin_[i];
-            p2zofs_ << "\t" << BinnedMatrix_[i][0][0] << "\t" << BinnedMatrix_[i][0][1] << "\t" << BinnedMatrix_[i][0][2]; 
-            p2zofs_ << "\t" << BinnedMatrix_[i][1][1] << "\t" << BinnedMatrix_[i][1][2];
-            p2zofs_ << "\t" << BinnedMatrix_[i][2][2];
-            p2zofs_ << "\t" << eigvec_[i][0] << "\t" << eigvec_[i][1] << "\t" << eigvec_[i][2] << "\t";
-            p2zofs_ << P2avg_[i] << "\n";
-        }
-        p2zofs_.close();
     }
 }
