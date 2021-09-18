@@ -3,7 +3,6 @@
 #include "SimulationState.h"
 #include "OrderParameters.h"
 #include "ProbeVolume.h"
-#include "ProbeVolumeRegistry.h"
 #include "xdr/XdrWrapper.h"
 #include "tools/CommonTypes.h"
 #include "tools/InputParser.h"
@@ -89,9 +88,6 @@ class Driver
 
         // simulation state object
         SimulationState simstate_;
-
-        // probe Volume registry that keeps track of all the probe volumes
-        ProbeVolumeRegistry pv_registry_;
 
         VectorReal3 total_atom_positions_;
 
