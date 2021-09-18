@@ -2,7 +2,6 @@
 #include "OrderParameters.h"
 #include "Qtensor.h"
 #include "tools/CommonTypes.h"
-#include "ProbeVolumeRegistry.h"
 
 #include <vector>
 #include <string>
