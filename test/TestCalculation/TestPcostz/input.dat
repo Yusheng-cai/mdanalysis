@@ -17,7 +17,7 @@ residuegroup = {
 
 calculation = {
     type = pcostz
-    residue = lc
+    residuegroup = lc
     zbin = {
         range = [ 2.5 15 ]
         numbins = 50
@@ -28,5 +28,6 @@ calculation = {
     }
     headindex = 1
     tailindex = 2
-    output = op.out
+    outputs = [ pcostz ]
+    outputNames = [ op.out ]
 }
