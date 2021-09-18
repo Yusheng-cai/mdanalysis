@@ -3,7 +3,6 @@
 #include "tools/InputParser.h"
 #include "Output_values.h"
 #include "SimulationState.h"
-#include "ProbeVolumeRegistry.h"
 #include "AtomDerivativesSet.h"
 
 #include <map>

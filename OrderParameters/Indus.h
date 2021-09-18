@@ -2,7 +2,6 @@
 #include "OrderParameters.h"
 #include "ProbeVolume.h"
 #include "parallel/OpenMP_buffer.h"
-#include "ProbeVolumeRegistry.h"
 
 class Indus:public OrderParameters
 {
