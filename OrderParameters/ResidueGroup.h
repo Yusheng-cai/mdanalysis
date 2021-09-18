@@ -37,6 +37,7 @@ class ResidueGroup
         std::string getName() const{return name_;}
         const std::vector<Molecule::residue> getResidues() const {return Residues_;}
         int getsize() const {return size_;}
+        int size() const {return size_;}
         int getAtomSize() const {return atomSize_;}
 
 
