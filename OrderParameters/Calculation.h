@@ -13,7 +13,10 @@
 #include <array>
 #include <string>
 #include <iostream>
+#include <algorithm>
+#include <numeric>
 #include <map>
+#include <functional>
 
 struct CalculationInput
 {
@@ -26,6 +29,8 @@ class Calculation
     public:
         using Real = CommonTypes::Real;
         using Real3= CommonTypes::Real3;
+        using outputFunc = std::function<void(std::string)>;
+        using perIteroutputFunc = std::function<void(std::ofstream&)>;
 
         Calculation(const CalculationInput& input);
         virtual ~Calculation(){};
@@ -33,11 +38,24 @@ class Calculation
         virtual void update(){};
         virtual void calculate() = 0;
         virtual void finishCalculate() = 0;
-        virtual void printOutput() {};
-        virtual void printOutputOnStep() {};
+        virtual void printOutput();
+        virtual void printOutputOnStep();
 
         void addAtomgroup(std::string name);
         void addResidueGroup(std::string name);
+
+        int getNumResidueGroups() const { return ResidueGroups_.size();}
+        int getNumAtomGroups() const {return AtomGroups_.size();}
+
+        void registerOutputFunction(std::string name, outputFunc func);
+        outputFunc& getOutputByName(std::string name);
+        void registerPerIterOutputFunction(std::string name, perIteroutputFunc func);
+        perIteroutputFunc& getIterOutputByName(std::string name);
+
+
+        void closeAllOutputPerIter();
+
+        void initializeResidueGroup(const std::string& residueName);
 
         const ResidueGroup& getResidueGroup(std::string name) const;
 
@@ -52,6 +70,28 @@ class Calculation
 
         std::vector<std::string> ResidueNames_;
         std::vector<std::string> AtomGroupNames_;
+
+        ParameterPack& pack_;
+
+        std::vector<int> COMIndices_;
+        std::vector<Real3> COM_;
+
+        // map from name to output function
+        std::map<std::string, outputFunc> MapNameToOutputFunction_;
+        std::map<std::string, perIteroutputFunc> MapNameToPerIterOutput_;
+
+        // vector of outputs
+        std::vector<std::string> vectorOutputs_;
+
+        // vector of output file names 
+        std::vector<std::string> vectorOutputNames_;
+
+        // vector of ofs for per iter calculation outputs
+        std::vector<std::ofstream> ofsVector_;
+
+        // vector of per iter outputs
+        std::vector<std::string> perIteroutputs_;
+        std::vector<std::string> perIteroutputNames_;
 };
 
 namespace CalculationRegistry

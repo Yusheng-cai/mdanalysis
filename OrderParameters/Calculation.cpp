@@ -1,8 +1,25 @@
 #include "Calculation.h"
 
 Calculation::Calculation(const CalculationInput& input)
-:simstate_(input.simstate_)
-{}
+:simstate_(input.simstate_), pack_(input.pack_)
+{
+    pack_.ReadVectorString("outputs", ParameterPack::KeyType::Optional, vectorOutputs_);
+    pack_.ReadVectorString("outputNames", ParameterPack::KeyType::Optional, vectorOutputNames_);
+
+    pack_.ReadVectorString("perIteroutputs", ParameterPack::KeyType::Optional, perIteroutputs_);
+    pack_.ReadVectorString("perIteroutputNames", ParameterPack::KeyType::Optional, perIteroutputNames_);
+
+    for (int i=0;i<perIteroutputs_.size();i++)
+    {
+        std::ofstream ofs_;
+        ofsVector_.push_back(std::move(ofs_));
+    }
+
+    for (int i=0;i<perIteroutputs_.size();i++)
+    {
+        ofsVector_[i].open(perIteroutputNames_[i]);
+    }
+}
 
 void Calculation::addAtomgroup(std::string name)
 {
@@ -41,4 +58,91 @@ const ResidueGroup& Calculation::getResidueGroup(std::string name) const
     ASSERT((it != MapResidueGroupNameToIndex_.end()), "The residue with name " << name << " is not registered.");
 
     return *ResidueGroups_[it->second]; 
+}
+
+void Calculation::initializeResidueGroup(const std::string& residueName)
+{
+    ASSERT((! residueName.empty()), "The residue name is not provided.");
+
+    // add the residue group
+    addResidueGroup(residueName);
+
+    // initialize the COM indice
+    auto& res = getResidueGroup(residueName).getResidues();
+    COMIndices_.resize(res[0].atoms_.size());
+    std::iota(COMIndices_.begin(), COMIndices_.end(), 1);
+
+    // COMIndices are in 1-based counting 
+    pack_.ReadVectorNumber("COMIndices", ParameterPack::KeyType::Optional, COMIndices_);
+    for (int i=0;i<COMIndices_.size();i++)
+    {
+        COMIndices_[i] -= 1;
+    }
+
+    // resize the COM 
+    COM_.resize(res.size());
+}
+
+void Calculation::printOutput()
+{
+    for (int i=0;i<vectorOutputs_.size();i++)
+    {
+        getOutputByName(vectorOutputs_[i])(vectorOutputNames_[i]);
+    }
+
+    closeAllOutputPerIter();
+}
+
+void Calculation::registerOutputFunction(std::string name, outputFunc func)
+{
+    auto it = MapNameToOutputFunction_.find(name);
+
+    ASSERT((it == MapNameToOutputFunction_.end()), "The output with name " << name << " is already registered in calculation.");
+
+    MapNameToOutputFunction_.insert(std::make_pair(name, func));
+}
+
+void Calculation::registerPerIterOutputFunction(std::string name, perIteroutputFunc func)
+{
+    auto it = MapNameToPerIterOutput_.find(name);
+
+    ASSERT((it == MapNameToPerIterOutput_.end()), "The per iter output with name " << name << " is already registered in calculation.");
+
+    MapNameToPerIterOutput_.insert(std::make_pair(name, func));
+}
+
+Calculation::perIteroutputFunc& Calculation::getIterOutputByName(std::string name)
+{
+    auto it = MapNameToPerIterOutput_.find(name);
+
+    ASSERT((it != MapNameToPerIterOutput_.end()), "The per iter output with name " << name << " is not registered.");
+
+    return it -> second;
+}
+
+
+Calculation::outputFunc& Calculation::getOutputByName(std::string name)
+{
+    auto it = MapNameToOutputFunction_.find(name);
+
+    ASSERT((it != MapNameToOutputFunction_.end()), "The output with name " << name << " is not found within calculation");
+
+    return it -> second;
+}
+
+void Calculation::printOutputOnStep()
+{
+    for (int i=0;i<perIteroutputs_.size();i++)
+    {
+        std::string name = perIteroutputs_[i];
+        getIterOutputByName(name)(ofsVector_[i]);
+    }
+}
+
+void Calculation::closeAllOutputPerIter()
+{
+    for (int i=0;i<ofsVector_.size();i++)
+    {
+        ofsVector_[i].close();
+    }
 }
