@@ -87,12 +87,6 @@ class QtensorZ : public Calculation
         // nx^2, ny^2, nz^2 for the eigenvectors
         std::vector<Real3> eigvec_;
 
-        // output per Iteration
-        std::ofstream perIternumofs_;
-        std::ofstream perIterQtensorofs_;
-        std::string PerIternumName_;
-        std::string PerIterQtensorName_;
-
         // Per Iteration items
         std::vector<Matrix> BinnedMatrixIter_;
         std::vector<Real> NumResPerBinIter_;

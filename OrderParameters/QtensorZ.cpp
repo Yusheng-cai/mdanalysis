@@ -220,11 +220,11 @@ void QtensorZ::printPerIterQtensor(std::ofstream& ofs)
         {
             for (int k=0;k<3;k++)
             {
-                perIterQtensorofs_ << BinnedMatrixIter_[i][j][k] << " ";
+                ofs << BinnedMatrixIter_[i][j][k] << " ";
             }
         }
     }
-    perIterQtensorofs_ << "\n";
+    ofs << "\n";
 }
 
 void QtensorZ::printPerIterev(std::ofstream& ofs)
