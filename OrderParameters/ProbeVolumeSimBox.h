@@ -17,7 +17,7 @@ class ProbeVolumeSimBox:public ProbeVolume
 
         // This calculates per atom basis of indicator function
         virtual ProbeVolumeOutput calculate(const Real3& x) const override; 
-        virtual void setGeometry(){};
+        virtual void setGeometry() override {};
 
 
     private:
