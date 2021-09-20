@@ -26,6 +26,9 @@ namespace StringTools
     bool VectorStringTransform(std::vector<std::string> vecstr, std::vector<T>& output);
 
     void RemoveBlankInString(std::string& str);
+
+    // Checke if a line only consists of white spaces 
+    bool CheckIfOnlyWhiteSpace(std::string& str);
 }
 
 

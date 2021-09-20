@@ -403,3 +403,8 @@ TokenStream::Status InputParser::ParseVector(TokenStream& toks, std::vector<std:
 
     return status;
 }
+
+bool StringTools::CheckIfOnlyWhiteSpace(std::string& str)
+{
+    return str.find_first_not_of(" ") == std::string::npos;
+}
