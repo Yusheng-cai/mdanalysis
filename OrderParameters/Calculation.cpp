@@ -6,6 +6,9 @@ Calculation::Calculation(const CalculationInput& input)
     pack_.ReadVectorString("outputs", ParameterPack::KeyType::Optional, vectorOutputs_);
     pack_.ReadVectorString("outputNames", ParameterPack::KeyType::Optional, vectorOutputNames_);
 
+    ASSERT((vectorOutputs_.size() == vectorOutputNames_.size()), "The size of the vector outputs does not agree with the \
+    size of names.");
+
     pack_.ReadVectorString("perIteroutputs", ParameterPack::KeyType::Optional, perIteroutputs_);
     pack_.ReadVectorString("perIteroutputNames", ParameterPack::KeyType::Optional, perIteroutputNames_);
 
