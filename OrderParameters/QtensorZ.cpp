@@ -18,6 +18,7 @@ QtensorZ::QtensorZ(const CalculationInput& input)
     registerPerIterOutputFunction("p2z", [this](std::ofstream& ofs) -> void {this -> printPerIterP2z(ofs);});
     registerPerIterOutputFunction("Qtensor", [this](std::ofstream& ofs) -> void {this -> printPerIterQtensor(ofs);});
     registerPerIterOutputFunction("ev", [this](std::ofstream& ofs) -> void{this -> printPerIterev(ofs);});
+    registerPerIterOutputFunction("num", [this](std::ofstream& ofs) -> void{this -> printPerIterNum(ofs);});
 
     // add the residue group to the system
     addResidueGroup(residueName_);
@@ -43,7 +44,6 @@ QtensorZ::QtensorZ(const CalculationInput& input)
     auto it = MapNameToDirection.find(direction_);
     ASSERT((it != MapNameToDirection.end()), "The direction " << direction_ << " is not recognized.");
     index_ = it -> second;
-
     
     // resize the binned matrix to number of bins
     // make all the matrix in vector zero
@@ -77,7 +77,6 @@ void QtensorZ::calculate()
     P2PerIter_.clear();
     BinnedMatrixIter_.clear();
     NumResPerBinIter_.clear();
-
     evPerIter_.resize(bin_ -> getNumbins(), {{0,0,0}});
     P2PerIter_.resize(bin_ -> getNumbins(), 0.0);
     // make all the matrix in vector zero
@@ -134,7 +133,6 @@ void QtensorZ::calculate()
         }
     }
 
-
     for (int i=0;i<BinnedMatrixIter_.size();i++)
     {
         if (NumResPerBinIter_[i] != 0)
@@ -149,21 +147,18 @@ void QtensorZ::calculate()
 
             for (int k=0;k<3;k++)
             {
-                Real value = std::pow(ev[k][0],2.0);
-                eigvec_[i][k] += value;
+                Real value = ev[k][0];
                 evPerIter_[i][k] = value;
             }
         }
     }
 
+    // sum up the matrices
     for (int i=0;i<BinnedMatrixIter_.size();i++)
     {
         Qtensor::matrix_accum_inplace(BinnedMatrix_[i], BinnedMatrixIter_[i]);
     }
-}
 
-void QtensorZ::printOutputOnStep()
-{
     // first make those p2 which has less residue than specified to be 0
     for (int i=0;i<NumResPerBinIter_.size();i++)
     {
@@ -176,6 +171,7 @@ void QtensorZ::printOutputOnStep()
         }
     }
 }
+
 
 void QtensorZ::printP2z(std::string name)
 {

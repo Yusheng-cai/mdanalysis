@@ -29,7 +29,6 @@ class QtensorZ : public Calculation
 
         virtual void calculate() override;
         virtual void finishCalculate() override;
-        virtual void printOutputOnStep() override;
 
         void printP2z(std::string name);
         void printPerIterP2z(std::ofstream& ofs);
