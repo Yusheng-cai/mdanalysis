@@ -17,6 +17,7 @@
 #include <numeric>
 #include <map>
 #include <functional>
+#include <memory>
 
 struct CalculationInput
 {
@@ -31,6 +32,7 @@ class Calculation
         using Real3= CommonTypes::Real3;
         using outputFunc = std::function<void(std::string)>;
         using perIteroutputFunc = std::function<void(std::ofstream&)>;
+        using ofsptr = std::unique_ptr<std::ofstream>;
 
         Calculation(const CalculationInput& input);
         virtual ~Calculation(){};
@@ -87,7 +89,7 @@ class Calculation
         std::vector<std::string> vectorOutputNames_;
 
         // vector of ofs for per iter calculation outputs
-        std::vector<std::ofstream> ofsVector_;
+        std::vector<ofsptr> ofsVector_;
 
         // vector of per iter outputs
         std::vector<std::string> perIteroutputs_;

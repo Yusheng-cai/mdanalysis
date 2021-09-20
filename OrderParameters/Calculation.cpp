@@ -14,13 +14,12 @@ Calculation::Calculation(const CalculationInput& input)
 
     for (int i=0;i<perIteroutputs_.size();i++)
     {
-        std::ofstream ofs_;
-        ofsVector_.push_back(std::move(ofs_));
+        ofsVector_.push_back(ofsptr(new std::ofstream));
     }
 
     for (int i=0;i<perIteroutputs_.size();i++)
     {
-        ofsVector_[i].open(perIteroutputNames_[i]);
+        ofsVector_[i]->open(perIteroutputNames_[i]);
     }
 }
 
@@ -138,7 +137,7 @@ void Calculation::printOutputOnStep()
     for (int i=0;i<perIteroutputs_.size();i++)
     {
         std::string name = perIteroutputs_[i];
-        getIterOutputByName(name)(ofsVector_[i]);
+        getIterOutputByName(name)(*ofsVector_[i]);
     }
 }
 
@@ -146,6 +145,6 @@ void Calculation::closeAllOutputPerIter()
 {
     for (int i=0;i<ofsVector_.size();i++)
     {
-        ofsVector_[i].close();
+        ofsVector_[i]->close();
     }
 }
