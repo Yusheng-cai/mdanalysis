@@ -16,7 +16,7 @@ void TopologyReader::Parse(std::string& name)
     while (std::getline(ifs_,sentence))
     {
         // skip the empty lines
-        if (! sentence.empty())
+        if (! StringTools::CheckIfOnlyWhiteSpace(sentence))
         {
             std::stringstream ss;
             ss.str(sentence);
@@ -26,15 +26,20 @@ void TopologyReader::Parse(std::string& name)
 
             while (ss >> word)
             {
-                words.push_back(word);
+                // append to words if word is not just empty space
+                if (! StringTools::CheckIfOnlyWhiteSpace(word))
+                {
+                    words.push_back(word);
+                }
             }
 
-            if (words[0] != ";")
+            if (words[0] != ";" && words[0] != "#include")
             {
                 contents.push_back(sentence);
             }
         }
     }
+
 
     std::stringstream ss;
     std::vector<int> startIndices_;
@@ -43,7 +48,9 @@ void TopologyReader::Parse(std::string& name)
     for (int i=0;i<contents.size();i++)
     {
         // see if we can access [ atoms ]
-        if (contents[i][0] == '[')
+        // find the first one not space 
+        int index = contents[i].find_first_not_of(" ");
+        if (contents[i][index] == '[')
         {
             // set the stringstream
             ss.clear();
@@ -64,13 +71,13 @@ void TopologyReader::Parse(std::string& name)
             }
         }
     }
-
     for (int i =0;i<startIndices_.size();i++)
     {
         int start = startIndices_[i];
         for (int j=start+1;j<contents.size();j++)
         {
-            if (contents[j][0] == '[')
+            int index = contents[j].find_first_not_of(" ");
+            if (contents[j][index] == '[')
             {
                 break;
             }
