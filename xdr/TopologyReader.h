@@ -32,13 +32,14 @@ class TopologyReader
         void MakeAtomNameToTypeMap();
 
         // make map from atomName to mass
-        void MakeAtomNameToMassMap();
+        void MakeAtomTypeToMassMap();
 
         // make map from atomName to charge
-        void MakeAtomNameToChargeMap();
+        void MakeAtomTypeToChargeMap();
 
-        Real getMassFromAtomName(const std::string& atomName);
-        Real getChargeFromAtomName(const std::string& atomName);
+        Real getMassFromAtomType(const std::string& atomType);
+        Real getChargeFromAtomType(const std::string& atomType);
+        std::string getAtomTypeFromAtomName(const std::string& atomName);
 
         enum TopIdx
         {
@@ -70,7 +71,7 @@ class TopologyReader
 
         std::map<std::string, std::string> AtomNameToTypeMap_;
 
-        std::map<std::string, Real> AtomNameToMassMap_;
+        std::map<std::string, Real> AtomTypeToMassMap_;
 
-        std::map<std::string, Real> AtomNameToChargeMap_;
+        std::map<std::string, Real> AtomTypeToChargeMap_;
 };
