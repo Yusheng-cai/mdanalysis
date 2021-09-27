@@ -16,6 +16,7 @@ namespace Molecule
         Real mass_;
         Real charge_;
 
+        std::string type_;
         Real3 positions_;
     };
 
