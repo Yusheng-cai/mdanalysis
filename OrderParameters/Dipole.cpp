@@ -79,12 +79,12 @@ void Dipole::calculate()
 
             #ifdef MY_DEBUG
             std::cout << "distance of " << id_ << " atom with respect to COM is " << dist[0] << " " << dist[1] << " " << dist[2] << std::endl;
+            std::cout << "Atom charge for " << id_ << " atom is " << atoms[id_].charge_ << std::endl;
             #endif 
 
             for(int k=0;k<3;k++)
             {
                 dipole[k] += atoms[id_].charge_* dist[k];
-                std::cout << "atoms charge for " << id_ << " = " << atoms[id_].charge_ << std::endl;
             }
         }
         LinAlg3x3::normalize(dipole);
