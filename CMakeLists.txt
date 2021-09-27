@@ -11,8 +11,8 @@ project(mdanalysis)
 # Require C++11
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(CMAKE_CXX_FLAGS_DEBUG_INIT "-O0 -Wall -g")
-set(CMAKE_CXX_FLAGS_RELEASE_INIT "-O3 -Wall -ffast-math")
+set(CMAKE_CXX_FLAGS_DEBUG "-O0 -Wall -g -DMY_DEBUG")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -ffast-math")
 
 # Requires OpenMP
 find_package(OpenMP REQUIRED)
