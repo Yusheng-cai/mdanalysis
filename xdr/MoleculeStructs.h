@@ -11,8 +11,10 @@ namespace Molecule
         int residueNumber_;
         std::string residueName_;
         std::string atomName_;
+
         int atomNumber_;
         Real mass_;
+        Real charge_;
 
         Real3 positions_;
     };
