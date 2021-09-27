@@ -33,8 +33,9 @@ ResidueGroup::ResidueGroup(const ResidueInput& input)
 
         for (int i=0;i<Residues_[index].atoms_.size();i++)
         {
-            Residues_[index].atoms_[i].mass_ = top_.getMassFromAtomName(Residues_[index].atoms_[i].atomName_);
-            Residues_[index].atoms_[i].charge_ = top_.getChargeFromAtomName(Residues_[index].atoms_[i].atomName_);
+            Residues_[index].atoms_[i].type_ = top_.getAtomTypeFromAtomName(Residues_[index].atoms_[i].atomName_);
+            Residues_[index].atoms_[i].mass_ = top_.getMassFromAtomType(Residues_[index].atoms_[i].type_);
+            Residues_[index].atoms_[i].charge_ = top_.getChargeFromAtomType(Residues_[index].atoms_[i].type_);
         }
 
         atomSize_ += Residues_[index].atoms_.size();
