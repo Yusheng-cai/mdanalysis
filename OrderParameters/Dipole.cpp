@@ -21,6 +21,8 @@ Dipole::Dipole(const CalculationInput& input)
     dipoledirection_.resize(res.size());
 
     initializeBins();
+
+    initializeAtomIndices();
 }
 
 void Dipole::initializeAtomIndices()
@@ -32,6 +34,11 @@ void Dipole::initializeAtomIndices()
     std::iota(Atomindices_.begin(), Atomindices_.end(), 1);
 
     pack_.ReadVectorNumber("atomIndices", ParameterPack::KeyType::Optional, Atomindices_);
+
+    for (int i=0;i<Atomindices_.size();i++)
+    {
+        Atomindices_[i] -= 1;
+    }
 }
 
 void Dipole::initializeBins()
@@ -56,17 +63,38 @@ void Dipole::calculate()
     {
         auto& atoms  = res[i].atoms_;
         Real3 dipole = {};
+
+        Real3 COM = CalculationTools::getCOM(res[i], simstate_, Atomindices_);
+
+        #ifdef MY_DEBUG
+        std::cout << "COM for the " << i  << "th molecule is " << COM[0] << " " << COM[1] << " " << COM[2] << std::endl;
+        #endif 
+
         for (int j=0;j<Atomindices_.size();j++)
         {
-            int id_ = Atomindices_[j] - 1;
+            int id_ = Atomindices_[j];
+            Real3 dist;
+            Real distsq;
+            simstate_.getSimulationBox().calculateDistance(atoms[id_].positions_, COM, dist, distsq);
+
+            #ifdef MY_DEBUG
+            std::cout << "distance of " << id_ << " atom with respect to COM is " << dist[0] << " " << dist[1] << " " << dist[2] << std::endl;
+            #endif 
+
             for(int k=0;k<3;k++)
             {
-                dipole[k] += atoms[id_].charge_* atoms[id_].positions_[k];
+                dipole[k] += atoms[id_].charge_* dist[k];
+                std::cout << "atoms charge for " << id_ << " = " << atoms[id_].charge_ << std::endl;
             }
         }
-
+        LinAlg3x3::normalize(dipole);
         Real dot_product = LinAlg3x3::DotProduct(dipole, direction_);
-        costheta[i] += dot_product;
+        costheta[i] = dot_product;
+
+        #ifdef MY_DEBUG
+        std::cout << "dipole for the " << i << "th molecule is " << dipole[0] << " " << dipole[1] << " " << dipole[2] << std::endl;
+        std::cout << "costheta for the " << i << "th molecule is " << dot_product << std::endl;
+        #endif
     }
 
     // bin the data 

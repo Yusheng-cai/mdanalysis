@@ -1,7 +1,9 @@
+#pragma once
 #include "Calculation.h"
 #include "tools/Assert.h"
 #include "Bin.h"
 #include "LinAlgTools.h"
+#include "CalculationTools.h"
 
 #include <vector>
 #include <array>
@@ -29,6 +31,6 @@ class Dipole : public Calculation
 
         // The atom indices in which we want to find the dipoles 
         std::vector<int> Atomindices_;
-        Real3 direction_;
+        Real3 direction_ = {0,0,1};
         Binptr bin_;
 };
