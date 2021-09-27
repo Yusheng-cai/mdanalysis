@@ -34,6 +34,7 @@ ResidueGroup::ResidueGroup(const ResidueInput& input)
         for (int i=0;i<Residues_[index].atoms_.size();i++)
         {
             Residues_[index].atoms_[i].mass_ = top_.getMassFromAtomName(Residues_[index].atoms_[i].atomName_);
+            Residues_[index].atoms_[i].charge_ = top_.getChargeFromAtomName(Residues_[index].atoms_[i].atomName_);
         }
 
         atomSize_ += Residues_[index].atoms_.size();
@@ -46,14 +47,19 @@ void ResidueGroup::update(const VectorReal3& total_atoms_)
 {
     for (int i=0;i<Residues_.size();i++)
     { 
-        //std::cout << "------Residue " << i << "-------" << std::endl;
+        #ifdef MY_DEBUG
+        std::cout << "------Residue " << i << "-------" << std::endl;
+        #endif 
+
         for (int j=0;j<Residues_[i].atoms_.size();j++)
         {
             int atNum = Residues_[i].atoms_[j].atomNumber_ - 1;
             // be careful, atomNumber is 1 based
             Residues_[i].atoms_[j].positions_ = total_atoms_[atNum];
-            // std::cout << "Atom " << atNum << ": " << Residues_[i].atoms_[j].positions_[0] << " " << Residues_[i].atoms_[j].positions_[1] << \
-            // " " << Residues_[i].atoms_[j].positions_[2] << std::endl;
+            #ifdef MY_DEBUG
+            std::cout << "Atom " << atNum << ": " << Residues_[i].atoms_[j].positions_[0] << " " << Residues_[i].atoms_[j].positions_[1] << \
+            " " << Residues_[i].atoms_[j].positions_[2] << std::endl;
+            #endif
         }
 
     }
