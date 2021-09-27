@@ -1,5 +1,10 @@
 #include "Dipole.h"
 
+namespace CalculationRegistry
+{
+    registry_<Dipole> registerDipole("dipole");
+}
+
 Dipole::Dipole(const CalculationInput& input)
 :Calculation(input)
 {
