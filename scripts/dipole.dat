@@ -1,0 +1,31 @@
+xdrfile = {
+	path = 5CHSAM_295_0.1_pbc.xtc
+}
+
+grofile = {
+    path = 5CHSAM_295_0.1.gro
+}
+
+topology = {
+    path = 5CB.itp
+}
+
+residuegroup = {
+	name = CH
+	selection = [ resname CH ]
+}
+
+calculation = {
+    type = dipole
+    residue = lc
+    bin = {
+        range = [ -1 1 ]
+        numbins = 100
+    }
+    outputs = [ costheta ]
+    outputNames = [ c.out ]
+}
+
+driver = {
+	startingframe = 2000
+}
