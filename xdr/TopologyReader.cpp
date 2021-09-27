@@ -117,8 +117,29 @@ void TopologyReader::MakeAtomNameToMassMap()
     AtomNameToTypeMap_.clear(); 
     for (int i=0;i<atomtypes_.size();i++)
     {
-        AtomNameToMassMap_.insert(std::make_pair(atomtypes_[i].atomName_, atomtypes_[i].mass_));
+        auto it  = AtomNameToMassMap_.find(atomtypes_[i].atomName_);
+
+        if (it == AtomNameToMassMap_.end())
+        {
+            AtomNameToMassMap_.insert(std::make_pair(atomtypes_[i].atomName_, atomtypes_[i].mass_));
+        }
     }
+}
+
+void TopologyReader::MakeAtomNameToChargeMap()
+{
+    AtomNameToChargeMap_.clear();
+
+    for (int i=0;i<atomtypes_.size();i++)
+    {
+        auto it = AtomNameToChargeMap_.find(atomtypes_[i].atomName_);
+
+        if (it == AtomNameToChargeMap_.end())
+        {
+            AtomNameToChargeMap_.insert(std::make_pair(atomtypes_[i].atomName_, atomtypes_[i].charge_));
+        }
+    }
+    
 }
 
 void TopologyReader::MakeAtomNameToTypeMap()
@@ -147,6 +168,15 @@ TopologyReader::Real TopologyReader::getMassFromAtomName(const std::string& atom
     auto it = AtomNameToMassMap_.find(atomname);
 
     ASSERT((it != AtomNameToMassMap_.end()), "The atomname " << atomname << " does not exist in topology.");
+
+    return it -> second;
+}
+
+TopologyReader::Real TopologyReader::getChargeFromAtomName(const std::string& atomName)
+{
+    auto it  = AtomNameToChargeMap_.find(atomName);
+
+    ASSERT((it != AtomNameToChargeMap_.end()), "The atom name " << atomName << " does not exist in topology.");
 
     return it -> second;
 }
