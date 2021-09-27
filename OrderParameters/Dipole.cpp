@@ -11,6 +11,8 @@ Dipole::Dipole(const CalculationInput& input)
     pack_.ReadString("residue", ParameterPack::KeyType::Required, residueName_);
     pack_.ReadArrayNumber("direction", ParameterPack::KeyType::Optional, direction_);
 
+    registerOutputFunction("costheta", [this](std::string name) -> void {this -> printHistogram(name);});
+
     // add the corresponding residuegroup
     addResidueGroup(residueName_);
 
