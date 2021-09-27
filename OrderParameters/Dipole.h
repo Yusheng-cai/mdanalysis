@@ -20,12 +20,15 @@ class Dipole : public Calculation
 
         void printHistogram(std::string name);
         void initializeBins();
+        void initializeAtomIndices();
 
     private:
         std::string residueName_;
         std::vector<Real3> dipoledirection_;
         std::vector<Real> histogram_;
 
+        // The atom indices in which we want to find the dipoles 
+        std::vector<int> Atomindices_;
         Real3 direction_;
         Binptr bin_;
 };

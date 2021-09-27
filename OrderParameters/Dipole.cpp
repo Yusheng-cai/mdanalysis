@@ -16,6 +16,17 @@ Dipole::Dipole(const CalculationInput& input)
     initializeBins();
 }
 
+void Dipole::initializeAtomIndices()
+{
+    auto& res = getResidueGroup(residueName_).getResidues();
+    int atomNum = res[0].atoms_.size();
+    Atomindices_.resize(atomNum);
+
+    std::iota(Atomindices_.begin(), Atomindices_.end(), 1);
+
+    pack_.ReadVectorNumber("atomIndices", ParameterPack::KeyType::Optional, Atomindices_);
+}
+
 void Dipole::initializeBins()
 {
     auto binPack = pack_.findParamPack("bin", ParameterPack::KeyType::Required);
@@ -36,14 +47,14 @@ void Dipole::calculate()
     // calculate the dipoles
     for (int i=0;i<residueSize;i++)
     {
-        int numAtoms = res[i].atoms_.size();
         auto& atoms  = res[i].atoms_;
         Real3 dipole = {};
-        for (int j=0;j<numAtoms;j++)
+        for (int j=0;j<Atomindices_.size();j++)
         {
+            int id_ = Atomindices_[j] - 1;
             for(int k=0;k<3;k++)
             {
-                dipole[k] += atoms[j].charge_* atoms[j].positions_[k];
+                dipole[k] += atoms[id_].charge_* atoms[id_].positions_[k];
             }
         }
 
