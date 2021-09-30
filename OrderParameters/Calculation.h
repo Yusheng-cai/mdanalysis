@@ -62,6 +62,8 @@ class Calculation
         const ResidueGroup& getResidueGroup(std::string name) const;
 
     protected:
+        int precision_=3;
+
         SimulationState& simstate_;
 
         std::map<std::string,int> MapAtomGroupNameToIndex_;
