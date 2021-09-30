@@ -87,7 +87,7 @@ void Pcost::calculate()
         int k = InsideIndices[i];
         Real cost = Qtensor::vec_dot(uij_[k], arr_);
 
-        ASSERT((cost >= -1 && cost <= 1), "cosine(theta) is not within range of -1 and 1");
+        // ASSERT((cost >= -1 && cost <= 1), "cosine(theta) is not within range of -1 and 1");
 
         int binNum = costBin_->findBin(cost);
         ASSERT((binNum <= histogram_.size()-1), "Bin number is out of range of histogram.");
