@@ -69,9 +69,6 @@ class QtensorZ : public Calculation
         int headIndex_;
         int tailIndex_;
 
-        // The indices of the atoms where COM is calculated wrt 
-        std::vector<int> COMIndices_;
-
         std::vector<Real> P2_;
         std::vector<Real> P2avg_;
 
