@@ -8,6 +8,7 @@
 #include <vector>
 #include <array>
 #include <string>
+#include <iomanip>
 #include <memory>
 
 class Dipole : public Calculation

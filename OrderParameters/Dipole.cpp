@@ -125,6 +125,7 @@ void Dipole::finishCalculate()
 void Dipole::printHistogram(std::string name)
 {
     std::ofstream ofs_;
+    ofs_ << std::fixed << std::setprecision(precision_);
     ofs_.open(name);
 
     ofs_ << "# positions  Number\n";
