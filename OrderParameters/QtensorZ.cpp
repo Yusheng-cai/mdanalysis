@@ -21,20 +21,9 @@ QtensorZ::QtensorZ(const CalculationInput& input)
     registerPerIterOutputFunction("num", [this](std::ofstream& ofs) -> void{this -> printPerIterNum(ofs);});
 
     // add the residue group to the system
-    addResidueGroup(residueName_);
-    auto& res = getResidueGroup(residueName_);
-    // COM Indices start with 1
-    COMIndices_.resize(res.getResidues()[0].atoms_.size());
-    std::iota(COMIndices_.begin(), COMIndices_.end(), 1.0);
-    COMIndex_provided_ = input.pack_.ReadVectorNumber("COMIndices", ParameterPack::KeyType::Optional, COMIndices_);
-
+    initializeResidueGroup(residueName_);
     headIndex_ --;
     tailIndex_ --;
-
-    for (int i=0;i<COMIndices_.size();i++)
-    {
-        COMIndices_[i] -= 1;
-    }
  
     auto binPack = input.pack_.findParamPack("bin", ParameterPack::KeyType::Required);
 
