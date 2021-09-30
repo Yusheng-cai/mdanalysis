@@ -12,9 +12,10 @@ int Bin::findBin(Real x)
 {
     int index;
 
-    if ( x == range_[0])
+    Real epsilon = 1e-5;
+    if ( std::abs(x - range_[0]) <= epsilon)
     {
-        index = std::ceil((x - range_[0])/step_);
+        index = 0;
     }
     else
     {
