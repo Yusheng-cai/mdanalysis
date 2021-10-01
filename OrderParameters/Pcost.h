@@ -29,7 +29,9 @@ class Pcost : public Calculation
         void printHistogram(std::string name);
         void printAtomIndices(std::string name);
 
-    private:
+        void printHistogramPerIter(std::ofstream& ofs);
+
+    protected:
         Binptr costBin_;
 
         // the name of the residuegroup provided
@@ -37,6 +39,9 @@ class Pcost : public Calculation
 
         // histogram
         std::vector<Real> histogram_;
+
+        // histogram per iteration
+        std::vector<Real> histogramPerIter_;
 
         int headIndex_;
         int tailIndex_;

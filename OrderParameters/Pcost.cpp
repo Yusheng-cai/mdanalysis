@@ -22,6 +22,8 @@ Pcost::Pcost(const CalculationInput& input)
     registerOutputFunction("histogram", [this](std::string name) -> void { this -> printHistogram(name);});
     registerOutputFunction("AtomIndices", [this](std::string name) -> void { this -> printAtomIndices(name);});
 
+    registerPerIterOutputFunction("histogram", [this](std::ofstream& ofs) -> void { this -> printHistogramPerIter(ofs);});
+
     headIndex_--;
     tailIndex_--;
 
@@ -41,6 +43,10 @@ void Pcost::calculate()
 {
     auto& res = getResidueGroup(residueGroupName_).getResidues();
     auto& pv  = simstate_.getProbeVolume(ProbeVolumeName_);
+
+    // clear the histogram per iteration
+    histogramPerIter_.clear();
+    histogramPerIter_.resize(costBin_->getNumbins(),0.0);
 
     // find all the COM of the residues in the system
     #pragma omp parallel for
@@ -93,7 +99,17 @@ void Pcost::calculate()
         ASSERT((binNum <= histogram_.size()-1), "Bin number is out of range of histogram.");
 
         histogram_[binNum] += 1; 
+        histogramPerIter_[binNum] += 1;
     }
+}
+
+void Pcost::printHistogramPerIter(std::ofstream& ofs)
+{
+    for (int i=0;i<histogramPerIter_.size();i++)
+    {
+        ofs << histogramPerIter_[i] << "\t";
+    }
+    ofs << "\n";
 }
 
 void Pcost::finishCalculate()
