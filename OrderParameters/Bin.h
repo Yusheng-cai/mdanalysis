@@ -1,3 +1,4 @@
+#pragma once
 #include "tools/Assert.h"
 #include "tools/CommonTypes.h"
 #include "tools/InputParser.h"

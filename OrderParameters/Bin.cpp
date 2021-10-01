@@ -17,6 +17,11 @@ int Bin::findBin(Real x)
     {
         index = 0;
     }
+    else if (std::abs(x - range_[1]) <= epsilon)
+    {
+        index = numbins_ - 1;
+    }
+    
     else
     {
         index = std::ceil((x-range_[0])/step_) - 1;
