@@ -38,6 +38,7 @@ target_sources(mdaOrderParameters PRIVATE
     "ProbeVolumeSimBox.cpp"
     "Dipole.cpp"
     "LinAlgTools.cpp"
+    "Pcost2.cpp"
 )
 
 set(mdaOrderParameters_HEADER
@@ -77,6 +78,7 @@ set(mdaOrderParameters_HEADER
     "ProbeVolumeSimBox.h"
     "Dipole.h"
     "LinAlgTools.h"
+    "Pcost2.h"
 )
 
 target_include_directories(mdaOrderParameters
