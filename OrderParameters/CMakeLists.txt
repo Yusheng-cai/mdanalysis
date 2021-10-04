@@ -39,6 +39,7 @@ target_sources(mdaOrderParameters PRIVATE
     "Dipole.cpp"
     "LinAlgTools.cpp"
     "Pcost2.cpp"
+    "Pcost2Qtensor.cpp"
 )
 
 set(mdaOrderParameters_HEADER
@@ -79,6 +80,7 @@ set(mdaOrderParameters_HEADER
     "Dipole.h"
     "LinAlgTools.h"
     "Pcost2.h"
+    "Pcost2Qtensor.h"
 )
 
 target_include_directories(mdaOrderParameters
