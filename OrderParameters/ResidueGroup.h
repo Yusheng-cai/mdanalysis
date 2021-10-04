@@ -40,6 +40,12 @@ class ResidueGroup
         int size() const {return size_;}
         int getAtomSize() const {return atomSize_;}
 
+        const Molecule::residue& operator[](int i) const
+        {
+            return Residues_[i];
+        }
+
+
 
     private:
         std::vector<int> AtomGroupGlobalIndices_;
