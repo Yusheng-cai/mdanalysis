@@ -95,7 +95,7 @@ void OutputStream::printIfOnStep()
         {
             ofs_ << driver_.getOutputValue(val).get_value();
             
-            ofs_ << " ";
+            ofs_ << "\t";
         }
 
         ofs_ << "\n";
