@@ -17,14 +17,19 @@ Pcost2Qtensor::Pcost2Qtensor(const CalculationInput& input)
     addResidueGroup(residue_name_);
 
     auto& res = getResidueGroup(residue_name_);
-    int size  = res.size();
-    int atomSize = res.getAtomSize();
-    uij_.resize(size);
-    norm_.resize(size,0.0);
-    cost2Peratom_.resize(3, std::vector<Real>(atomSize,0.0));
-    cost2PerRes_.resize(3, std::vector<Real>(size,0.0));
+    size_  = res.size();
+    atomSize_ = res.getAtomSize();
+    uij_.resize(size_);
+    norm_.resize(size_,0.0);
+    cost2Peratom_.resize(3, std::vector<Real>(atomSize_,0.0));
+    cost2PerRes_.resize(3, std::vector<Real>(size_,0.0));
 
-    pack_.findParamPack("betafactor", ParameterPack::KeyType::Optional);
+    auto bfPack = pack_.findParamPack("betafactor", ParameterPack::KeyType::Optional);
+    if (bfPack != nullptr)
+    {
+        bf_ = bptr(new BetaFactorWriter(const_cast<ParameterPack&>(*bfPack)));
+    }
+    
 
     registerPerIterOutputFunction("cost20", [this](std::ofstream& ofs) -> void { this -> printcost20PerResIter(ofs);});
     registerPerIterOutputFunction("cost21", [this](std::ofstream& ofs) -> void { this -> printcost21PerResIter(ofs);});
@@ -71,9 +76,17 @@ void Pcost2Qtensor::calculate()
 
     for (int i=0;i<3;i++)
     {
-        for (int j=0;j<uij_.size();j++)
+        for (int j=0;j<size_;j++)
         {
-            cost2PerRes_[i][j] = std::pow(Qtensor::vec_dot(uij_[j], eigenvector_[i]),2.0);
+            Real cost2 = std::pow(Qtensor::vec_dot(uij_[j], eigenvector_[i]),2.0);
+            cost2PerRes_[i][j] = cost2;
+            int aSize = res[j].atoms_.size();
+
+            for (int k=0;k<aSize;k++)
+            {
+                int atomIndex = res[j].atoms_[k].atomNumber_-1;
+                cost2Peratom_[i][atomIndex] = cost2;
+            }
         }
     }
 }
@@ -106,4 +119,14 @@ void Pcost2Qtensor::printcost22PerResIter(std::ofstream& ofs)
     }
 
     ofs << "\n";
+}
+
+void Pcost2Qtensor::printOutputOnStep()
+{
+    if (bf_.get() != nullptr)
+    {
+        int timestep = simstate_.getFrameNumber();
+
+        bf_ -> write(timestep, cost2Peratom_[0]);
+    }
 }

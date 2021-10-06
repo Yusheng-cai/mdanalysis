@@ -4,6 +4,7 @@
 #include "CalculationTools.h"
 #include "Qtensor.h"
 #include "Pcost.h"
+#include "BetaFactorWriter.h"
 
 #include <string>
 #include <numeric>
@@ -23,6 +24,7 @@ class Pcost2Qtensor : public Calculation
         using Matrix = CommonTypes::Matrix;
         using Real3  = CommonTypes::Real3;
         using Real   = CommonTypes::Real;
+        using bptr   = std::unique_ptr<BetaFactorWriter>; 
 
         Pcost2Qtensor(const CalculationInput& input);
 
@@ -31,6 +33,7 @@ class Pcost2Qtensor : public Calculation
         void printcost22PerResIter(std::ofstream& ofs);
         virtual void calculate() override;
         virtual void finishCalculate() override {};
+        virtual void printOutputOnStep();
     
     private:
         Matrix Qtensor_;
@@ -51,4 +54,9 @@ class Pcost2Qtensor : public Calculation
         int tail_index_;
 
         std::string residue_name_;
+
+        int atomSize_;
+        int size_;
+
+        bptr bf_;
 };
