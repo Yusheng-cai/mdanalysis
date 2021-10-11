@@ -28,6 +28,12 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
 
+# Requires FFTW3 for now 
+find_package(FFTW3)
+if (FFTW3_FOUND)
+  message(STATUS "FFTW3 library: ${FFTW3_LIBRARIES}")
+endif()
+
 enable_testing()
 
 add_subdirectory(xdr)
