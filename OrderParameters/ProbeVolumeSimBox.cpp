@@ -8,6 +8,7 @@ namespace ProbeVolumes
 ProbeVolumeSimBox::ProbeVolumeSimBox(ProbeVolumeInput& input)
 :ProbeVolume(input)
 {
+    ASSERT((! isDynamic()), "The simulation box probe volume does not support dynamic atom group.");
 }
 
 ProbeVolumeOutput ProbeVolumeSimBox::calculate(const Real3& x) const
