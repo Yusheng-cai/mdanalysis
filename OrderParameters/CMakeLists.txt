@@ -40,6 +40,9 @@ target_sources(mdaOrderParameters PRIVATE
     "LinAlgTools.cpp"
     "Pcost2.cpp"
     "Pcost2Qtensor.cpp"
+    "findNearStructure.cpp"
+    "FFT.cpp"
+    "MSD.cpp"
 )
 
 set(mdaOrderParameters_HEADER
@@ -81,7 +84,11 @@ set(mdaOrderParameters_HEADER
     "LinAlgTools.h"
     "Pcost2.h"
     "Pcost2Qtensor.h"
+    "findNearStructure.h"
+    "FFT.h"
+    "MSD.h"
 )
+
 
 target_include_directories(mdaOrderParameters
                         PUBLIC 
@@ -89,7 +96,11 @@ target_include_directories(mdaOrderParameters
                         $<INSTALL_INTERFACE:${PROJECT_BINARY_DIR}/include>
 )
 
-target_link_libraries(mdaOrderParameters PUBLIC mdatools mdaxdr mdaparallel)
+target_include_directories(mdaOrderParameters PUBLIC ${FFTW3_INCLUDE_DIRS})
+
+message("In src, ${FFTW3_LIBRARIES}")
+
+target_link_libraries(mdaOrderParameters PUBLIC mdatools mdaxdr mdaparallel ${FFTW3_LIBRARIES})
 
 include(InstallLibraryWithStandardSetup)
 InstallLibraryWithStandardSetup(mdaOrderParameters 
