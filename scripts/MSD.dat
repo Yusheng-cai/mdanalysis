@@ -1,0 +1,32 @@
+xdrfile = {
+	path = t.xtc
+}
+
+grofile = {
+    path = NP.gro
+}
+
+topology = {
+    path = NP.itp
+}
+
+residuegroup = {
+	name = NP
+	selection = [ resname AU , AUS , AUL ]
+}
+
+residuegroup = {
+	name = lc
+	selection = [ resname 5CB ]
+}
+
+calculation = {
+    type = MSD
+    residue = NP
+    outputs = [ msd ]
+    outputNames = [ msd.out ]
+}
+
+driver = {
+	startingframe = 101
+}
