@@ -89,7 +89,7 @@ void OutputStream::printIfOnStep()
     {
         ofs_ << driver_.getTime();
 
-        ofs_ << " ";
+        ofs_ << "\t";
 
         for (auto val:value_)
         {
