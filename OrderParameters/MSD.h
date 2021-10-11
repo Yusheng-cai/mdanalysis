@@ -19,7 +19,7 @@ class MSD : public Calculation
 
         // function that calculates the MSD for a single atom over time 
         // dimension : (nframes, ndim)
-        std::vector<Real> calculateMSD(std::vector<Real3>& data);
+        std::vector<std::vector<Real>> calculateMSD(std::vector<Real3>& data);
 
         // output function
         void printMSD(std::string name);
@@ -33,11 +33,15 @@ class MSD : public Calculation
 
         std::string directionStr_="xyz";
 
+        std::vector<std::string> VectorDirection_;
+
         std::vector<int> directionIndex_;
+
+        std::vector<std::vector<int>> directionsIndex_;
 
         int directionSize=3;
 
-        std::vector<Real> MSD_;
+        std::vector<std::vector<Real>> MSD_;
 
         std::map<std::string,std::vector<int>> MapStrToIndex2 = 
         {{"x", {0}}, 

@@ -9,12 +9,17 @@ MSD::MSD(const CalculationInput& input)
 : Calculation(input)
 {
     pack_.ReadString("residue", ParameterPack::KeyType::Required, residueName_);
-    pack_.ReadString("direction", ParameterPack::KeyType::Optional, directionStr_);
 
-    auto it = MapStrToIndex2.find(directionStr_);
-    ASSERT((it != MapStrToIndex2.end()), "The direction " << directionStr_ << " is not available.");
-    directionIndex_ = it -> second;
-    directionSize = directionIndex_.size();
+    // the number of directions 
+    pack_.ReadVectorString("directions", ParameterPack::KeyType::Required, VectorDirection_);
+
+    for (int i=0;i<VectorDirection_.size();i++)
+    {
+        auto it = MapStrToIndex2.find(VectorDirection_[i]);
+        ASSERT((it != MapStrToIndex2.end()), "The direction " << VectorDirection_[i] << " is not available.");
+
+        directionsIndex_.push_back(it -> second);
+    }
 
     // add the residue group
     addResidueGroup(residueName_);
@@ -45,7 +50,10 @@ void MSD::calculate()
 void MSD::finishCalculate()
 {
     int numFrames = positions_.size();
-    std::vector<std::vector<Real>> MSDtimeframe(numFrames, std::vector<Real>(numAtoms_,0.0));
+    int numdir    = directionsIndex_.size();
+
+    // numdir, numFrames, numAtoms
+    std::vector<std::vector<std::vector<Real>>> MSDtimeframe(numdir, std::vector<std::vector<Real>>(numFrames, std::vector<Real>(numAtoms_,0.0)));
 
     for (int i=0;i<numAtoms_;i++)
     {
@@ -55,23 +63,31 @@ void MSD::finishCalculate()
             atomPos[j] = positions_[j][i];
         }
 
-        std::vector<Real> MSD_atom = calculateMSD(atomPos);
+        // (numdir, numFrames)
+        std::vector<std::vector<Real>> MSD_atom = calculateMSD(atomPos);
 
-        for (int j=0;j<numFrames;j++)
+        for (int j=0;j<numdir;j++)
         {
-            MSDtimeframe[j][i] = MSD_atom[j];
+            for (int k=0;k<numFrames;k++)
+            {
+                MSDtimeframe[j][k][i] = MSD_atom[j][k];
+            }
         }
     }
 
     // finally average over all the MSD for all the atoms 
-    MSD_.resize(numFrames,0.0);
-    for (int i=0;i<numFrames;i++)
+    MSD_.resize(numdir, std::vector<Real>(numFrames,0.0));
+
+    for (int i=0;i<numdir;i++)
     {
-        for (int j=0;j<numAtoms_;j++)
+        for (int j=0;j<numFrames;j++)
         {
-            MSD_[i] += MSDtimeframe[i][j];
+            for (int k=0;k<numAtoms_;k++)
+            {
+                MSD_[i][j] += MSDtimeframe[i][j][k];
+            }
+            MSD_[i][j] /= numAtoms_;
         }
-        MSD_[i] /= numAtoms_;
     }
 }
 
@@ -81,72 +97,90 @@ void MSD::printMSD(std::string name)
 
     ofs.open(name);
 
-    for (int i=0;i<MSD_.size();i++)
+    int numdir = directionsIndex_.size();
+    int numframes = MSD_[0].size();
+
+    for (int i=0;i<numframes;i++)
     {
-        ofs << MSD_[i] << "\n";
+        for (int j=0;j<numdir;j++)
+        {
+            ofs << MSD_[j][i] << "\t";
+        }
+        ofs << "\n";
     }
 
     ofs.close();
 }
 
-std::vector<MSD::Real> MSD::calculateMSD(std::vector<Real3>& position)
+std::vector<std::vector<MSD::Real>> MSD::calculateMSD(std::vector<Real3>& position)
 {
-    int size = position[0].size();
-
-    ASSERT((size == directionSize), "The position passed into calculating MSD is " << size << " while the required size is " << directionSize);
-
     int numFrames = position.size();
+    int numdir = directionsIndex_.size();
 
     // make a vector of squares 
-    std::vector<Real> squares(numFrames, 0.0);
-    std::vector<std::vector<Real>> data(numFrames);
-    std::vector<std::vector<Real>> AC_vector(size);
+    // which direction, numFrames
+    std::vector<std::vector<Real>> squares(numdir, std::vector<Real>(numFrames, 0.0));
+
+    // set up the MSD 
+    // which direction, numFrames
+    std::vector<std::vector<Real>> MSD(numdir, std::vector<Real>(numFrames,0.0));
+
+    // which direction, numFrames,  directionIndex
+    std::vector<std::vector<std::vector<Real>>> data(numdir);
+    // which direction, directionIndex, numFrames
+    std::vector<std::vector<std::vector<Real>>> AC_vector(numdir);
 
     // calculate the squared distances
-    for (int i=0;i<numFrames;i++)
+    for (int i=0;i<numdir;i++)
     {
-        data[i].resize(directionSize);
-        for (int j=0;j<directionSize;j++)
+        data[i].resize(numFrames);
+        for (int j=0;j<numFrames;j++)
         {
-            int index = directionIndex_[j];
-            squares[i] += std::pow(position[i][index],2.0);
-            data[i][j] = position[i][index];
+            int directionSize = directionsIndex_[i].size();
+            data[i][j].resize(directionSize,0.0);
+            for (int k=0;k<directionSize;k++)
+            {
+                int index = directionsIndex_[i][k];
+                squares[i][j] += std::pow(position[j][index],2.0);
+                data[i][j][k] = position[j][index];
+            }
         }
     }
 
-    // calculate the autocorrelation in each dimension
-    FFT::autocorrelation(data, AC_vector, true);
-
-    // create the SAB vector
-    std::vector<Real> SAB(numFrames);
-    for (int i=0;i<numFrames;i++)
+    for (int i=0;i<directionsIndex_.size();i++)
     {
-        for (int j=0;j<directionSize;j++)
+        int directionSize = directionsIndex_[i].size();
+
+        ASSERT((data[i][0].size() == directionSize), "The size of the data does not match the size of the directions.");
+
+        // calculate the autocorrelation in each dimension
+        FFT::autocorrelation(data[i], AC_vector[i], true);
+
+        // create the SAB vector
+        std::vector<Real> SAB(numFrames);
+        for (int j=0;j<numFrames;j++)
         {
-            SAB[i] += AC_vector[j][i];
+            for (int k=0;k<directionSize;k++)
+            {
+                SAB[j] += AC_vector[i][k][j];
+            }
         }
-    }
 
-    Real sumSQ=0.0;
-    for (int i=0;i<numFrames-1;i++)
-    {
-        sumSQ += squares[i];
-        std::cout << "squares " << i << " = " << squares[i] << std::endl;
-    }
-    sumSQ = 2*sumSQ;
-    std::cout << "sumSQ = " << sumSQ << std::endl;
+        Real sumSQ=0.0;
+        for (int j=0;j<numFrames;j++)
+        {
+            sumSQ += squares[i][j];
+        }
 
-    std::vector<Real> MSD(numFrames,0.0);
+        sumSQ = 2*sumSQ;
 
-    for (int i=1;i<numFrames-1;i++)
-    {
-        sumSQ = sumSQ - squares[i-1] - squares[numFrames-i];
+        MSD[i][0] = sumSQ/numFrames - 2*SAB[0];
 
-        std::cout << "sumSQ = " << sumSQ << std::endl;
-
-        MSD[i] =  sumSQ/(numFrames-i) - 2*SAB[i];
-
-        std::cout << "MSD " << i << " = " << MSD[i] << std::endl;
+        for (int j=1;j<numFrames;j++)
+        {
+            sumSQ = sumSQ - squares[i][j-1] - squares[i][numFrames-j];
+            MSD[i][j] =  sumSQ/(numFrames-j) - 2*SAB[j];
+        }
     }
 
     return MSD;
