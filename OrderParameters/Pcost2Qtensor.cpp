@@ -127,6 +127,7 @@ void Pcost2Qtensor::printOutputOnStep()
     {
         int timestep = simstate_.getFrameNumber();
 
+        // always write out the direction with respect to the actual director
         bf_ -> write(timestep, cost2Peratom_[0]);
     }
 }
