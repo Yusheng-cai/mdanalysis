@@ -92,7 +92,7 @@ std::vector<const std::vector<std::string>*> ParameterPack::findVectors(const st
 
     if (num_matches == 0)
     {
-        ASSERT((keytype != ParameterPack::KeyType::Required), "The required key for vector is not provided.");
+        ASSERT((keytype != ParameterPack::KeyType::Required), "The required key " << key << " for vector is not provided.");
     }
 
     std::vector<const std::vector<std::string>*> vector_ptrs;
