@@ -44,18 +44,16 @@ class SimulationState
         void registerResidueGroup(std::string name, ResidueGroup& res);
 
         // get AtomGroup reference by name
-        const AtomGroup& getAtomGroup(std::string name) const;
         AtomGroup& getAtomGroup(std::string name);
         const std::map<std::string, AtomGroup>& getAtomGroupRegistry() const{ return MapName2AtomGroup_;}
 
         // get ResidueGroups by name
-        const ResidueGroup& getResidueGroup(std::string name) const;
         ResidueGroup& getResidueGroup(std::string name);
         const std::map<std::string, ResidueGroup>& getResidueGroupRegistry() const {return MapName2ResidueGroup_;}
 
         // register probe volume
         void registerProbeVolume(const std::string name, const ProbeVolume* pv_ptr);
-        const ProbeVolume& getProbeVolume(const std::string name) const;
+        ProbeVolume& getProbeVolume(const std::string name);
 
         ProbeVolume& accessProbeVolume(const std::string name);
 
