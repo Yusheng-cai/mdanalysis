@@ -250,6 +250,8 @@ void Driver::initializeProbeVolume(const std::vector<const ParameterPack*>& PVpa
         pack->ReadString("type", ParameterPack::KeyType::Required, pv_type);
         pack->ReadString("name", ParameterPack::KeyType::Required, pv_name);
 
+        ProbeVolumeNames_.push_back(pv_name);
+
         // TODO: change the PV input initialization
         ProbeVolumeInput PV_input{*pack, simstate_}; 
         auto pv_ptr = ProbeVolumes::Factory::instance().create(pv_type, PV_input);
@@ -316,6 +318,13 @@ void Driver::update()
         res.update(total_atom_positions_);
     }
 
+    // update the probe volume
+    for (int i=0;i<ProbeVolumeNames_.size();i++)
+    {
+        auto& pv = simstate_.getProbeVolume(ProbeVolumeNames_[i]);
+
+        pv.update();
+    }
 
     // update the simulation box
     auto& box = simstate_.getSimulationBox();
