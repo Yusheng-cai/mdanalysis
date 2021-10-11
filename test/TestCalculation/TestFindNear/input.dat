@@ -1,0 +1,36 @@
+xdrfile = {
+	path = NP.xtc
+}
+
+grofile = {
+    path = NP.gro
+}
+
+topology = {
+    path = NP.itp
+}
+
+residuegroup = {
+	name = NP
+	selection = [ resname AU , AUS , AUL ]
+}
+
+probevolume = {
+	name = v
+	type = sphere
+	dynamicgroup = NP
+	radius = 4.5 
+}
+
+residuegroup = {
+	name = lc
+	selection = [ resname 5CB ]
+}
+
+calculation = {
+    type = findnearstructure
+    residue = lc
+    probevolume = v
+    perIteroutputs = [ atomindices ] 
+    perIteroutputNames = [ op.out ]
+}
