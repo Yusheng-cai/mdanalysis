@@ -133,7 +133,6 @@ void FFT::autocorrelation(std::vector<std::vector<Real>>& data, std::vector<std:
             for (int j=0;j<N;j++)
             {
                 AC_vector[i][j] = ifft[j].real()/(N-j);
-                std::cout << "AC vector " << j << " = " << AC_vector[i][j] << "\n";
             }
         }
     }
