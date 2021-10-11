@@ -77,6 +77,9 @@ class Driver
         ParameterPack pack_;
         std::map<std::string, ProbeVolumePtr> MapName2PV_;
 
+        // probe volume names 
+        std::vector<std::string> ProbeVolumeNames_;
+
         // Vector of OrderParameters
         std::vector<OPptr> OP_;
 
