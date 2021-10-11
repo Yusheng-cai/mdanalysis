@@ -3,9 +3,11 @@
 #include "tools/CommonTypes.h"
 #include "tools/InputParser.h"
 #include "tools/GenericFactory.h"
+#include "ResidueGroup.h"
 #include "SimulationBox.h"
 
 #include <vector>
+#include <map>
 #include <array>
 #include <iostream>
 #include <string>
@@ -51,6 +53,10 @@ class ProbeVolume
         const SimulationState& getSimulationState() const{return simstate_;}
         const SimulationBox& getSimulationBox() const{return simbox_;}
 
+        // add dynamic residue groups
+        void addDynamicResidueGroup(std::string name);
+        ResidueGroup& getDynamicResidueGroup(std::string name);
+
         // getters
         Real getSigma() const {return sigma_;}
         Real getAlphaC() const {return ac_;}
@@ -64,12 +70,19 @@ class ProbeVolume
         Real ac_=0.02;
 
         // default Dynamic to be false
-        bool isDynamic_;
+        bool isDynamic_=false;
 
         SimulationState& simstate_;
         SimulationBox& simbox_;
 
         std::string name_;
+
+        // dynamic residue group
+        std::string dynamicResGroup_;
+
+        // The pointers to the residue groups
+        std::vector<ResidueGroup*> ResidueGroups_;
+        std::map<std::string, int> MapResidueNameToIndex_;
 };
 
 namespace ProbeVolumes
