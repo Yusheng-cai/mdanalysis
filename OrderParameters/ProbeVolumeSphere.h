@@ -2,6 +2,11 @@
 #include "ProbeVolume.h"
 #include "SimulationState.h"
 #include "IndicatorFunction1d.h"
+#include "CalculationTools.h"
+
+#include <algorithm>
+#include <list>
+#include <numeric>
 
 class ProbeVolumeSphere: public ProbeVolume
 {
@@ -10,6 +15,7 @@ class ProbeVolumeSphere: public ProbeVolume
         virtual ~ProbeVolumeSphere(){};
 
         virtual void setGeometry() override;
+        virtual void update() override;
 
         virtual ProbeVolumeOutput calculate(const Real3& x) const override;
 

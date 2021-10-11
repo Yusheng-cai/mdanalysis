@@ -9,13 +9,43 @@ ProbeVolumeSphere::ProbeVolumeSphere(ProbeVolumeInput& input)
 :ProbeVolume(input)
 {
     input.ParamPack.ReadNumber("radius", ParameterPack::KeyType::Required, r_);
-    input.ParamPack.ReadArrayNumber("center", ParameterPack::KeyType::Required, center_);
     input.ParamPack.ReadNumber("alpha_c", ParameterPack::KeyType::Optional, ac_);
     input.ParamPack.ReadNumber("sigma", ParameterPack::KeyType::Optional, sigma_);
+
+    if (isDynamic())
+    {
+        addDynamicResidueGroup(dynamicResGroup_);
+    }
+    else
+    {
+        input.ParamPack.ReadArrayNumber("center", ParameterPack::KeyType::Required, center_);
+    }
 
     func_ = IndicatorFunction1d(sigma_, ac_, r_); 
 
     setGeometry();
+}
+
+void ProbeVolumeSphere::update()
+{
+    if (isDynamic())
+    {
+        // obtain the residue group
+        auto& res = getDynamicResidueGroup(dynamicResGroup_).getTotalResidue();
+
+        std::vector<int> indices(res.atoms_.size());
+        std::iota(indices.begin(), indices.end(), 0);
+
+        // get the COM of the entire dynamic residue group
+        Real3 COM = CalculationTools::getCOM(res, simstate_, indices);
+
+        // update the center
+        center_ = COM;
+
+        #ifdef MY_DEBUG
+        std::cout << "COM updated = " << center_[0] << " " << center_[1] << " " << center_[2] << std::endl;
+        #endif 
+    }
 }
 
 void ProbeVolumeSphere::setGeometry()
