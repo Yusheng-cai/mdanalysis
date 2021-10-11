@@ -68,6 +68,7 @@ set(NONOMP_TEST "")
 list(APPEND NONOMP_TEST "TestCalculation/TestPcostz")
 list(APPEND NONOMP_TEST "TestCalculation/TestPcost")
 list(APPEND NONOMP_TEST "TestCalculation/TestDipole")
+list(APPEND NONOMP_TEST "TestCalculation/TestFindNear")
 
 foreach(TEST_NAME IN LISTS NONOMP_TEST)
     set(TEST_SCRIPT "${TEST_NAME}/input.dat")
