@@ -39,6 +39,7 @@ class ResidueGroup
         int getsize() const {return size_;}
         int size() const {return size_;}
         int getAtomSize() const {return atomSize_;}
+        const Molecule::residue getTotalResidue() const {return TotalResidues_;}
 
         const Molecule::residue& operator[](int i) const
         {
@@ -67,6 +68,9 @@ class ResidueGroup
 
         // The residues
         std::vector<Molecule::residue> Residues_;
+
+        // Total residues as a residue 
+        Molecule::residue TotalResidues_;
 
         // strategy for parsing
         stratptr strat_;

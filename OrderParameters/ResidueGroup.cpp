@@ -31,6 +31,7 @@ ResidueGroup::ResidueGroup(const ResidueInput& input)
     {
         Residues_[index] = GroResidues_[*it];
 
+
         for (int i=0;i<Residues_[index].atoms_.size();i++)
         {
             std::string residueName = Residues_[index].atoms_[i].residueName_;
@@ -38,6 +39,9 @@ ResidueGroup::ResidueGroup(const ResidueInput& input)
             Residues_[index].atoms_[i].type_ = top_.getAtomTypeFromAtomNameResname(residueName, atomname);
             Residues_[index].atoms_[i].mass_ = top_.getMassFromAtomTypeResname(residueName, Residues_[index].atoms_[i].type_);
             Residues_[index].atoms_[i].charge_ = top_.getChargeFromAtomTypeResname(residueName, Residues_[index].atoms_[i].type_);
+
+            Molecule::atom a = Residues_[index].atoms_[i];
+            TotalResidues_.atoms_.push_back(a);
         }
 
         atomSize_ += Residues_[index].atoms_.size();
@@ -64,6 +68,12 @@ void ResidueGroup::update(const VectorReal3& total_atoms_)
             " " << Residues_[i].atoms_[j].positions_[2] << std::endl;
             #endif
         }
+    }
 
+    for (int i=0;i<TotalResidues_.atoms_.size();i++)
+    {
+        int atNum = TotalResidues_.atoms_[i].atomNumber_ - 1;
+        // be careful, atomNumber is 1 based
+        TotalResidues_.atoms_[i].positions_ = total_atoms_[atNum];
     }
 }
