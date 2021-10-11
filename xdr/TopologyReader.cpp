@@ -91,6 +91,12 @@ void TopologyReader::Parse(std::string& name)
 
                 while (ss >> word)
                 {
+                    // sometimes we have comments at the end of line
+                    // e.g. blah blah ; comment 
+                    if (word == ";")
+                    {
+                        break;
+                    }
                     words.push_back(word);
                 }
 
