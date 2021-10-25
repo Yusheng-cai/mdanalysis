@@ -102,15 +102,6 @@ LinAlg3x3::Matrix LinAlg3x3::RotationMatrix(const Real3& v1, const Real3& v2)
 	rotMat[2][1] = (y * z * auxk) + x;
 	rotMat[2][2] = (z * z * auxk) + rdotz;
 
-    for (int i=0;i<3;i++)
-    {
-        for (int j=0;j<3;j++)
-        {
-            std::cout << rotMat[i][j] << "\t";
-        }
-        std::cout << "\n";
-    }
-
     return rotMat;
 }
 
