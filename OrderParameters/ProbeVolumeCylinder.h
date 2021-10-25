@@ -18,6 +18,7 @@ class ProbeVolumeCylinder : public ProbeVolume
         
         ProbeVolumeCylinder(ProbeVolumeInput& input);
 
+        // The x here is already pbc corrected and shifted to the correct frame of reference 
         virtual ProbeVolumeOutput calculate(const Real3& x) const;
 
         void setGeometry(Real Rmax, Real zmax, Real ac, Real sigma);

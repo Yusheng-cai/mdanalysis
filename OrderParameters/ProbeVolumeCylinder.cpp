@@ -11,8 +11,9 @@ void ProbeVolumeCylinder::setGeometry(Real rmax, Real zmax, Real ac, Real sigma)
     rrange_[0] = 0;
     rrange_[1] = rmax;
 
-    zrange_[0] = -zmax/2;
-    zrange_[1] = zmax/2;
+    // z goes from 0 to zmax
+    zrange_[0] = 0;
+    zrange_[1] = zmax;
 
     ac_ = ac;
     sigma_ = sigma;
@@ -23,14 +24,8 @@ void ProbeVolumeCylinder::setGeometry(Real rmax, Real zmax, Real ac, Real sigma)
 
 ProbeVolumeOutput ProbeVolumeCylinder::calculate(const Real3& x) const
 {
-    Real3 diff;
-
-    Real3 distance;
-    Real distsq_;
-    getSimulationBox().calculateDistance(x, center_,distance, distsq_); 
-
     // radius is x^2 + y^2
-    Real radius = std::sqrt(distance[1]*distance[1] + distance[0]*distance[0]);
+    Real radius = std::sqrt(x[1]*x[1] + x[0]*x[0]);
 
     Real dhtildedr_;
     Real htilder_;
@@ -42,7 +37,7 @@ ProbeVolumeOutput ProbeVolumeCylinder::calculate(const Real3& x) const
     Real dhtildedz_;
     Real htildez_;
     Real hz_;
-    zfunc_.calculate(distance[2],hz_, htildez_, dhtildedz_);
+    zfunc_.calculate(x[2],hz_, htildez_, dhtildedz_);
 
     // Calculate the non-coarse grained indicator for cylinder
     Real hcylinder = hz_*hr_;
@@ -56,10 +51,10 @@ ProbeVolumeOutput ProbeVolumeCylinder::calculate(const Real3& x) const
     if (radius >= 1e-7)
     {
         // dhtildedx
-        dhtildedc_[0] = dhtildedr_/radius*distance[0]*htildez_;
+        dhtildedc_[0] = dhtildedr_/radius*x[0]*htildez_;
 
         // dhtildedy 
-        dhtildedc_[1] = dhtildedr_/radius*distance[1]*htildez_;
+        dhtildedc_[1] = dhtildedr_/radius*x[1]*htildez_;
 
         // dhtildedz
         dhtildedc_[2] = dhtildedz_*htilder_;
