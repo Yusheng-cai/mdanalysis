@@ -26,7 +26,6 @@ class ProbeVolumeTiltedCylinder : public ProbeVolume
 
     private:
         cylinderPtr cylinder_;
-        std::string dynamicAtomName_;
 
         Real3 Zvector_;
 

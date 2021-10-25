@@ -32,7 +32,4 @@ class ProbeVolumeCylinder : public ProbeVolume
 
         // The center of the cylinder, all the atoms will be shifted accordingly
         Real3 center_ = {{0,0,0}};
-
-        Real ac_;
-        Real sigma_;
 };

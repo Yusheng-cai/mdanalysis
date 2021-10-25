@@ -9,11 +9,10 @@ ProbeVolumeTiltedCylinder::ProbeVolumeTiltedCylinder(ProbeVolumeInput& input)
 : ProbeVolume(input)
 {
     input.ParamPack.ReadNumber("radius", ParameterPack::KeyType::Required, radius_);
+    cylinder_ = cylinderPtr(new ProbeVolumeCylinder(input));
 
     if (isDynamic())
     {
-        addDynamicAtomGroup(dynamicAtomName_);
-
         auto& DynamicAG = getDynamicAtomGroup(dynamicAtomName_);
 
         ASSERT((DynamicAG.getNumAtoms() == 2), "The dynamic atom for dynamic cylinder is specified by 2 atoms.");
@@ -33,7 +32,7 @@ ProbeVolumeTiltedCylinder::ProbeVolumeTiltedCylinder(ProbeVolumeInput& input)
         }
         dist_ = std::sqrt(dist_);
 
-        rotationMat_ = LinAlg3x3::GetRotationMatrix(Zvector_, refVector);
+        rotationMat_ = LinAlg3x3::RotationMatrix(Zvector_, refVector);
 
         cylinder_ -> setGeometry(radius_, dist_, ac_, sigma_);
     }
@@ -47,18 +46,25 @@ void ProbeVolumeTiltedCylinder::setGeometry()
 
         const auto& Atoms = DynamicAG.getAtoms();
 
+        ASSERT((Atoms.size() == 2), "Dynamic cylinder is defined by 2 atoms.");
+
         base_ = Atoms[0].position;
         top_  = Atoms[1].position;
 
+
         // calculate the pbc corrected distance between top and base 
-        getSimulationBox().calculateDistance(base_, top_, Zvector_, distance_);
+        getSimulationBox().calculateDistance(top_, base_, Zvector_, distance_);
+
+        distance_ = std::sqrt(distance_);
 
         LinAlg3x3::normalize(Zvector_);
 
         // make the rotation matrix 
-        rotationMat_ = LinAlg3x3::GetRotationMatrix(Zvector_, refVector);
+        rotationMat_ = LinAlg3x3::RotationMatrix(Zvector_, refVector);
 
         cylinder_ -> setGeometry(radius_, distance_, ac_, sigma_);
+
+        Real3 rotated = LinAlg3x3::MatrixDotVector(rotationMat_, Zvector_);
     }
 }
 
@@ -66,9 +72,20 @@ ProbeVolumeOutput ProbeVolumeTiltedCylinder::calculate(const Real3& x) const
 {
     Real3 dist_;
     Real d_;
-    getSimulationBox().calculateDistance(x, base_, dist_, d_);
+    Real3 shift_ = getSimulationBox().calculateShift(x, base_);
+    Real3 xpbc_;
 
-    Real3 rotatedVec = LinAlg3x3::MatrixDotVector(rotationMat_, dist_);
+    for (int i=0;i<3;i++)
+    {
+        xpbc_[i] = x[i] + shift_[i];
+    }
+
+    for (int i=0;i<3;i++)
+    {
+        dist_[i] = xpbc_[i] - base_[i];
+    }
+
+    Real3 rotatedVec = LinAlg3x3::MatrixDotVector(rotationMat_, dist_); 
 
     auto output = cylinder_ -> calculate(rotatedVec);
 
