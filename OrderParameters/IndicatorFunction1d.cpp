@@ -35,6 +35,11 @@ void IndicatorFunction1d::calculate(const Real& x, Real& h_x, Real& htilde_x, Re
 
         dhtilde_dx = - truncatedGaussian(max_ - x);
     }
+
+    if (std::abs(htilde_x) < 1e-7)
+    {
+        htilde_x = 0.0;
+    }
 }
 
 void IndicatorFunction1d::setLimits()
