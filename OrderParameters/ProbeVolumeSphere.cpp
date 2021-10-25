@@ -9,8 +9,6 @@ ProbeVolumeSphere::ProbeVolumeSphere(ProbeVolumeInput& input)
 :ProbeVolume(input)
 {
     input.ParamPack.ReadNumber("radius", ParameterPack::KeyType::Required, r_);
-    input.ParamPack.ReadNumber("alpha_c", ParameterPack::KeyType::Optional, ac_);
-    input.ParamPack.ReadNumber("sigma", ParameterPack::KeyType::Optional, sigma_);
 
     if (isDynamic())
     {
