@@ -3,7 +3,12 @@
 ProbeVolume::ProbeVolume(ProbeVolumeInput& input):simstate_(input.simstate), simbox_(simstate_.getSimulationBox())
 {
     // read in dynamic group
-    isDynamic_ = input.ParamPack.ReadString("dynamicgroup", ParameterPack::KeyType::Optional, dynamicResGroup_);
+    isDynamic_ = input.ParamPack.ReadString("dynamicgroup", ParameterPack::KeyType::Optional, dynamicAtomName_);
+
+    if (isDynamic())
+    {
+        addDynamicAtomGroup(dynamicAtomName_);
+    }
 
     // read in alphaC and sigma
     input.ParamPack.ReadNumber("sigma", ParameterPack::KeyType::Optional, sigma_);
@@ -40,7 +45,7 @@ void ProbeVolume::addDynamicAtomGroup(std::string name)
     ASSERT((it == MapAtomNameToIndex_.end()), "The atom group with name " << name << " is registered twice.");
 
     auto& ag = simstate_.getAtomGroup(name);
-    int size = ResidueGroups_.size();
+    int size = AtomGroups_.size();
     MapAtomNameToIndex_.insert(std::make_pair(name, size));
 
     AtomGroups_.push_back(&ag);

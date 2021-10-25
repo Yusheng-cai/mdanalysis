@@ -84,6 +84,7 @@ class ProbeVolume
 
         // dynamic residue group
         std::string dynamicResGroup_;
+        std::string dynamicAtomName_;
 
         // The pointers to the residue groups
         std::vector<ResidueGroup*> ResidueGroups_;
