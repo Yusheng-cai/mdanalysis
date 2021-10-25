@@ -5,6 +5,7 @@
 #include "tools/GenericFactory.h"
 #include "ResidueGroup.h"
 #include "SimulationBox.h"
+#include "AtomGroup.h"
 
 #include <vector>
 #include <map>
@@ -57,6 +58,10 @@ class ProbeVolume
         void addDynamicResidueGroup(std::string name);
         ResidueGroup& getDynamicResidueGroup(std::string name);
 
+        // add dynamic atom groups
+        void addDynamicAtomGroup(std::string name);
+        AtomGroup& getDynamicAtomGroup(std::string name);
+
         // getters
         Real getSigma() const {return sigma_;}
         Real getAlphaC() const {return ac_;}
@@ -83,7 +88,12 @@ class ProbeVolume
         // The pointers to the residue groups
         std::vector<ResidueGroup*> ResidueGroups_;
         std::map<std::string, int> MapResidueNameToIndex_;
+
+        // The pointers to the atom groups
+        std::vector<AtomGroup*> AtomGroups_;
+        std::map<std::string, int> MapAtomNameToIndex_;
 };
+
 
 namespace ProbeVolumes
 {
