@@ -1,0 +1,33 @@
+xdrfile = {
+	path = LC.xtc
+}
+
+atomgroup = {
+	name = a
+	selection = [ atom_index 1-20:3 , 30-1000 ]
+}
+
+atomgroup = {
+	name = dynamic
+	selection = [ atom_index  ]
+}
+
+probevolume = {
+	name = v
+	type = box
+	xrange =  [ 0 4 ]
+	yrange =  [ 0 4 ]
+	zrange =  [ 0 4 ]
+}
+
+orderparameter = {
+	name = g
+	type = indus
+	atomgroup = a
+	probevolume = v
+}
+
+outputfile = {
+    name = indus.out
+    value = [ g.n g.ntilde ] 
+}
