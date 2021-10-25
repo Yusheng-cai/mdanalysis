@@ -19,6 +19,12 @@ MSD::MSD(const CalculationInput& input)
         ASSERT((it != MapStrToIndex2.end()), "The direction " << VectorDirection_[i] << " is not available.");
 
         directionsIndex_.push_back(it -> second);
+
+        std::cout << "For direction " << i << std::endl;
+        for (int j=0;j<it->second.size();j++)
+        {
+            std::cout << it -> second[j] << std::endl;
+        }
     }
 
     // add the residue group

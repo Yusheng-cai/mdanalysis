@@ -49,6 +49,7 @@ class AtomGroup
         // getters
         std::string getName() const{return name_;}
         const std::vector<int>& getAtomGroupIndices() const {return AtomGroupGlobalIndices_;} 
+        int getNumAtoms() const {return atoms_.size();}
 
         // convert from AtomGroupIndices to global indices
         int AtomGroupIndices2GlobalIndices(int atomgroupIndices) const;
@@ -58,6 +59,8 @@ class AtomGroup
         OP::Atom accessAtomByIndex(int index) {return atoms_[index];}
         const std::vector<OP::Atom>& getAtoms() const {return atoms_;}
         std::vector<OP::Atom>& accessAtoms() {return atoms_;}
+
+        
 
     private:
         // Indices of the AtomGroup
