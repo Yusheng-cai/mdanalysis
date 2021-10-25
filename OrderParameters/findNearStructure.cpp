@@ -55,7 +55,7 @@ void findNearStructure::calculate()
         {
             for (int j=0;j<res[i].atoms_.size();j++)
             {
-                int Aindices = res[i].atoms_[j].atomNumber_ - 1;
+                int Aindices = res[i].atoms_[j].atomNumber_;
                 AtomIndices_.push_back(Aindices);
             }
         }
