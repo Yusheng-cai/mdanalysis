@@ -25,7 +25,7 @@ void ProbeVolumeCylinder::setGeometry(Real rmax, Real zmax, Real ac, Real sigma)
 ProbeVolumeOutput ProbeVolumeCylinder::calculate(const Real3& x) const
 {
     // radius is x^2 + y^2
-    Real radius = std::sqrt(x[1]*x[1] + x[0]*x[0]);
+    Real radius = std::sqrt(x[1]*x[1] + x[2]*x[2]);
 
     Real dhtildedr_;
     Real htilder_;
@@ -37,7 +37,7 @@ ProbeVolumeOutput ProbeVolumeCylinder::calculate(const Real3& x) const
     Real dhtildedz_;
     Real htildez_;
     Real hz_;
-    zfunc_.calculate(x[2],hz_, htildez_, dhtildedz_);
+    zfunc_.calculate(x[0],hz_, htildez_, dhtildedz_);
 
     // Calculate the non-coarse grained indicator for cylinder
     Real hcylinder = hz_*hr_;

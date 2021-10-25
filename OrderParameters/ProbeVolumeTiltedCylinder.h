@@ -37,7 +37,7 @@ class ProbeVolumeTiltedCylinder : public ProbeVolume
         Real distance_;
 
         // reference vector 
-        Real3 refVector = {{0,0,1}};
+        Real3 refVector = {{1,0,0}};
 
         // The rotation matrix 
         Matrix rotationMat_;
