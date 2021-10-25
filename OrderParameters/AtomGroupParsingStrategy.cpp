@@ -36,7 +36,7 @@ void AtomIndexParsing::Parse(std::vector<int>& indices)
 
         if (found_dash == std::string::npos)
         {
-            ASSERT((index_str_[i].size() == 1), "Since no '-' was provided, the passed in value has to be a constant index.");
+            //ASSERT((index_str_[i].size() == 1), "Since no '-' was provided, the passed in value has to be a constant index.");
 
             int index = StringTools::StringToType<int>(index_str_[i]); 
             indices.push_back(index - 1);
