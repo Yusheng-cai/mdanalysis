@@ -11,9 +11,6 @@ ProbeVolumeBox::ProbeVolumeBox(ProbeVolumeInput& input)
     input.ParamPack.ReadArrayNumber("xrange", ParameterPack::KeyType::Required, xrange_);
     input.ParamPack.ReadArrayNumber("yrange", ParameterPack::KeyType::Required, yrange_);
     input.ParamPack.ReadArrayNumber("zrange", ParameterPack::KeyType::Required, zrange_);
-    input.ParamPack.ReadNumber("sigma", ParameterPack::KeyType::Optional, sigma_);
-    input.ParamPack.ReadNumber("alphac", ParameterPack::KeyType::Optional, ac_);
-
 
     ASSERT((! isDynamic()), "The box probe volume does not yet support dynamic atom group.");
 
