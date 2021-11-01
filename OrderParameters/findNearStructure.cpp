@@ -8,20 +8,80 @@ namespace CalculationRegistry
 findNearStructure::findNearStructure(const CalculationInput& input)
 :Calculation(input)
 {
-    pack_.ReadString("residue", ParameterPack::KeyType::Required, resname_);
+    pack_.ReadString("mode", ParameterPack::KeyType::Optional, mode_);
+
+    if (mode_ == "residue")
+    {
+        pack_.ReadString("residue", ParameterPack::KeyType::Required, resName_);
+        initializeResidueGroup(resName_);
+
+        auto& res = getResidueGroup(resName_);
+        COM_.resize(res.getResidues().size());
+    }
+    else if (mode_ == "atom")
+    {
+        pack_.ReadString("atomgroup", ParameterPack::KeyType::Required, agName_);
+        addAtomgroup(agName_);
+    }
+    else
+    {
+        ASSERT((true==false), "mode " << mode_ << " is not supported currently");
+    }
+
     pack_.ReadString("probevolume", ParameterPack::KeyType::Required, pvName_);
 
     auto& pv = simstate_.getProbeVolume(pvName_);
-    ASSERT((pv.isDynamic()), "The probe volume must be dynamic for this calculation.");
 
     // register the per iter outputs
     registerPerIterOutputFunction("atomindices", [this](std::ofstream& ofs) -> void {this -> printAtomIndicesPerIter(ofs);});
+}
 
-    // add the residue groups
-    initializeResidueGroup(resname_);
+void findNearStructure::calculateRes()
+{
+    AtomIndices_.clear();
 
-    auto& res = getResidueGroup(resname_).getResidues();
-    COM_.resize(res.size());
+    auto& pv = simstate_.getProbeVolume(pvName_);
+    auto& res= simstate_.getResidueGroup(resName_).getResidues();
+
+    for (int i=0;i<res.size();i++)
+    {
+        auto& r = res[i];
+
+        Real3 C = CalculationTools::getCOM(r, simstate_, COMIndices_);
+        COM_[i] = C;
+    }
+
+    for (int i=0;i<res.size();i++)
+    {
+        auto output = pv.calculate(COM_[i]);
+
+        if (output.hx_ == 1)
+        {
+            for (int j=0;j<res[i].atoms_.size();j++)
+            {
+                AtomIndices_.push_back(res[i].atoms_[j].atomNumber_ -1);
+            }
+        }
+    }
+}
+
+void findNearStructure::calculateAtom()
+{
+    AtomIndices_.clear();
+
+    auto& pv  = simstate_.getProbeVolume(pvName_);
+    auto& ag  = simstate_.getAtomGroup(agName_).getAtoms();
+
+    for (int i=0;i<ag.size();i++)
+    {
+        auto output = pv.calculate(ag[i].position);
+
+        if (output.hx_ == 1)
+        {
+            int Aindices = ag[i].index;
+            AtomIndices_.push_back(Aindices);
+        }
+    }
 }
 
 void findNearStructure::printAtomIndicesPerIter(std::ofstream& ofs)
@@ -36,28 +96,12 @@ void findNearStructure::printAtomIndicesPerIter(std::ofstream& ofs)
 
 void findNearStructure::calculate()
 {
-    AtomIndices_.clear();
-
-    auto& res = getResidueGroup(resname_).getResidues();
-    auto& pv  = simstate_.getProbeVolume(pvName_);
-
-    for (int i=0;i<res.size();i++)
+    if (mode_ == "atom")
     {
-        Real3 com = CalculationTools::getCOM(res[i], simstate_, COMIndices_);
-        COM_[i] = com;
+        calculateAtom();
     }
-
-    for (int i=0;i<COM_.size();i++)
+    else if (mode_ == "residue")
     {
-        auto output = pv.calculate(COM_[i]);
-
-        if (output.hx_ == 1)
-        {
-            for (int j=0;j<res[i].atoms_.size();j++)
-            {
-                int Aindices = res[i].atoms_[j].atomNumber_;
-                AtomIndices_.push_back(Aindices);
-            }
-        }
+        calculateRes();
     }
 }

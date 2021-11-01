@@ -15,15 +15,23 @@ class findNearStructure : public Calculation
         virtual void calculate() override;
         virtual void finishCalculate() override {};
 
+        void calculateAtom();
+        void calculateRes();
+
         void printAtomIndicesPerIter(std::ofstream& ofs);
 
     private:
-        std::string resname_;
+        std::string agName_;
         std::string pvName_;
+
+        // residue name
+        std::string resName_;
 
         // The COM of the residues 
         std::vector<Real3> COM_;
 
         // The indices of the atoms near structure 
         std::vector<int> AtomIndices_;
+
+        std::string mode_ = "residue";
 };
