@@ -52,6 +52,11 @@ void IndicatorFunction2d::calculate(const Real& x, Real& h_x, Real& htilde_x, Re
 
         dhtilde_dx = -(tilde1 - tilde2);
     }
+
+    if (std::abs(htilde_x) < 1e-7 )
+    {
+        htilde_x = 0;
+    }
 }
 
 void IndicatorFunction2d::setLimits()
