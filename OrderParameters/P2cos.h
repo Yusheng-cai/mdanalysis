@@ -29,4 +29,6 @@ class P2cos: public liquid_crystal
         Real P2cos_OP_;
 
         std::array<Real,3> n_;
+
+        std::string pvName_;
 };
