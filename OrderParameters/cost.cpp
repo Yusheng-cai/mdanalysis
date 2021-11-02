@@ -15,8 +15,15 @@ Cost::Cost(const CalculationInput& input)
     input.pack_.ReadArrayNumber("array", ParameterPack::KeyType::Optional, arr_);
     input.pack_.ReadNumber("precision", ParameterPack::KeyType::Optional, precision_);
     input.pack_.ReadString("probevolume", ParameterPack::KeyType::Required, ProbeVolumeName_);
+    input.pack_.ReadNumber("numbins", ParameterPack::KeyType::Optional, numBins_);
 
-    auto bfPack = input.pack_.findParamPack("BetaFactors", ParameterPack::KeyType::Required);
+    // initialize the bin pointer 
+    Bin_ = Binptr(new Bin(0.0,1.0,numBins_));
+
+    // resize the histogram 
+    histogram_.resize(numBins_, 0.0);
+
+    auto bfPack = input.pack_.findParamPack("BetaFactors", ParameterPack::KeyType::Optional);
 
     if (bfPack != nullptr)
     {
@@ -43,7 +50,10 @@ Cost::Cost(const CalculationInput& input)
 
     // resize the molecular director size
     uij_.resize(res.size());
+
+    registerOutputFunction("histogram", [this](std::string name) -> void {this -> printhistogram(name);});
 }
+
 
 void Cost::calculate()
 {
@@ -89,6 +99,7 @@ void Cost::calculate()
     {
         int k = InsideIndices[i];
         Real cost = Qtensor::vec_dot(uij_[k], arr_);
+        Real cost2 = cost * cost;
 
         ASSERT((cost >= -1 && cost <= 1), "cosine(theta) is not within range of -1 and 1");
 
@@ -98,11 +109,23 @@ void Cost::calculate()
 
             BetaFactors_[atomNum-1] = std::pow(cost,2.0);
         }
+
+        // start binning 
+        ASSERT((Bin_->isInRange(cost2)), "cosine(theta)^2 is not within range of 0 and 1.");
+        int binNum = Bin_->findBin(cost2);
+        histogram_[binNum] += 1;
     }
 }
 
 void Cost::finishCalculate()
-{}
+{
+    int numFrames = simstate_.getTotalFrames();
+
+    for (int i=0;i<histogram_.size();i++)
+    {
+        histogram_[i] /= numFrames;
+    }
+}
 
 void Cost::printOutputOnStep()
 {
@@ -110,4 +133,20 @@ void Cost::printOutputOnStep()
     {
         bf_ -> write(simstate_.getFrameNumber(), BetaFactors_);
     }
+}
+
+void Cost::printhistogram(std::string name)
+{
+    std::ofstream ofs_;
+    ofs_.open(name);
+
+    ofs_ << "# index location value\n";
+
+    for (int i=0;i<histogram_.size();i++)
+    {
+        Real location = Bin_ -> getCenterLocationOfBin(i);
+        ofs_ << i << " " << location << " " << histogram_[i] << "\n";
+    }
+
+    ofs_.close();
 }
