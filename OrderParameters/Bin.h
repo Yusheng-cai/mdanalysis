@@ -14,6 +14,7 @@ class Bin
         using Range = CommonTypes::Real2;
 
         Bin(const ParameterPack& pack);
+        Bin(Real min, Real max, int numbins);
 
         int findBin(Real data);
         bool isInRange(Real data);

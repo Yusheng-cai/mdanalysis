@@ -8,6 +8,15 @@ Bin::Bin(const ParameterPack& pack)
     step_ = (range_[1] - range_[0])/numbins_;
 }
 
+Bin::Bin(Real min, Real max, int numbins)
+:numbins_(numbins)
+{
+    range_[0] = min;
+    range_[1] = max;
+
+    step_ = (range_[1] - range_[0])/numbins;
+}
+
 int Bin::findBin(Real x)
 {
     int index;
