@@ -61,10 +61,13 @@ void Pcost2::calculate()
     AtomIndicesInPV_.push_back(AtomIndicesINPVIter);
     
     // starting binning 
+    p2tilde_ = 0.0;
     for (int i=0;i<InsideIndices.size();i++)
     {
         int k = InsideIndices[i];
         Real cost = std::pow(Qtensor::vec_dot(uij_[k], arr_),2.0);
+
+        p2tilde_ = p2tilde_ + 1.5 * cost - 0.5;
 
         // ASSERT((cost >= -1 && cost <= 1), "cosine(theta) is not within range of -1 and 1");
 
@@ -74,4 +77,6 @@ void Pcost2::calculate()
         histogram_[binNum] += 1; 
         histogramPerIter_[binNum] += 1;
     }
+
+    p2tilde_ /= InsideIndices.size();
 }
