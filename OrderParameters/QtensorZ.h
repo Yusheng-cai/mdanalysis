@@ -29,12 +29,16 @@ class QtensorZ : public Calculation
 
         virtual void calculate() override;
         virtual void finishCalculate() override;
+        void binUsingMinMax();
 
         void printP2z(std::string name);
         void printPerIterP2z(std::ofstream& ofs);
         void printPerIterev(std::ofstream& ofs);
         void printPerIterNum(std::ofstream& ofs);
         void printPerIterQtensor(std::ofstream& ofs);
+
+        void printPerIterP2zBeta(std::ofstream& ofs);
+        void printPerItereveczBeta(std::ofstream& ofs);
 
         std::vector<Real>& getP2() {return P2_;}
 
@@ -92,4 +96,13 @@ class QtensorZ : public Calculation
 
         // zero Matrix
         Matrix zeroMatrix_ = {};
+
+        // map from residue index to the corresponding bin index 
+        std::vector<int> ResIndexToBinIndex_;
+
+        int numbins_;
+        bool usingMinMaxBins_=false;
+
+        // we only bin the COM above this count
+        Real above_=-100000;
 };
