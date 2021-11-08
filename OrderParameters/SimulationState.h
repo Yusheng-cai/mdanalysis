@@ -4,6 +4,7 @@
 #include "AtomGroup.h"
 #include "ResidueGroup.h"
 #include "ProbeVolume.h"
+#include "Calculation.h"
 
 #include <string>
 #include <map>
@@ -43,6 +44,12 @@ class SimulationState
         // registers ResidueGroups
         void registerResidueGroup(std::string name, ResidueGroup& res);
 
+        // registers Calculation
+        void registerCalculation(std::string name, const Calculation& calc);
+
+        // get calculations 
+        const Calculation& getCalculation(std::string name);
+
         // get AtomGroup reference by name
         AtomGroup& getAtomGroup(std::string name);
         const std::map<std::string, AtomGroup>& getAtomGroupRegistry() const{ return MapName2AtomGroup_;}
@@ -67,6 +74,7 @@ class SimulationState
         std::map<std::string,AtomGroup> MapName2AtomGroup_;
         std::map<std::string,ResidueGroup> MapName2ResidueGroup_;
         std::map<std::string, ProbeVolumePtr> MapName2PV;  
+        std::map<std::string, Calculation*> MapName2Calculation_;
 
         int totalframes_;
 

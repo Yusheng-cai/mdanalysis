@@ -56,3 +56,17 @@ ProbeVolume& SimulationState::accessProbeVolume(const std::string name)
 
     return *(it -> second);
 }
+
+void SimulationState::registerCalculation(std::string name, const Calculation& calc)
+{
+    auto it = MapName2Calculation_.find(name);
+
+    ASSERT((it == MapName2Calculation_.end()), "The calculation with name " << name << " is registered twice.");
+
+    MapName2Calculation_.insert(std::make_pair(name, const_cast<Calculation*>(&calc)));
+}
+
+const Calculation& SimulationState::getCalculation(std::string name)
+{
+
+}
