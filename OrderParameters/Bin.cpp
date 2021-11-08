@@ -8,6 +8,19 @@ Bin::Bin(const ParameterPack& pack)
     step_ = (range_[1] - range_[0])/numbins_;
 }
 
+Bin::Bin(Range range, int numbins)
+:range_(range), numbins_(numbins)
+{
+    step_ = (range_[1] - range_[0])/numbins_;
+}
+
+void Bin::update(Range range, int numbins)
+{
+    range_ = range;
+    numbins_ = numbins;
+    step_ = (range_[1] - range_[0])/numbins_;
+}
+
 int Bin::findBin(Real x)
 {
     int index;

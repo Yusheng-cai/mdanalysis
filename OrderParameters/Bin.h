@@ -14,9 +14,12 @@ class Bin
         using Range = CommonTypes::Real2;
 
         Bin(const ParameterPack& pack);
+        Bin(Range range, int numbins);
+        Bin(){};
 
         int findBin(Real data);
         bool isInRange(Real data);
+        void update(Range range, int numbins);
 
         Range getRange() const {return range_;}
         int getNumbins() const {return numbins_;}
