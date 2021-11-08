@@ -23,4 +23,7 @@ class Pcost2 : public Pcost
         Pcost2(const CalculationInput& input);
 
         virtual void calculate() override;
+    
+    private:
+        Real p2tilde_;
 };

@@ -9,6 +9,7 @@ P2cos::P2cos(const OrderParametersInput& input)
 :liquid_crystal(input)
 {
     input.pack_.ReadArrayNumber<Real,3>("director", ParameterPack::KeyType::Required, n_);
+
     n_ = Qtensor::normalize_director(n_);
 
     registerOutput("p2",[this](void)-> Real {return this->getP2cos();});

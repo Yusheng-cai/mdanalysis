@@ -21,14 +21,21 @@ class Cost : public Calculation
 {
     public:
         using BFptr = std::unique_ptr<BetaFactorWriter>;
+        using Binptr = std::unique_ptr<Bin>;
+
 
         Cost(const CalculationInput& input);
 
         virtual void calculate() override;
         virtual void finishCalculate() override;
         virtual void printOutputOnStep() override;
+        void printhistogram(std::string name);
 
     private:
+        // bin pointer
+        Binptr Bin_;
+        int numBins_ = 50;
+
         // the indices for calculating the center of mass
         std::vector<int> COMIndices_;
 
@@ -62,6 +69,9 @@ class Cost : public Calculation
         std::vector<Real> BetaFactors_;
 
         int precision_ = 3;
+
+        // histogram 
+        std::vector<Real> histogram_;
 
         BFptr bf_;
 };
