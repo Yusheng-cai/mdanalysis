@@ -2,7 +2,6 @@
 #include "tools/Assert.h"
 #include "tools/GenericFactory.h"
 #include "tools/InputParser.h"
-#include "SimulationState.h"
 #include "xdr/TopologyReader.h"
 #include "xdr/GroFile.h"
 #include "AtomGroup.h"
@@ -18,6 +17,8 @@
 #include <map>
 #include <functional>
 #include <memory>
+
+class SimulationState;
 
 struct CalculationInput
 {
@@ -42,6 +43,7 @@ class Calculation
         virtual void finishCalculate() = 0;
         virtual void printOutput();
         virtual void printOutputOnStep();
+        virtual void calculateBetaFactors() {};
 
         void addAtomgroup(std::string name);
         void addResidueGroup(std::string name);
@@ -96,6 +98,9 @@ class Calculation
         // vector of per iter outputs
         std::vector<std::string> perIteroutputs_;
         std::vector<std::string> perIteroutputNames_;
+
+        // beta factors 
+        std::vector<Real> BetaFactors_;
 };
 
 namespace CalculationRegistry

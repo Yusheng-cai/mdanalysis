@@ -1,4 +1,4 @@
-#include "Calculation.h"
+#include "SimulationState.h"
 
 Calculation::Calculation(const CalculationInput& input)
 :simstate_(input.simstate_), pack_(input.pack_)
