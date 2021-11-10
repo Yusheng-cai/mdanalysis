@@ -1,3 +1,5 @@
+#pragma once 
+
 #include "OrderParameters.h"
 #include "tools/Assert.h"
 #include "Qtensor.h"
