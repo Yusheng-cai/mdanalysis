@@ -17,8 +17,12 @@ namespace LinAlg3x3
     Matrix dyad(const Real3& v1, const Real3& v2);
 
     Real3 MatrixDotVector(const Matrix& mat1, const Real3& v1); 
+    
 
     // This is the rotation matrix that rotates vector 1 onto vector 2
     Matrix GetRotationMatrix(const Real3& v1, const Real3& v2);
     Matrix RotationMatrix(const Real3& v1, const Real3& v2);
+
+    // calculate 3uiuj - I 
+    Matrix LocalQtensor(const Real3& v1);
 }

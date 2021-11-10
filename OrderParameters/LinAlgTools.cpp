@@ -24,6 +24,26 @@ LinAlg3x3::Real LinAlg3x3::DotProduct(const Real3& v1, const Real3& v2)
     return ret;
 }
 
+LinAlg3x3::Matrix LinAlg3x3::LocalQtensor(const Real3& v1)
+{
+    Matrix Qtemp = dyad(v1, v1);
+
+    for (int i=0;i<3;i++)
+    {
+        for (int j=0;j<3;j++)
+        {
+            Qtemp[i][j] = 3 * Qtemp[i][j];
+
+            if (i == j)
+            {
+                Qtemp[i][j] -= 1;
+            }
+        }
+    }
+
+    return Qtemp;
+}
+
 LinAlg3x3::Real LinAlg3x3::norm(const Real3& v1)
 {
     Real ret = 0.0;
