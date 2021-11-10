@@ -38,6 +38,8 @@ class OpenMP_buffer{
         // clear the master_object_ptr
         void clearMasterObject(){master_object_ptr_=nullptr;}
 
+        std::vector<T>& getBuffer() {return buffer_;}
+
         // clear all buffers
         void clearBuffer()
         {
@@ -53,7 +55,7 @@ class OpenMP_buffer{
         T* getMasterObject(){return master_object_ptr_;}
 
         // start from the second buffer since the first one is always the "master object"
-        iterator beginworker() {return buffer_.begin()++;}
+        iterator beginworker() {return std::next(buffer_.begin());}
         iterator endworker()   {return buffer_.end();}
 
     private:
