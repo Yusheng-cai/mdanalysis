@@ -42,7 +42,7 @@ target_sources(mdaOrderParameters PRIVATE
     "Dipole.cpp"
     "LinAlgTools.cpp"
     "Pcost2.cpp"
-    "Pcost2Qtensor.cpp"
+    "QtensorCalc.cpp"
     "findNearStructure.cpp"
     "FFT.cpp"
     "MSD.cpp"
@@ -90,11 +90,11 @@ set(mdaOrderParameters_HEADER
     "Dipole.h"
     "LinAlgTools.h"
     "Pcost2.h"
-    "Pcost2Qtensor.h"
     "findNearStructure.h"
     "FFT.h"
     "MSD.h"
     "LocalOrder.h"
+    "QtensorCalc.h"
 )
 
 
