@@ -34,6 +34,7 @@ class Calculation
         using outputFunc = std::function<void(std::string)>;
         using perIteroutputFunc = std::function<void(std::ofstream&)>;
         using ofsptr = std::unique_ptr<std::ofstream>;
+        using Range = std::array<Real,2>;
 
         Calculation(const CalculationInput& input);
         virtual ~Calculation(){};
