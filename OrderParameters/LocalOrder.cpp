@@ -20,6 +20,8 @@ LocalOrder::LocalOrder(const CalculationInput& input)
     // read in the head & tail index of the residue 
     input.pack_.ReadNumber("headindex", ParameterPack::KeyType::Required, headIndex_);
     input.pack_.ReadNumber("tailindex", ParameterPack::KeyType::Required, tailIndex_);
+    headIndex_--;
+    tailIndex_--;
 }
 
 void LocalOrder::calculate()
