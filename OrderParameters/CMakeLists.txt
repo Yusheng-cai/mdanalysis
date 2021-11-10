@@ -46,6 +46,7 @@ target_sources(mdaOrderParameters PRIVATE
     "findNearStructure.cpp"
     "FFT.cpp"
     "MSD.cpp"
+    "LocalOrder.cpp"
 )
 
 set(mdaOrderParameters_HEADER
@@ -93,6 +94,7 @@ set(mdaOrderParameters_HEADER
     "findNearStructure.h"
     "FFT.h"
     "MSD.h"
+    "LocalOrder.h"
 )
 
 
