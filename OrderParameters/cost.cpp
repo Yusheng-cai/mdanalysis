@@ -18,7 +18,8 @@ Cost::Cost(const CalculationInput& input)
     input.pack_.ReadNumber("numbins", ParameterPack::KeyType::Optional, numBins_);
 
     // initialize the bin pointer 
-    Bin_ = Binptr(new Bin(0.0,1.0,numBins_));
+    Range range_ = {{0.0, 1.0}};
+    Bin_ = Binptr(new Bin(range_,numBins_));
 
     // resize the histogram 
     histogram_.resize(numBins_, 0.0);
