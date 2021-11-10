@@ -75,7 +75,6 @@ QtensorZ::QtensorZ(const CalculationInput& input)
 
 void QtensorZ::binUsingMinMax()
 {
-    std::cout << "Did it get here?" << std::endl;
     std::vector<Real> zdir;
     for (int i=0;i<COM_.size();i++)
     {
@@ -94,6 +93,8 @@ void QtensorZ::binUsingMinMax()
     Range range = {{min, max}};
 
     bin_->update(range, numbins_);
+    std::cout << "Range = {" <<  min << " " << max << "}." << std::endl;
+    std::cout << "step size = " << bin_ -> getStep() << std::endl;
 }
 
 void QtensorZ::calculate()
