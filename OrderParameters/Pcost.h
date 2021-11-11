@@ -29,7 +29,7 @@ class Pcost : public Calculation
         void printHistogram(std::string name);
         void printAtomIndices(std::string name);
 
-        void printHistogramPerIter(std::ofstream& ofs);
+        void printcosthetaHistogramPerIter(std::ofstream& ofs);
 
     protected:
         Binptr costBin_;
@@ -68,4 +68,6 @@ class Pcost : public Calculation
 
         // keeps track of AtomIndicesInPV per frame
         std::vector<std::vector<int>> AtomIndicesInPV_;
+
+        std::vector<int> InsideIndices_;
 };

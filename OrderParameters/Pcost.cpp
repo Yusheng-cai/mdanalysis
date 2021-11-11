@@ -22,7 +22,7 @@ Pcost::Pcost(const CalculationInput& input)
     registerOutputFunction("histogram", [this](std::string name) -> void { this -> printHistogram(name);});
     registerOutputFunction("AtomIndices", [this](std::string name) -> void { this -> printAtomIndices(name);});
 
-    registerPerIterOutputFunction("histogram", [this](std::ofstream& ofs) -> void { this -> printHistogramPerIter(ofs);});
+    registerPerIterOutputFunction("costheta", [this](std::ofstream& ofs) -> void { this -> printcosthetaHistogramPerIter(ofs);});
 
     headIndex_--;
     tailIndex_--;
@@ -66,19 +66,19 @@ void Pcost::calculate()
     }
 
     // check which COM are inside the probevolume
-    std::vector<int> InsideIndices;
+    InsideIndices_.clear();
     for (int i=0;i<COM_.size();i++)
     {
         auto pvOutput = pv.calculate(COM_[i]);
         if (pvOutput.hx_ == 1)
         {
-            InsideIndices.push_back(i);
+            InsideIndices_.push_back(i);
         }
     }
 
     std::vector<int> AtomIndicesINPVIter;
     // get the atom indices in the pv per iteration
-    for (int i=0;i<InsideIndices.size();i++)
+    for (int i=0;i<InsideIndices_.size();i++)
     {
         for (int j=0;j<res[i].atoms_.size();j++)
         {
@@ -88,9 +88,9 @@ void Pcost::calculate()
     AtomIndicesInPV_.push_back(AtomIndicesINPVIter);
     
     // starting binning 
-    for (int i=0;i<InsideIndices.size();i++)
+    for (int i=0;i<InsideIndices_.size();i++)
     {
-        int k = InsideIndices[i];
+        int k = InsideIndices_[i];
         Real cost = Qtensor::vec_dot(uij_[k], arr_);
 
         // ASSERT((cost >= -1 && cost <= 1), "cosine(theta) is not within range of -1 and 1");
@@ -103,7 +103,7 @@ void Pcost::calculate()
     }
 }
 
-void Pcost::printHistogramPerIter(std::ofstream& ofs)
+void Pcost::printcosthetaHistogramPerIter(std::ofstream& ofs)
 {
     for (int i=0;i<histogramPerIter_.size();i++)
     {
