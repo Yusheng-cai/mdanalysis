@@ -30,6 +30,7 @@ class Cost : public Calculation
         virtual void finishCalculate() override;
         virtual void printOutputOnStep() override;
         void printhistogram(std::string name);
+        void printavgCosthetaPerIter(std::ofstream& ofs);
 
     private:
         // bin pointer
@@ -74,4 +75,6 @@ class Cost : public Calculation
         std::vector<Real> histogram_;
 
         BFptr bf_;
+
+        Real avgCostheta_;
 };

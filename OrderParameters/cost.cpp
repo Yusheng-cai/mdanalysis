@@ -53,6 +53,7 @@ Cost::Cost(const CalculationInput& input)
     uij_.resize(res.size());
 
     registerOutputFunction("histogram", [this](std::string name) -> void {this -> printhistogram(name);});
+    registerPerIterOutputFunction("costheta", [this](std::ofstream& ofs) -> void {this -> printavgCosthetaPerIter(ofs);});
 }
 
 
@@ -96,11 +97,16 @@ void Cost::calculate()
         }
     }
 
+    avgCostheta_ = 0.0;
+
     for (int i=0;i<InsideIndices.size();i++)
     {
         int k = InsideIndices[i];
         Real cost = Qtensor::vec_dot(uij_[k], arr_);
         Real cost2 = cost * cost;
+
+        // average the cos squared theta 
+        avgCostheta_ += cost2;
 
         ASSERT((cost >= -1 && cost <= 1), "cosine(theta) is not within range of -1 and 1");
 
@@ -116,6 +122,16 @@ void Cost::calculate()
         int binNum = Bin_->findBin(cost2);
         histogram_[binNum] += 1;
     }
+
+    avgCostheta_ /= InsideIndices.size();
+}
+
+void Cost::printavgCosthetaPerIter(std::ofstream& ofs)
+{
+    // print time and cos theta 
+    Real framenum = simstate_.getFrameNumber();
+
+    ofs << framenum << " " << avgCostheta_ << "\n";
 }
 
 void Cost::finishCalculate()
