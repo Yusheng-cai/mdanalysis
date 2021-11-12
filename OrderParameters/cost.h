@@ -31,6 +31,7 @@ class Cost : public Calculation
         virtual void printOutputOnStep() override;
         void printhistogram(std::string name);
         void printavgCosthetaPerIter(std::ofstream& ofs);
+        void printNtilde(std::ofstream& ofs);
 
     private:
         // bin pointer

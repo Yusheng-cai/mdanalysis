@@ -54,6 +54,7 @@ Cost::Cost(const CalculationInput& input)
 
     registerOutputFunction("histogram", [this](std::string name) -> void {this -> printhistogram(name);});
     registerPerIterOutputFunction("costheta", [this](std::ofstream& ofs) -> void {this -> printavgCosthetaPerIter(ofs);});
+    registerPerIterOutputFunction("Ntilde", [this](std::ofstream& ofs) -> void { this -> printNtilde(ofs);});
 }
 
 
@@ -142,6 +143,36 @@ void Cost::finishCalculate()
     {
         histogram_[i] /= numFrames;
     }
+}
+
+void Cost::printNtilde(std::ofstream& ofs)
+{
+    // obtain the residue 
+    auto& res = getResidueGroup(residueGroupName_).getTotalResidue();
+    auto& pv  = simstate_.getProbeVolume(ProbeVolumeName_);
+
+    Real Ntilde = 0.0;
+
+    #pragma omp parallel
+    {
+        Real Ntilde_local = 0.0;
+        #pragma omp for
+        for (int i=0;i<res.atoms_.size();i++)
+        {
+            auto pvOutput = pv.calculate(res.atoms_[i].positions_);
+
+            Ntilde_local += pvOutput.htilde_x_;
+        }
+
+        #pragma omp critical
+        {
+            Ntilde += Ntilde_local;
+        }
+    }
+
+    int numframe = simstate_.getFrameNumber();
+
+    ofs << numframe << " " << Ntilde << " " << avgCostheta_ << std::endl;
 }
 
 void Cost::printOutputOnStep()
