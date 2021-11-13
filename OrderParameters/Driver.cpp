@@ -48,17 +48,19 @@ Driver::Driver(std::string filename, CommandLineArguments& cmd)
         initializeProbeVolume(pv_pack);
     }
 
-    if (op_pack.size() != 0)
-    {
-        initializeOP(op_pack);
-        // only register output values
-        RegisterOuputValues();
-    }
-
     if (c_pack.size() != 0)
     {
         initializeCalculation(c_pack);
     }
+
+    if (op_pack.size() != 0)
+    {
+        initializeOP(op_pack);
+        // only register output values
+    }
+
+    RegisterOuputValues();
+
 
     if (output_pack.size() != 0)
     {
@@ -194,6 +196,20 @@ void Driver::RegisterOuputValues()
             std::string op_name = OP_[i]->getName();
             std::string output_name = it -> first;
             std::string full_name = op_name + "." + output_name;
+
+            outputValueRegistry_.insert(full_name, it -> second);
+        }
+    }
+
+    for (int i=0;i<Calc_.size();i++)
+    {
+        auto registry = Calc_[i] -> getOutputRegistry();
+
+        for (auto it = registry.begin() ;it != registry.end(); it++)
+        {
+            std::string calc_name = Calc_[i]->getName();
+            std::string output_name = it -> first;
+            std::string full_name = calc_name + "." + output_name;
 
             outputValueRegistry_.insert(full_name, it -> second);
         }
