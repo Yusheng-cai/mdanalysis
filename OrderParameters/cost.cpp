@@ -55,6 +55,9 @@ Cost::Cost(const CalculationInput& input)
     registerOutputFunction("histogram", [this](std::string name) -> void {this -> printhistogram(name);});
     registerPerIterOutputFunction("costheta", [this](std::ofstream& ofs) -> void {this -> printavgCosthetaPerIter(ofs);});
     registerPerIterOutputFunction("Ntilde", [this](std::ofstream& ofs) -> void { this -> printNtilde(ofs);});
+
+    // register for output file
+    registerOutputFileOutputs("costheta", [this](void) -> Real {return this -> getCostheta2();});
 }
 
 

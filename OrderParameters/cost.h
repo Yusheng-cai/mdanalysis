@@ -33,6 +33,8 @@ class Cost : public Calculation
         void printavgCosthetaPerIter(std::ofstream& ofs);
         void printNtilde(std::ofstream& ofs);
 
+        Real getCostheta2() {return avgCostheta_;}
+
     private:
         // bin pointer
         Binptr Bin_;
