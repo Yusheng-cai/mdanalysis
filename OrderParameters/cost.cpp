@@ -112,7 +112,12 @@ void Cost::calculate()
         // average the cos squared theta 
         avgCostheta_ += cost2;
 
-        ASSERT((cost >= -1 && cost <= 1), "cosine(theta) is not within range of -1 and 1");
+        //ASSERT((cost >= -1 && cost <= 1), "cosine(theta) is not within range of -1 and 1");
+
+        if ( !(cost >= -1 && cost <= 1))
+        {
+            std::cout << "WARNING cosine(theta) is not within range of -1 and 1 and it is " << cost << std::endl;
+        }
 
         for (int j=0;j<res[k].atoms_.size();j++)
         {
