@@ -24,6 +24,13 @@ Calculation::Calculation(const CalculationInput& input)
     }
 }
 
+void Calculation::registerOutputFileOutputs(std::string name, OutputValue::ValueFunction func)
+{
+    OutputValue val(name, func);
+
+    output_.insert(std::make_pair(name, val));
+}
+
 void Calculation::addAtomgroup(std::string name)
 {
     // Check if the AtomGroupName is not in the map

@@ -7,6 +7,7 @@
 #include "AtomGroup.h"
 #include "ResidueGroup.h"
 #include "tools/CommonTypes.h"
+#include "Output_values.h"
 
 #include <vector>
 #include <array>
@@ -29,6 +30,8 @@ struct CalculationInput
 class Calculation
 {
     public:
+        using OutputRegistry = std::map<std::string,OutputValue>; 
+
         using Real = CommonTypes::Real;
         using Real3= CommonTypes::Real3;
         using outputFunc = std::function<void(std::string)>;
@@ -49,6 +52,8 @@ class Calculation
         void addAtomgroup(std::string name);
         void addResidueGroup(std::string name);
 
+        std::string getName() {return name_;}
+
         int getNumResidueGroups() const { return ResidueGroups_.size();}
         int getNumAtomGroups() const {return AtomGroups_.size();}
 
@@ -57,6 +62,9 @@ class Calculation
         void registerPerIterOutputFunction(std::string name, perIteroutputFunc func);
         perIteroutputFunc& getIterOutputByName(std::string name);
 
+        // register outputs in the output file
+        void registerOutputFileOutputs(std::string name, OutputValue::ValueFunction func);
+        const OutputRegistry& getOutputRegistry() { return output_;}
 
         void closeAllOutputPerIter();
 
@@ -65,6 +73,11 @@ class Calculation
         const ResidueGroup& getResidueGroup(std::string name) const;
 
     protected:
+        // output registry 
+        OutputRegistry output_;
+
+        std::string name_="c";
+
         int precision_=3;
 
         SimulationState& simstate_;
