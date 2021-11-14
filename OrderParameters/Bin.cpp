@@ -47,7 +47,8 @@ int Bin::findBin(Real x)
 
 bool Bin::isInRange(Real data)
 {
-    if (data >= range_[0] && data <= range_[1])
+    Real epsilon=1e-6;
+    if (data >= range_[0] - epsilon && data <= range_[1] + epsilon)
     {
         return true;
     }
