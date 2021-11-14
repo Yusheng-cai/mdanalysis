@@ -23,14 +23,6 @@ Cost::Cost(const CalculationInput& input)
 
     // resize the histogram 
     histogram_.resize(numBins_, 0.0);
-
-    auto bfPack = input.pack_.findParamPack("BetaFactors", ParameterPack::KeyType::Optional);
-
-    if (bfPack != nullptr)
-    {
-        bf_ = BFptr(new BetaFactorWriter(const_cast<ParameterPack&>(*bfPack)));
-    }
-
     headIndex_--;
     tailIndex_--;
 
@@ -63,15 +55,13 @@ Cost::Cost(const CalculationInput& input)
 
 void Cost::calculate()
 {
-    BetaFactors_.clear();
-    
     auto& res = getResidueGroup(residueGroupName_).getResidues();
     auto& pv  = simstate_.getProbeVolume(ProbeVolumeName_);
 
-    int totalatomNumbers = getResidueGroup(residueGroupName_).getAtomSize();
-    BetaFactors_.resize(totalatomNumbers);
-    std::fill(BetaFactors_.begin(), BetaFactors_.end(), -1.0);
+    // resize the histogram
+    histogram_.resize(numBins_, 0.0);
 
+    int totalatomNumbers = getResidueGroup(residueGroupName_).getAtomSize();
 
     // find all the COM of the residues in the system
     #pragma omp parallel for
@@ -119,16 +109,14 @@ void Cost::calculate()
             std::cout << "WARNING cosine(theta) is not within range of -1 and 1 and it is " << cost << std::endl;
         }
 
-        for (int j=0;j<res[k].atoms_.size();j++)
-        {
-            int atomNum = res[k].atoms_[j].atomNumber_;
-
-            BetaFactors_[atomNum-1] = std::pow(cost,2.0);
-        }
-
         // start binning 
         ASSERT((Bin_->isInRange(cost2)), "cosine(theta)^2 is not within range of 0 and 1.");
         int binNum = Bin_->findBin(cost2);
+
+        if (binNum >= histogram_.size())
+        {
+            std::cout << "binNum = " << binNum << " historagm size = " << histogram_.size() << std::endl;
+        }
         histogram_[binNum] += 1;
     }
 
@@ -181,14 +169,6 @@ void Cost::printNtilde(std::ofstream& ofs)
     int numframe = simstate_.getFrameNumber();
 
     ofs << numframe << " " << Ntilde << " " << avgCostheta_ << std::endl;
-}
-
-void Cost::printOutputOnStep()
-{
-    if (bf_.get() != nullptr)
-    {
-        bf_ -> write(simstate_.getFrameNumber(), BetaFactors_);
-    }
 }
 
 void Cost::printhistogram(std::string name)
