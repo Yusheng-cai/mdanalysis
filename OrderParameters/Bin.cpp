@@ -34,7 +34,6 @@ int Bin::findBin(Real x)
     {
         index = numbins_ - 1;
     }
-    
     else
     {
         index = std::ceil((x-range_[0])/step_) - 1;
@@ -48,7 +47,7 @@ int Bin::findBin(Real x)
 bool Bin::isInRange(Real data)
 {
     Real epsilon=1e-6;
-    if (data >= range_[0] - epsilon && data <= range_[1] + epsilon)
+    if (data > range_[0] - epsilon && data < range_[1] + epsilon)
     {
         return true;
     }
