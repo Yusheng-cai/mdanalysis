@@ -113,10 +113,6 @@ void Cost::calculate()
         ASSERT((Bin_->isInRange(cost2)), "cosine(theta)^2 is not within range of 0 and 1.");
         int binNum = Bin_->findBin(cost2);
 
-        if (binNum >= histogram_.size())
-        {
-            std::cout << "binNum = " << binNum << " historagm size = " << histogram_.size() << std::endl;
-        }
         histogram_[binNum] += 1;
     }
 
