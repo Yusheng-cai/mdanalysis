@@ -24,8 +24,8 @@ QtensorZ::QtensorZ(const CalculationInput& input)
 
     // add the residue group to the system
     initializeResidueGroup(residueName_);
-    headIndex_ --;
-    tailIndex_ --;
+    headIndex_--;
+    tailIndex_--;
  
     auto binPack = input.pack_.findParamPack("bin", ParameterPack::KeyType::Optional);
 
