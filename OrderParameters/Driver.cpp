@@ -114,7 +114,6 @@ void Driver::initializeTop(const ParameterPack* topPack)
 
         top_.Parse(topAbsPath);
     }
-
 }
 
 bool Driver::isValidStep(int step)
@@ -352,12 +351,8 @@ void Driver::update()
     for (int i=0;i<OP_.size();i++)
     {
         auto& op = OP_[i];
-        //auto start = std::chrono::high_resolution_clock::now();
-        op->update();
-        //auto stop = std::chrono::high_resolution_clock::now();
 
-        // auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-        // std::cout << "Time it took for op update is " << duration.count() << " microseconds" << std::endl;
+        op->update();
     }
 
     // update the calculation
@@ -369,6 +364,7 @@ void Driver::update()
 
 void Driver::calculate()
 {
+    // perform OP calculations
     for (int i = 0;i<OP_.size();i++)
     {
         auto& op = OP_[i];
