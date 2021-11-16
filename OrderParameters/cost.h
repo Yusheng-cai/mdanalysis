@@ -4,6 +4,7 @@
 #include "CalculationTools.h"
 #include "Qtensor.h"
 #include "BetaFactorWriter.h"
+#include "LinAlgTools.h"
 
 #include <string>
 #include <numeric>

@@ -17,6 +17,9 @@ Cost::Cost(const CalculationInput& input)
     input.pack_.ReadString("probevolume", ParameterPack::KeyType::Required, ProbeVolumeName_);
     input.pack_.ReadNumber("numbins", ParameterPack::KeyType::Optional, numBins_);
 
+    // normalize the vector 
+    LinAlg3x3::normalize(arr_);
+
     // initialize the bin pointer 
     Range range_ = {{0.0, 1.0}};
     Bin_ = Binptr(new Bin(range_,numBins_));
