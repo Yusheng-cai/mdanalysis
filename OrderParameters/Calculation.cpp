@@ -12,6 +12,7 @@ Calculation::Calculation(const CalculationInput& input)
     pack_.ReadVectorString("perIteroutputs", ParameterPack::KeyType::Optional, perIteroutputs_);
     pack_.ReadVectorString("perIteroutputNames", ParameterPack::KeyType::Optional, perIteroutputNames_);
     pack_.ReadNumber("precision", ParameterPack::KeyType::Optional, precision_);
+    pack_.ReadString("name", ParameterPack::KeyType::Optional, name_);
 
     for (int i=0;i<perIteroutputs_.size();i++)
     {
