@@ -14,7 +14,7 @@ Cost::Cost(const CalculationInput& input)
 
     input.pack_.ReadArrayNumber("array", ParameterPack::KeyType::Optional, arr_);
     input.pack_.ReadNumber("precision", ParameterPack::KeyType::Optional, precision_);
-    input.pack_.ReadString("probevolume", ParameterPack::KeyType::Required, ProbeVolumeName_);
+    initializeProbeVolumes();
     input.pack_.ReadNumber("numbins", ParameterPack::KeyType::Optional, numBins_);
 
     // normalize the vector 
@@ -31,7 +31,6 @@ Cost::Cost(const CalculationInput& input)
 
     // add the residue group
     addResidueGroup(residueGroupName_);
-
     auto& res = getResidueGroup(residueGroupName_).getResidues();
     COMIndices_.resize(res[0].atoms_.size());
     std::iota(COMIndices_.begin(), COMIndices_.end(), 1);
@@ -59,7 +58,12 @@ Cost::Cost(const CalculationInput& input)
 void Cost::calculate()
 {
     auto& res = getResidueGroup(residueGroupName_).getResidues();
-    auto& pv  = simstate_.getProbeVolume(ProbeVolumeName_);
+    std::vector<ProbeVolume*> probevolumes;
+    for (int i=0;i<probevolumeNames_.size();i++)
+    {
+        auto& pv  = simstate_.getProbeVolume(probevolumeNames_[i]);
+        probevolumes.push_back(&pv);
+    }
 
     // resize the histogram
     histogram_.resize(numBins_, 0.0);
@@ -87,10 +91,14 @@ void Cost::calculate()
     std::vector<int> InsideIndices;
     for (int i=0;i<COM_.size();i++)
     {
-        auto pvOutput = pv.calculate(COM_[i]);
-        if (pvOutput.hx_ == 1)
+        for (auto pv : probevolumes)
         {
-            InsideIndices.push_back(i);
+            auto pvOutput = pv->calculate(COM_[i]);
+            if (pvOutput.hx_ == 1)
+            {
+                InsideIndices.push_back(i);
+                break;
+            }
         }
     }
 
@@ -104,8 +112,6 @@ void Cost::calculate()
 
         // average the cos squared theta 
         avgCostheta_ += cost2;
-
-        //ASSERT((cost >= -1 && cost <= 1), "cosine(theta) is not within range of -1 and 1");
 
         if ( !(cost >= -1 && cost <= 1))
         {

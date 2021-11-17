@@ -28,9 +28,7 @@ findNearStructure::findNearStructure(const CalculationInput& input)
         ASSERT((true==false), "mode " << mode_ << " is not supported currently");
     }
 
-    pack_.ReadString("probevolume", ParameterPack::KeyType::Required, pvName_);
-
-    auto& pv = simstate_.getProbeVolume(pvName_);
+    initializeProbeVolumes();
 
     // register the per iter outputs
     registerPerIterOutputFunction("atomindices", [this](std::ofstream& ofs) -> void {this -> printAtomIndicesPerIter(ofs);});
@@ -39,8 +37,14 @@ findNearStructure::findNearStructure(const CalculationInput& input)
 void findNearStructure::calculateRes()
 {
     AtomIndices_.clear();
+    std::vector<ProbeVolume*> probevolumes;
 
-    auto& pv = simstate_.getProbeVolume(pvName_);
+    for (int i=0;i<probevolumeNames_.size();i++) 
+    {
+        auto& pv = simstate_.getProbeVolume(probevolumeNames_[i]);
+        probevolumes.push_back(&pv);
+    }
+
     auto& res= simstate_.getResidueGroup(resName_).getResidues();
 
     for (int i=0;i<res.size();i++)
@@ -51,16 +55,26 @@ void findNearStructure::calculateRes()
         COM_[i] = C;
     }
 
-    for (int i=0;i<res.size();i++)
+    // find the inside indices 
+    std::vector<int> insideIndices;
+    for (int i=0;i<COM_.size();i++)
     {
-        auto output = pv.calculate(COM_[i]);
-
-        if (output.hx_ == 1)
+        for (auto pv : probevolumes)
         {
-            for (int j=0;j<res[i].atoms_.size();j++)
+            auto output = pv->calculate(COM_[i]);
+            if (output.hx_ == 1)
             {
-                AtomIndices_.push_back(res[i].atoms_[j].atomNumber_ -1);
+                insideIndices.push_back(i);
             }
+        }
+    }
+
+    for (int i=0;i<insideIndices.size();i++)
+    {
+        int index = insideIndices[i];
+        for (int j=0;j<res[index].atoms_.size();j++)
+        {
+            AtomIndices_.push_back(res[index].atoms_[j].atomNumber_ -1);
         }
     }
 }
