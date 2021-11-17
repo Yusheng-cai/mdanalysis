@@ -37,7 +37,9 @@ QtensorCalc::QtensorCalc(const CalculationInput& input)
 
 void QtensorCalc::printQtensorPerIter(std::ofstream& ofs)
 {
-    ofs << Qtensor_[0][0] << " " << Qtensor_[0][1] << " " << Qtensor_[0][2] << " " << Qtensor_[1][1] << Qtensor_[1][2] << "\n";
+    auto result = Qtensor::orderedeig_Qtensor(Qtensor_);
+    ofs << Qtensor_[0][0] << " " << Qtensor_[0][1] << " " << Qtensor_[0][2] << " " << Qtensor_[1][1] << " " << Qtensor_[1][2] \
+    << " " << result.second[0] << " " << result.second[1] << " " << result.second[2] << "\n";
 }
 
 void QtensorCalc::printevPerIter(std::ofstream& ofs)

@@ -52,6 +52,8 @@ class QtensorCalc : public Calculation
         Real3 v1_;
         Real3 v2_;
 
+        // P(costheta) wrt to each of the director
+
         int head_index_;
         int tail_index_;
 
