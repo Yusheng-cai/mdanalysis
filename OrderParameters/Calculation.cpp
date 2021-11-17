@@ -11,6 +11,8 @@ Calculation::Calculation(const CalculationInput& input)
 
     pack_.ReadVectorString("perIteroutputs", ParameterPack::KeyType::Optional, perIteroutputs_);
     pack_.ReadVectorString("perIteroutputNames", ParameterPack::KeyType::Optional, perIteroutputNames_);
+
+    ASSERT((perIteroutputs_.size() == perIteroutputNames_.size()), "The number of output files must match the number of outputs.");
     pack_.ReadNumber("precision", ParameterPack::KeyType::Optional, precision_);
     pack_.ReadString("name", ParameterPack::KeyType::Optional, name_);
 
@@ -24,6 +26,13 @@ Calculation::Calculation(const CalculationInput& input)
         ofsVector_[i]->open(perIteroutputNames_[i]);
     }
 }
+
+void Calculation::initializeProbeVolumes()
+{
+    // read in the names of the probevolumes
+    pack_.ReadVectorString("probevolumes", ParameterPack::KeyType::Optional, probevolumeNames_);
+}
+
 
 void Calculation::registerOutputFileOutputs(std::string name, OutputValue::ValueFunction func)
 {

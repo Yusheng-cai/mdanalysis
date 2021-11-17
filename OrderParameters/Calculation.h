@@ -72,6 +72,8 @@ class Calculation
 
         const ResidueGroup& getResidueGroup(std::string name) const;
 
+        void initializeProbeVolumes();
+
     protected:
         // output registry 
         OutputRegistry output_;
@@ -115,6 +117,9 @@ class Calculation
 
         // beta factors 
         std::vector<Real> BetaFactors_;
+
+        // string that holds the names of the probe volumes
+        std::vector<std::string> probevolumeNames_;
 };
 
 namespace CalculationRegistry
