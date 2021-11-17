@@ -27,12 +27,18 @@ class P2tilde: public OrderParameters
         Real getQyz() const {return Qtensor_[1][2];}
         Real getN() const {return N_;}
         Real getNtilde() const {return Ntilde_;}
+        Real geteig1() const {return eig1_;}
+        Real geteig2() const {return eig2_;}
+        Real getbiaxiality() const {return biaxiality_;}
 
     private:
         Matrix Qtensor_;
 
         Real p2tilde_;
         Real3 v1_;
+        Real biaxiality_;
+        Real eig1_;
+        Real eig2_;
 
         // obtain the name of the probevolume
         std::string pvname_;
