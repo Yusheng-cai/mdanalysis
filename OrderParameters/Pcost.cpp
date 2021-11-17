@@ -18,6 +18,7 @@ Pcost::Pcost(const CalculationInput& input)
     input.pack_.ReadArrayNumber("array", ParameterPack::KeyType::Optional, arr_);
     input.pack_.ReadNumber("precision", ParameterPack::KeyType::Optional, precision_);
     input.pack_.ReadString("probevolume", ParameterPack::KeyType::Required, ProbeVolumeName_);
+    isExclusion_ = input.pack_.ReadString("notinPV", ParameterPack::KeyType::Optional, exclusionPVName_);
 
     registerOutputFunction("histogram", [this](std::string name) -> void { this -> printHistogram(name);});
     registerOutputFunction("AtomIndices", [this](std::string name) -> void { this -> printAtomIndices(name);});
@@ -43,6 +44,9 @@ void Pcost::calculate()
 {
     auto& res = getResidueGroup(residueGroupName_).getResidues();
     auto& pv  = simstate_.getProbeVolume(ProbeVolumeName_);
+
+    // resize center of mass
+    COM_.resize(res.size());
 
     // clear the histogram per iteration
     histogramPerIter_.clear();
@@ -70,11 +74,26 @@ void Pcost::calculate()
     for (int i=0;i<COM_.size();i++)
     {
         auto pvOutput = pv.calculate(COM_[i]);
-        if (pvOutput.hx_ == 1)
+        bool excluded=false;
+
+        if (isExclusion_)
+        {
+            auto& excludePV = simstate_.getProbeVolume(exclusionPVName_);
+            auto pvO = excludePV.calculate(COM_[i]);
+
+            if (pvO.hx_ == 1)
+            {
+                excluded=true;
+            }
+        }
+
+        if (pvOutput.hx_ == 1 && ! excluded)
         {
             InsideIndices_.push_back(i);
         }
     }
+
+    std::cout << "Insideindices.size = " << InsideIndices_.size() << std::endl;
 
     std::vector<int> AtomIndicesINPVIter;
     // get the atom indices in the pv per iteration

@@ -70,4 +70,8 @@ class Pcost : public Calculation
         std::vector<std::vector<int>> AtomIndicesInPV_;
 
         std::vector<int> InsideIndices_;
+
+        // whether or not we are doing exclusion 
+        bool isExclusion_=false;
+        std::string exclusionPVName_;
 };
