@@ -35,6 +35,8 @@ class QtensorCalc : public Calculation
         void printp2PerIter(std::ofstream& ofs);
         void printQtensorPerIter(std::ofstream& ofs);
         void printcos2PerIter(std::ofstream& ofs);
+
+        Real getBiaxiality() const {return biaxiality_;}
     
     private:
         Matrix Qtensor_;
@@ -51,6 +53,7 @@ class QtensorCalc : public Calculation
         Real3 v0_;
         Real3 v1_;
         Real3 v2_;
+        Real biaxiality_;
 
         // P(costheta) wrt to each of the director
 

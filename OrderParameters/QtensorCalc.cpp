@@ -33,6 +33,9 @@ QtensorCalc::QtensorCalc(const CalculationInput& input)
     registerPerIterOutputFunction("p2", [this](std::ofstream& ofs) -> void {this -> printp2PerIter(ofs);});
     registerPerIterOutputFunction("qtensor", [this](std::ofstream& ofs) -> void {this -> printQtensorPerIter(ofs);});
     registerPerIterOutputFunction("cos2dir", [this](std::ofstream& ofs) -> void {this -> printcos2PerIter(ofs);});
+
+    // register output
+    registerOutputFileOutputs("biaxiality", [this](void) -> Real {this -> getBiaxiality();});
 }
 
 void QtensorCalc::printQtensorPerIter(std::ofstream& ofs)
@@ -108,6 +111,8 @@ void QtensorCalc::calculate()
 
     eigenvector_=  result.first;
     eigenval_   = result.second;
+
+    biaxiality_ = eigenval_[1] * 2.0 + eigenval_[0];
 }
 
 void QtensorCalc::printcos2PerIter(std::ofstream& ofs)

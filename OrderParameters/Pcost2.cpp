@@ -39,19 +39,32 @@ void Pcost2::calculate()
     }
 
     // check which COM are inside the probevolume
-    std::vector<int> InsideIndices;
+    InsideIndices_.clear();
     for (int i=0;i<COM_.size();i++)
     {
         auto pvOutput = pv.calculate(COM_[i]);
-        if (pvOutput.hx_ == 1)
+        bool excluded=false;
+
+        if (isExclusion_)
         {
-            InsideIndices.push_back(i);
+            auto& excludePV = simstate_.getProbeVolume(exclusionPVName_);
+            auto pvO = excludePV.calculate(COM_[i]);
+
+            if (pvO.hx_ == 1)
+            {
+                excluded=true;
+            }
+        }
+
+        if (pvOutput.hx_ == 1 && ! excluded)
+        {
+            InsideIndices_.push_back(i);
         }
     }
 
     std::vector<int> AtomIndicesINPVIter;
     // get the atom indices in the pv per iteration
-    for (int i=0;i<InsideIndices.size();i++)
+    for (int i=0;i<InsideIndices_.size();i++)
     {
         for (int j=0;j<res[i].atoms_.size();j++)
         {
@@ -62,9 +75,9 @@ void Pcost2::calculate()
     
     // starting binning 
     p2tilde_ = 0.0;
-    for (int i=0;i<InsideIndices.size();i++)
+    for (int i=0;i<InsideIndices_.size();i++)
     {
-        int k = InsideIndices[i];
+        int k = InsideIndices_[i];
         Real cost = std::pow(Qtensor::vec_dot(uij_[k], arr_),2.0);
 
         p2tilde_ = p2tilde_ + 1.5 * cost - 0.5;
@@ -78,5 +91,5 @@ void Pcost2::calculate()
         histogramPerIter_[binNum] += 1;
     }
 
-    p2tilde_ /= InsideIndices.size();
+    p2tilde_ /= InsideIndices_.size();
 }
