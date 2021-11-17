@@ -9,6 +9,8 @@ LocalOrder::LocalOrder(const CalculationInput& input)
 : Calculation(input)
 {
     registerPerIterOutputFunction("p2", [this](std::ofstream& ofs) -> void {this -> printLocalOrderBetaFactor(ofs);});
+    registerPerIterOutputFunction("biaxiality", [this](std::ofstream& ofs) -> void {this -> printLocalBiaxialityBetaFactor(ofs);});
+    registerPerIterOutputFunction("director", [this](std::ofstream& ofs) -> void {this -> printLocaldirector(ofs);});
 
     // read in the radius 
     input.pack_.ReadNumber("radius", ParameterPack::KeyType::Required, radius_);
@@ -20,6 +22,7 @@ LocalOrder::LocalOrder(const CalculationInput& input)
     // read in the head & tail index of the residue 
     input.pack_.ReadNumber("headindex", ParameterPack::KeyType::Required, headIndex_);
     input.pack_.ReadNumber("tailindex", ParameterPack::KeyType::Required, tailIndex_);
+    input.pack_.ReadArrayNumber("array", ParameterPack::KeyType::Optional, arr_);
     headIndex_--;
     tailIndex_--;
 }
@@ -31,6 +34,8 @@ void LocalOrder::calculate()
     COM_.resize(res.size());
     uij_.resize(res.size());
     localP2_.resize(res.size());
+    localBiaxiality_.resize(res.size());
+    localdirector_.resize(res.size());
 
     // obtain the COM 
     #pragma omp parallel for
@@ -108,8 +113,41 @@ void LocalOrder::calculate()
 
         // find the eigenvalue and eigenvector 
         auto res = Qtensor::orderedeig_Qtensor(QtensorLocal);
-        localP2_[i] = res.second[1] * (-2.0);
+        localP2_[i] = res.second[0];
+        localBiaxiality_[i] = res.second[1] * 2.0 + res.second[0]; 
+
+        // get the local director dotted with the corresponding user provided direction
+        Real dotProduct = LinAlg3x3::DotProduct(res.first[0], arr_);
+        localdirector_[i] = dotProduct * dotProduct;
     }
+}
+
+void LocalOrder::printLocaldirector(std::ofstream& ofs)
+{
+    auto& res = getResidueGroup(residueName_);
+    std::vector<Real> localdirectorPeratom_(res.getAtomSize(),0.0);
+
+    int index = 0;
+    for (int i=0;i<res.size();i++)
+    {
+        for (int j=0;j<res[i].atoms_.size();j++)
+        {
+            localdirectorPeratom_[index] = localdirector_[i];
+            index ++;
+        }
+    }
+
+    int timeframe = simstate_.getFrameNumber();
+
+    ofs << timeframe << " ";
+
+    for (int i=0;i<localdirectorPeratom_.size();i++)
+    {
+        ofs << localdirectorPeratom_[i] << " ";
+    }
+
+    ofs << "\n";
+
 }
 
 void LocalOrder::printLocalOrderBetaFactor(std::ofstream& ofs)
@@ -134,6 +172,33 @@ void LocalOrder::printLocalOrderBetaFactor(std::ofstream& ofs)
     for (int i=0;i<localP2Peratom_.size();i++)
     {
         ofs << localP2Peratom_[i] << " ";
+    }
+
+    ofs << "\n";
+}
+
+void LocalOrder::printLocalBiaxialityBetaFactor(std::ofstream& ofs)
+{
+    auto& res = getResidueGroup(residueName_);
+    std::vector<Real> localBiaxialityPeratom_(res.getAtomSize(),0.0);
+
+    int index = 0;
+    for (int i=0;i<res.size();i++)
+    {
+        for (int j=0;j<res[i].atoms_.size();j++)
+        {
+            localBiaxialityPeratom_[index] = localBiaxiality_[i]; 
+            index ++;
+        }
+    }
+
+    int timeframe = simstate_.getFrameNumber();
+
+    ofs << timeframe << " ";
+
+    for (int i=0;i<localBiaxialityPeratom_.size();i++)
+    {
+        ofs << localBiaxialityPeratom_[i] << " ";
     }
 
     ofs << "\n";
