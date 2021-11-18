@@ -66,6 +66,7 @@ void findNearStructure::calculateRes()
 
         if (! inpv)
         {
+            // TODO: this does not work if we have union
             for (auto pv : probevolumes_)
             {
                 auto output = pv->calculate(COM_[i]);
