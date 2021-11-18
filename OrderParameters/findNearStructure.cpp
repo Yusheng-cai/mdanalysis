@@ -83,7 +83,7 @@ void findNearStructure::calculateRes()
         int index = insideIndices[i];
         for (int j=0;j<res[index].atoms_.size();j++)
         {
-            AtomIndices_.push_back(res[index].atoms_[j].atomNumber_);
+            AtomIndices_.push_back(res[index].atoms_[j].atomNumber_-1);
         }
     }
 }
@@ -92,17 +92,34 @@ void findNearStructure::calculateAtom()
 {
     AtomIndices_.clear();
 
-    auto& pv  = simstate_.getProbeVolume(pvName_);
     auto& ag  = simstate_.getAtomGroup(agName_).getAtoms();
 
+    // find the inside indices 
+    std::vector<int> insideIndices;
     for (int i=0;i<ag.size();i++)
     {
-        auto output = pv.calculate(ag[i].position);
-
-        if (output.hx_ == 1)
+        bool inpv = false;
+        for (auto pv: NotInprobevolumes_)
         {
-            int Aindices = ag[i].index;
-            AtomIndices_.push_back(Aindices);
+            auto output = pv -> calculate(ag[i].position);
+
+            if(output.hx_ == 1)
+            {
+                inpv = true;
+            }
+        }
+
+        if (! inpv)
+        {
+            // TODO: this does not work if we have union
+            for (auto pv : probevolumes_)
+            {
+                auto output = pv->calculate(ag[i].position);
+                if (output.hx_ == 1)
+                {
+                    AtomIndices_.push_back(ag[i].index);
+                }
+            }
         }
     }
 }

@@ -57,7 +57,10 @@ void Pcost2::calculate()
 
         if (! excluded)
         {
-            InsideIndices_.push_back(i);
+            if (pvOutput.hx_ == 1)
+            {
+                InsideIndices_.push_back(i);
+            }
         }
     }
 
