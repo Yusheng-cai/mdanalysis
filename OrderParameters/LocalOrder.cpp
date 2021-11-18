@@ -153,7 +153,7 @@ void LocalOrder::calculate()
 
         Real dotProduct = LinAlg3x3::DotProduct(vec_, v0_);
 
-        localdirector_[i] = dotProduct * dotProduct;
+        localdirector_[i] = dotProduct;
     }
 }
 
