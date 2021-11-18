@@ -3,6 +3,7 @@
 #include "Bin.h"
 #include "CalculationTools.h"
 #include "Qtensor.h"
+#include "LinAlgTools.h"
 
 #include <string>
 #include <numeric>

@@ -16,6 +16,7 @@ Pcost::Pcost(const CalculationInput& input)
     input.pack_.ReadNumber("tailindex", ParameterPack::KeyType::Required,tailIndex_);
 
     input.pack_.ReadArrayNumber("array", ParameterPack::KeyType::Optional, arr_);
+    LinAlg3x3::normalize(arr_);
     input.pack_.ReadNumber("precision", ParameterPack::KeyType::Optional, precision_);
     input.pack_.ReadString("probevolume", ParameterPack::KeyType::Required, ProbeVolumeName_);
 
@@ -89,7 +90,10 @@ void Pcost::calculate()
 
         if (! excluded)
         {
-            InsideIndices_.push_back(i);
+            if (pvOutput.hx_ == 1)
+            {
+                InsideIndices_.push_back(i);
+            }
         }
     }
 
