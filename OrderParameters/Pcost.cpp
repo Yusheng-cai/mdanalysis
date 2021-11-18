@@ -18,7 +18,6 @@ Pcost::Pcost(const CalculationInput& input)
     input.pack_.ReadArrayNumber("array", ParameterPack::KeyType::Optional, arr_);
     input.pack_.ReadNumber("precision", ParameterPack::KeyType::Optional, precision_);
     input.pack_.ReadString("probevolume", ParameterPack::KeyType::Required, ProbeVolumeName_);
-    isExclusion_ = input.pack_.ReadString("notinPV", ParameterPack::KeyType::Optional, exclusionPVName_);
 
     registerOutputFunction("histogram", [this](std::string name) -> void { this -> printHistogram(name);});
     registerOutputFunction("AtomIndices", [this](std::string name) -> void { this -> printAtomIndices(name);});
@@ -38,6 +37,8 @@ Pcost::Pcost(const CalculationInput& input)
     // resize of histogram to size of bins 
     histogram_.resize(costBin_->getNumbins());
     std::fill(histogram_.begin(), histogram_.end(), 0.0);
+
+    initializeNotInProbeVolumes();
 }
 
 void Pcost::calculate()
@@ -76,18 +77,17 @@ void Pcost::calculate()
         auto pvOutput = pv.calculate(COM_[i]);
         bool excluded=false;
 
-        if (isExclusion_)
+        for (auto pv2 : NotInprobevolumes_) 
         {
-            auto& excludePV = simstate_.getProbeVolume(exclusionPVName_);
-            auto pvO = excludePV.calculate(COM_[i]);
+            auto pv0 = pv2 -> calculate(COM_[i]);
 
-            if (pvO.hx_ == 1)
+            if (pv0.hx_ == 1)
             {
                 excluded=true;
             }
         }
 
-        if (pvOutput.hx_ == 1 && ! excluded)
+        if (! excluded)
         {
             InsideIndices_.push_back(i);
         }
