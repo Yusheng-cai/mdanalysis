@@ -27,10 +27,28 @@ Calculation::Calculation(const CalculationInput& input)
     }
 }
 
+
+void Calculation::initializeNotInProbeVolumes()
+{
+    pack_.ReadVectorString("NotInprobevolumes", ParameterPack::KeyType::Optional, NotInprobevolumeNames_);
+
+    for (int i=0;i<NotInprobevolumeNames_.size();i++)
+    {
+        auto& pv = simstate_.getProbeVolume(NotInprobevolumeNames_[i]);
+        NotInprobevolumes_.push_back(&pv);
+    }
+
+}
 void Calculation::initializeProbeVolumes()
 {
     // read in the names of the probevolumes
     pack_.ReadVectorString("probevolumes", ParameterPack::KeyType::Optional, probevolumeNames_);
+
+    for (int i=0;i<probevolumeNames_.size();i++)
+    {
+        auto& pv = simstate_.getProbeVolume(probevolumeNames_[i]);
+        probevolumes_.push_back(&pv);
+    }
 }
 
 

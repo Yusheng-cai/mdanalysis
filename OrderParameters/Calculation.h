@@ -8,6 +8,7 @@
 #include "ResidueGroup.h"
 #include "tools/CommonTypes.h"
 #include "Output_values.h"
+#include "ProbeVolume.h"
 
 #include <vector>
 #include <array>
@@ -74,6 +75,8 @@ class Calculation
 
         void initializeProbeVolumes();
 
+        void initializeNotInProbeVolumes();
+
     protected:
         // output registry 
         OutputRegistry output_;
@@ -120,6 +123,11 @@ class Calculation
 
         // string that holds the names of the probe volumes
         std::vector<std::string> probevolumeNames_;
+        std::vector<ProbeVolume*> probevolumes_;
+
+        // string that holds the names of probe volumes to be excluded
+        std::vector<std::string> NotInprobevolumeNames_;
+        std::vector<ProbeVolume*> NotInprobevolumes_;
 };
 
 namespace CalculationRegistry
