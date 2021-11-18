@@ -29,6 +29,7 @@ QtensorCalc::QtensorCalc(const CalculationInput& input)
 
     // register per iter output
     registerPerIterOutputFunction("cos20", [this](std::ofstream& ofs) -> void {this -> printcos2thetaPerIter(ofs);});
+    registerPerIterOutputFunction("cos0", [this](std::ofstream& ofs) -> void {this -> printcosPerIter(ofs);});
     registerPerIterOutputFunction("ev", [this](std::ofstream& ofs) -> void {this -> printevPerIter(ofs);});
     registerPerIterOutputFunction("p2", [this](std::ofstream& ofs) -> void {this -> printp2PerIter(ofs);});
     registerPerIterOutputFunction("qtensor", [this](std::ofstream& ofs) -> void {this -> printQtensorPerIter(ofs);});
@@ -124,6 +125,31 @@ void QtensorCalc::printcos2PerIter(std::ofstream& ofs)
     {
         Real val = LinAlg3x3::DotProduct(arr_, uij_[i]);
         val = val * val;
+        dottedval[i] = val;
+    }
+
+    int frameNum = simstate_.getFrameNumber();
+    ofs << frameNum << " ";
+
+    for (int i=0;i<dottedval.size();i++)
+    {
+        for (int j=0;j<res[i].atoms_.size();j++)
+        {
+            ofs << dottedval[i] << " ";
+        }
+    }
+
+    ofs << "\n";
+}
+
+void QtensorCalc::printcosPerIter(std::ofstream& ofs)
+{
+    std::vector<Real> dottedval(uij_.size(),0.0);
+    auto& res = getResidueGroup(residue_name_);
+
+    for (int i=0;i<uij_.size();i++)
+    {
+        Real val = LinAlg3x3::DotProduct(arr_, uij_[i]);
         dottedval[i] = val;
     }
 

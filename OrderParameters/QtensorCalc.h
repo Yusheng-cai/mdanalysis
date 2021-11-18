@@ -35,6 +35,7 @@ class QtensorCalc : public Calculation
         void printp2PerIter(std::ofstream& ofs);
         void printQtensorPerIter(std::ofstream& ofs);
         void printcos2PerIter(std::ofstream& ofs);
+        void printcosPerIter(std::ofstream& ofs);
 
         Real getBiaxiality() const {return biaxiality_;}
     
