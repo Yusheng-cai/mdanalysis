@@ -89,6 +89,34 @@ void LocalOrder::calculate()
 
     ASSERT((neighborIndices_.size() == res.size()), "There is a size mismatch.");
 
+    // Find global order as well
+    GlobalQtensor_.fill({});
+    #pragma omp parallel
+    {
+        Matrix QtensorLocal_ = {};
+        #pragma omp for
+        for (int i=0;i<uij_.size();i++)
+        {
+            Matrix QtensorSingle_ = LinAlg3x3::LocalQtensor(uij_[i]);
+            Qtensor::matrix_accum_inplace(QtensorLocal_, QtensorSingle_);
+        }
+
+        #pragma omp critical 
+        {
+            Qtensor::matrix_accum_inplace(GlobalQtensor_, QtensorLocal_);
+        }
+    }
+    Real N = uij_.size();
+    Qtensor::matrix_mult_inplace(GlobalQtensor_, 1/(2.0*N));
+
+    auto result = Qtensor::orderedeig_Qtensor(GlobalQtensor_);
+    globaleigenvalue_ = result.second;
+    globaleigenvector_ = result.first;
+    for (int i=0;i<3;i++)
+    {
+        v0_[i] = globaleigenvector_[i][0];
+    }
+
     // calculate the local Qtensors 
     #pragma omp parallel for 
     for (int i=0;i<COM_.size();i++)
@@ -117,7 +145,14 @@ void LocalOrder::calculate()
         localBiaxiality_[i] = res.second[1] * 2.0 + res.second[0]; 
 
         // get the local director dotted with the corresponding user provided direction
-        Real dotProduct = LinAlg3x3::DotProduct(res.first[0], arr_);
+        Real3 vec_;
+        for (int j=0;j<3;j++)
+        {
+            vec_[j] = res.first[j][0];
+        }
+
+        Real dotProduct = LinAlg3x3::DotProduct(vec_, v0_);
+
         localdirector_[i] = dotProduct * dotProduct;
     }
 }

@@ -48,4 +48,9 @@ class LocalOrder : public Calculation
         std::vector<Real> localdirector_;
 
         OpenMP::OpenMP_buffer<std::vector<std::vector<int>>> NeighborIndicesBuffer_;
+
+        Matrix GlobalQtensor_;
+        Real3 globaleigenvalue_;
+        Matrix globaleigenvector_;
+        Real3 v0_;
 };
