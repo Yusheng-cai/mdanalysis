@@ -45,22 +45,23 @@ void Pcost2::calculate()
         auto pvOutput = pv.calculate(COM_[i]);
         bool excluded=false;
 
-        if (isExclusion_)
+        for (auto pv2 : NotInprobevolumes_) 
         {
-            auto& excludePV = simstate_.getProbeVolume(exclusionPVName_);
-            auto pvO = excludePV.calculate(COM_[i]);
+            auto pv0 = pv2 -> calculate(COM_[i]);
 
-            if (pvO.hx_ == 1)
+            if (pv0.hx_ == 1)
             {
                 excluded=true;
             }
         }
 
-        if (pvOutput.hx_ == 1 && ! excluded)
+        if (! excluded)
         {
             InsideIndices_.push_back(i);
         }
     }
+
+    std::cout << "Insideindices.size = " << InsideIndices_.size() << std::endl;
 
     std::vector<int> AtomIndicesINPVIter;
     // get the atom indices in the pv per iteration
