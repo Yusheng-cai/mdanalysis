@@ -406,5 +406,6 @@ TokenStream::Status InputParser::ParseVector(TokenStream& toks, std::vector<std:
 
 bool StringTools::CheckIfOnlyWhiteSpace(std::string& str)
 {
-    return str.find_first_not_of(" ") == std::string::npos;
+    //return str.find_first_not_of(' ') == std::string::npos;
+    return std::all_of(str.begin(), str.end(), [](unsigned char c)->bool {return std::isspace(c);});
 }
