@@ -20,6 +20,9 @@ P2tilde::P2tilde(const OrderParametersInput& input)
     registerOutput("qxz", [this](void) -> Real {return this -> getQxz();});
     registerOutput("qyy", [this](void)-> Real {return this -> getQyy();});
     registerOutput("qyz", [this](void) -> Real {return this -> getQyz();});
+    registerOutput("biaxiality", [this](void)->Real {return this->getbiaxiality();});
+    registerOutput("eig1", [this](void) -> Real {return this->geteig1();});
+    registerOutput("eig2", [this](void) -> Real {return this->geteig2();});
 }
 
 void P2tilde::calculate()
@@ -84,10 +87,14 @@ void P2tilde::calculate()
 
     Qtensor::matrix_mult_inplace(Qtensor_, 1.0/(2.0*Ntilde_));
 
-    auto result = Qtensor::OP_Qtensor(Qtensor_);
+    auto result = Qtensor::orderedeig_Qtensor(Qtensor_);
 
-    p2tilde_ = result.first;
-    v1_ = result.second;
+    p2tilde_ = result.second[0]; 
+    eig1_    = result.second[1];
+    eig2_    = result.second[2];
+    biaxiality_ = eig1_ * 2.0 + p2tilde_;
+
+    v1_ = result.first[0];
 }
 
 void P2tilde::update()
