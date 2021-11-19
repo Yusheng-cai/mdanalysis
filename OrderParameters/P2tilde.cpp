@@ -11,6 +11,8 @@ P2tilde::P2tilde(const OrderParametersInput& input)
     input.pack_.ReadString("probevolume", ParameterPack::KeyType::Required, pvname_);
     input.pack_.ReadString("headgroup", ParameterPack::KeyType::Required, headgroupname_);
     input.pack_.ReadString("tailgroup", ParameterPack::KeyType::Required, tailgroupname_);
+    indicatorgroupname_ = headgroupname_;
+    input.pack_.ReadString("indicatorgroup", ParameterPack::KeyType::Optional, indicatorgroupname_);
 
     registerOutput("p2tilde", [this](void)->Real {return this->getP2tilde();});
     registerOutput("n", [this](void)->Real {return this->getN();});
@@ -32,9 +34,11 @@ void P2tilde::calculate()
     auto& probeV = simstate_.getProbeVolume(pvname_);
     auto& headAG = simstate_.getAtomGroup(headgroupname_);
     auto& tailAG = simstate_.getAtomGroup(tailgroupname_);
+    auto& indAG  = simstate_.getAtomGroup(indicatorgroupname_);
 
     auto& headatoms_ = headAG.getAtoms();
     auto& tailatoms_ = tailAG.getAtoms();
+    auto& indatoms   = indAG.getAtoms();
 
     #pragma omp parallel
     {
@@ -48,8 +52,9 @@ void P2tilde::calculate()
         {
             Real3 headpos_ = headatoms_[i].position;
             Real3 tailpos_ = tailatoms_[i].position; 
+            Real3 indpos   = indatoms[i].position;
 
-            ProbeVolumeOutput output = probeV.calculate(headpos_);
+            ProbeVolumeOutput output = probeV.calculate(indpos);
 
             // perform the Qtensor calculation only if htilde_x is larger than 0
             if (output.htilde_x_ > 0)

@@ -46,6 +46,7 @@ class P2tilde: public OrderParameters
         // obtain the name of the head and tail atom groups
         std::string headgroupname_;
         std::string tailgroupname_;
+        std::string indicatorgroupname_;
 
         // the indices of the atoms within the probeVolume
         std::vector<int> IndusIndices_;
