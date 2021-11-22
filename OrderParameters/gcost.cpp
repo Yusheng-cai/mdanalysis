@@ -94,11 +94,23 @@ void gcost::calculate()
         }
     }
 
+
+    int size = InsideIndices_.size();
+    for (auto it = InsideIndicesBuffer_.beginworker(); it != InsideIndicesBuffer_.endworker(); it ++)
+    {
+        size += it -> size();
+    }
+
+    InsideIndices_.reserve(size);
+
     for (auto it = InsideIndicesBuffer_.beginworker(); it != InsideIndicesBuffer_.endworker(); it ++)
     {
         InsideIndices_.insert(InsideIndices_.end(), it -> begin(), it -> end());
     }
 
+
+    neighborDistance_.clear();
+    dotProduct_.clear();
     neighborDistance_.resize(InsideIndices_.size(), std::vector<Real>(InsideIndices_.size(),0.0));
     dotProduct_.resize(InsideIndices_.size(), std::vector<Real>(InsideIndices_.size(),0.0));
 
@@ -120,7 +132,7 @@ void gcost::calculate()
             Real3 u2 = uij_[index2];
             Real dotproduct = LinAlg3x3::DotProduct(u1,u2);
 
-            neighborDistance_[i][j] = val;
+            neighborDistance_[i][j] = std::sqrt(val);
             dotProduct_[i][j] = dotproduct;
         }
     }
@@ -144,12 +156,10 @@ void gcost::calculate()
     // divide histogram dot product by histogram
     for (int i=0;i<histogramDotProductPerIter_.size();i++)
     {
-        histogramDotProductPerIter_[i] /= histogramPerIter_[i];
-    }
-
-    for (int i=0;i<histogramDotProductPerIter_.size();i++)
-    {
-        std::cout << histogramDotProductPerIter_[i] << std::endl;
+        if (histogramPerIter_[i] != 0)
+        {
+            histogramDotProductPerIter_[i] /= histogramPerIter_[i];
+        }
     }
 
     // add histogramdotproductperiter to histogramdotproduct
@@ -166,7 +176,7 @@ void gcost::printHistogram(std::string name)
 
     for (int i=0;i<histogramDotProduct_.size();i++)
     {
-        ofs_ << histogramDotProduct_[i] << "\n";
+        ofs_ << bin_->getLeftLocationOfBin(i) << " " <<  histogramDotProduct_[i] << "\n";
     }
 
     ofs_.close();
