@@ -153,4 +153,5 @@ namespace CalculationTools
 
     Real3 getCOM(const Molecule::residue& residues, const SimulationState& simstate, std::vector<int>& indices_);
     Real3 getCOC(const Molecule::residue& residues, const SimulationState& simstate, std::vector<int>& indices_);
+    Real3 getCOG(const Molecule::residue& residues, const SimulationState& simstate, std::vector<int>& indices_);
 };
