@@ -42,7 +42,6 @@ RDFresidue::RDFresidue(const CalculationInput& input)
     std::iota(COMIndices1_.begin(), COMIndices1_.end(),1);
     std::iota(COMIndices2_.begin(), COMIndices2_.end(),1);
     
-
     input.pack_.ReadVectorNumber("comIndices1", ParameterPack::KeyType::Optional, COMIndices1_);
     input.pack_.ReadVectorNumber("comIndices2", ParameterPack::KeyType::Optional, COMIndices2_);
 
