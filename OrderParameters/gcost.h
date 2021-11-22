@@ -3,25 +3,32 @@
 #include "tools/Assert.h"
 #include "tools/InputParser.h"
 #include "Bin.h"
-#include "CalculationTools.h"
 #include "parallel/OpenMP.h"
 #include "LinAlgTools.h"
+#include "SimulationState.h"
 
 #include <vector>
 #include <memory>
 #include <array>
 #include <string>
+#include <functional>
+#include <map>
 
 class gcost : public Calculation
 {
     public:
         using binptr = std::unique_ptr<Bin>;
+        using fcn    = std::function<Real(Real3&, Real3&)>;
         gcost(const CalculationInput& input);
 
         virtual void calculate();
         virtual void finishCalculate() override;
         void printHistogram(std::string name);
 
+        Real calcFactor(Real3& ui, Real3& uj);
+        Real calcg1(Real3& ui, Real3& uj);
+        Real calcg2(Real3& ui, Real3& uj);
+        void registerCalcFunc(int i, fcn function);
 
     private:
         binptr bin_;
@@ -36,6 +43,8 @@ class gcost : public Calculation
 
         int numbins_;
 
+        std::string mode_="mass";
+
         std::vector<int> InsideIndices_;
         OpenMP::OpenMP_buffer<std::vector<int>> InsideIndicesBuffer_;
 
@@ -45,4 +54,8 @@ class gcost : public Calculation
         std::vector<Real> histogramDotProduct_;
         std::vector<int> histogramPerIter_;
         std::vector<Real> histogramDotProductPerIter_;
+
+        std::map<int, fcn> MapIndexToFcn_;
+
+        int index_=1;
 };

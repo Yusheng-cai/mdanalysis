@@ -1,7 +1,9 @@
+#pragma once
 #include "FFT.h"
 #include "tools/CommonTypes.h"
 #include "tools/Assert.h"
 #include "Calculation.h"
+#include "SimulationState.h"
 
 #include <vector>
 #include <string>

@@ -1,10 +1,10 @@
 #pragma once
 #include "Calculation.h"
 #include "Bin.h"
-#include "CalculationTools.h"
 #include "Qtensor.h"
 #include "BetaFactorWriter.h"
 #include "LinAlgTools.h"
+#include "SimulationState.h"
 
 #include <string>
 #include <numeric>

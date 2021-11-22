@@ -1,9 +1,9 @@
 #pragma once
 #include "Calculation.h"
 #include "Bin.h"
-#include "CalculationTools.h"
 #include "Qtensor.h"
 #include "Pcost.h"
+#include "SimulationState.h"
 
 #include <string>
 #include <numeric>

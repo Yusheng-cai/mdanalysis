@@ -3,7 +3,7 @@
 #include "tools/Assert.h"
 #include "Bin.h"
 #include "LinAlgTools.h"
-#include "CalculationTools.h"
+#include "SimulationState.h"
 
 #include <vector>
 #include <array>

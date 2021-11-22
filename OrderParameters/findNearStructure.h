@@ -1,8 +1,10 @@
+#pragma once 
+
 #include "tools/Assert.h"
 #include "tools/CommonTypes.h"
 #include "Calculation.h"
 #include "tools/InputParser.h"
-#include "CalculationTools.h"
+#include "SimulationState.h"
 
 #include <vector>
 #include <string>

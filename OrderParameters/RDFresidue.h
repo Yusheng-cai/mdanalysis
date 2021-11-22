@@ -1,8 +1,9 @@
+#pragma once
 #include "Calculation.h"
-#include "CalculationTools.h"
 #include "Bin.h"
 #include "parallel/OpenMP_buffer.h"
 #include "tools/Constants.h"
+#include "SimulationState.h"
 
 #include <vector>
 #include <algorithm>

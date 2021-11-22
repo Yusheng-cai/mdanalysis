@@ -25,7 +25,43 @@ gcost::gcost(const CalculationInput& input)
 
     registerOutputFunction("histogram", [this](std::string name) -> void {this->printHistogram(name);});
 
+    input.pack_.ReadNumber("index", ParameterPack::KeyType::Optional, index_);
+
     histogramDotProduct_.resize(numbins_,0.0);
+
+    registerCalcFunc(1, [this](Real3& ui, Real3& uj) -> Real {return this -> calcg1(ui,uj);});
+    registerCalcFunc(2, [this](Real3& ui, Real3& uj) -> Real {return this -> calcg2(ui,uj);});
+}
+
+gcost::Real gcost::calcFactor(Real3& ui, Real3& uj)
+{
+    auto it = MapIndexToFcn_.find(index_);
+
+    ASSERT((it != MapIndexToFcn_.end()), "The index " << index_ << " is not registered.");
+
+    Real val = it->second.operator()(ui,uj);
+
+    return val;
+}
+
+gcost::Real gcost::calcg1(Real3& ui, Real3& uj)
+{
+    return LinAlg3x3::DotProduct(ui,uj);
+}
+
+gcost::Real gcost::calcg2(Real3& ui, Real3& uj)
+{
+    Real dotProduct = LinAlg3x3::DotProduct(ui, uj);
+    return 1.5 * dotProduct * dotProduct  - 0.5;
+}
+
+void gcost::registerCalcFunc(int index, fcn function)
+{
+    auto it = MapIndexToFcn_.find(index);
+
+    ASSERT((it == MapIndexToFcn_.end()), "The index " << index << " is already registered.");
+
+    MapIndexToFcn_.insert(std::make_pair(index, function));
 }
 
 void gcost::calculate()
@@ -42,7 +78,7 @@ void gcost::calculate()
     #pragma omp parallel for
     for (int i=0;i<COM_.size();i++)
     {
-        COM_[i] = CalculationTools::getCOM(res[i], simstate_, COMIndices_);
+        COM_[i] = calcCOM(res[i]); 
 
         Real3 headpos = res[i].atoms_[headindex_].positions_;
         Real3 tailpos = res[i].atoms_[tailindex_].positions_;
@@ -130,7 +166,7 @@ void gcost::calculate()
 
             Real3 u1 = uij_[index1];
             Real3 u2 = uij_[index2];
-            Real dotproduct = LinAlg3x3::DotProduct(u1,u2);
+            Real dotproduct = calcFactor(u1, u2);
 
             neighborDistance_[i][j] = std::sqrt(val);
             dotProduct_[i][j] = dotproduct;

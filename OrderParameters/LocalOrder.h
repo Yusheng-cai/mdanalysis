@@ -3,10 +3,10 @@
 #include "Calculation.h"
 #include "tools/Assert.h"
 #include "tools/CommonTypes.h"
-#include "CalculationTools.h"
 #include "LinAlgTools.h"
 #include "Qtensor.h"
 #include "parallel/OpenMP.h"
+#include "SimulationState.h"
 
 #include <iostream>
 #include <vector>

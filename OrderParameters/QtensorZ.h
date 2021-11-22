@@ -2,10 +2,10 @@
 #include "Calculation.h"
 #include "tools/Assert.h"
 #include "xdr/MoleculeStructs.h"
-#include "CalculationTools.h"
 #include "tools/CommonTypes.h"
 #include "Bin.h"
 #include "Qtensor.h"
+#include "SimulationState.h"
 
 #include <vector>
 #include <iomanip>

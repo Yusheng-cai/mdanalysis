@@ -2,7 +2,7 @@
 #include "ProbeVolume.h"
 #include "SimulationState.h"
 #include "IndicatorFunction1d.h"
-#include "CalculationTools.h"
+#include "Calculation.h"
 
 #include <algorithm>
 #include <list>
