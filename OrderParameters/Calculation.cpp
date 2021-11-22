@@ -37,7 +37,6 @@ Calculation::Real3 Calculation::calcCOM(const Molecule::residue& residues)
     }
     else if (COM_mode_ == "charge")
     {
-        std::cout << "Using charge." << std::endl;
         return CalculationTools::getCOC(residues, simstate_, COMIndices_);
     }
     else
