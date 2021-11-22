@@ -43,8 +43,6 @@ class gcost : public Calculation
 
         int numbins_;
 
-        std::string mode_="mass";
-
         std::vector<int> InsideIndices_;
         OpenMP::OpenMP_buffer<std::vector<int>> InsideIndicesBuffer_;
 
