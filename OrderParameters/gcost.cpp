@@ -174,17 +174,42 @@ void gcost::calculate()
     }
 
     // for a single residue, let's bin it 
-    for (int i=0;i<InsideIndices_.size();i++)
-    {
-        for (int j=i+1;j<InsideIndices_.size();j++)
-        {
-            Real dist = neighborDistance_[i][j];
+    histogramDotProductPerIterbuffer_.set_master_object(histogramDotProductPerIter_);
+    histogramPerIterbuffer_.set_master_object(histogramPerIter_);
 
-            if (bin_ ->isInRange(dist))
+    #pragma omp parallel
+    {
+        auto& dotbuffer = histogramDotProductPerIterbuffer_.access_buffer_by_id();
+        auto& histbuffer = histogramPerIterbuffer_.access_buffer_by_id();
+
+        dotbuffer.clear();
+        dotbuffer.resize(numbins_,0);
+
+        histbuffer.clear();
+        histbuffer.resize(numbins_,0);
+
+        #pragma omp for
+        for (int i=0;i<InsideIndices_.size();i++)
+        {
+            for (int j=i+1;j<InsideIndices_.size();j++)
             {
-                int binnum = bin_ -> findBin(dist);
-                histogramDotProductPerIter_[binnum] += dotProduct_[i][j];
-                histogramPerIter_[binnum] += 1;
+                Real dist = neighborDistance_[i][j];
+
+                if (bin_ ->isInRange(dist))
+                {
+                    int binnum = bin_ -> findBin(dist);
+                    dotbuffer[binnum] += dotProduct_[i][j];
+                    histbuffer[binnum] += 1;
+                }
+            }
+        }
+
+        #pragma omp critical 
+        {
+            for (int i=0;i<numbins_;i++)
+            {
+                histogramDotProductPerIter_[i] += dotbuffer[i];
+                histogramPerIter_[i] += histbuffer[i];
             }
         }
     }
