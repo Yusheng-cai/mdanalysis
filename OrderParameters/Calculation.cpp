@@ -16,6 +16,8 @@ Calculation::Calculation(const CalculationInput& input)
     pack_.ReadNumber("precision", ParameterPack::KeyType::Optional, precision_);
     pack_.ReadString("name", ParameterPack::KeyType::Optional, name_);
 
+    pack_.ReadString("COMmode", ParameterPack::KeyType::Optional, COM_mode_);
+
     for (int i=0;i<perIteroutputs_.size();i++)
     {
         ofsVector_.push_back(ofsptr(new std::ofstream));
@@ -25,6 +27,24 @@ Calculation::Calculation(const CalculationInput& input)
     {
         ofsVector_[i]->open(perIteroutputNames_[i]);
     }
+}
+
+Calculation::Real3 Calculation::calcCOM(const Molecule::residue& residues)
+{
+    if (COM_mode_ == "mass")
+    {
+        return CalculationTools::getCOM(residues, simstate_, COMIndices_);
+    }
+    else if (COM_mode_ == "charge")
+    {
+        std::cout << "Using charge." << std::endl;
+        return CalculationTools::getCOC(residues, simstate_, COMIndices_);
+    }
+    else
+    {
+        ASSERT((true == false), "The mode " << COM_mode_ << " is not yet available.");
+    }
+
 }
 
 
@@ -183,4 +203,107 @@ void Calculation::closeAllOutputPerIter()
     {
         ofsVector_[i]->close();
     }
+}
+
+CalculationTools::Real3 CalculationTools::getCOM(const Molecule::residue& residueGroup, const SimulationState& simstate, \
+std::vector<int>& indices_)
+{
+    auto& simbox = simstate.getSimulationBox();
+
+    // For COM calculation, for each residue, we shift the atoms with respect to the first atom
+    // obtain the position of the first atom in the residue group
+    int index0 = indices_[0];
+    auto& pos1 = residueGroup.atoms_[index0].positions_;
+
+    // Total mass of the atoms of interest
+    Real massTot = 0;
+    Real3 COM_pos = {{0,0,0}};
+    
+
+    // iterate over the indices of interest
+    for (int j=0;j<indices_.size();j++)
+    {
+        Real3 distance;
+        Real distsq;
+
+        int index = indices_[j];
+        Real3 shiftWRTatom1 = simbox.calculateShift(residueGroup.atoms_[index].positions_, pos1);
+
+        Real3 shiftedPos;
+
+        for (int k=0;k<3;k++)
+        {
+            shiftedPos[k] = residueGroup.atoms_[index].positions_[k] + shiftWRTatom1[k];
+        }
+
+        for (int k=0;k<3;k++)
+        {
+            COM_pos[k] += shiftedPos[k] * residueGroup.atoms_[index].mass_;
+        }
+
+        massTot += residueGroup.atoms_[index].mass_;
+    }
+
+    for (int j=0;j<3;j++)
+    {
+        COM_pos[j] = COM_pos[j]/massTot;
+    }
+
+    // check if it is outside of the box, if it is, then move it inside the box
+    Real3 shift = simbox.calculateShift(COM_pos, simbox.getCenter());
+
+    for (int j=0;j<3;j++)
+    {
+        COM_pos[j] += shift[j];
+    }
+
+    return COM_pos;
+}
+
+CalculationTools::Real3 CalculationTools::getCOC(const Molecule::residue& residueGroup, const SimulationState& simstate, \
+std::vector<int>& indices_)
+{
+    auto& simbox = simstate.getSimulationBox();
+
+    // For COM calculation, for each residue, we shift the atoms with respect to the first atom
+    // obtain the position of the first atom in the residue group
+    int index0 = indices_[0];
+    auto& pos1 = residueGroup.atoms_[index0].positions_;
+
+    // Total mass of the atoms of interest
+    Real chargeTot = 0;
+    Real3 COM_pos = {{0,0,0}};
+    
+
+    // iterate over the indices of interest
+    for (int j=0;j<indices_.size();j++)
+    {
+        Real3 distance;
+        Real distsq;
+
+        int index = indices_[j];
+        Real3 shiftWRTatom1 = simbox.calculateShift(residueGroup.atoms_[index].positions_, pos1);
+
+        Real3 shiftedPos;
+
+        for (int k=0;k<3;k++)
+        {
+            shiftedPos[k] = residueGroup.atoms_[index].positions_[k] + shiftWRTatom1[k];
+        }
+
+        for (int k=0;k<3;k++)
+        {
+            COM_pos[k] += shiftedPos[k] * residueGroup.atoms_[index].charge_;
+        }
+    }
+
+    // check if it is outside of the box, if it is, then move it inside the box
+    Real3 shift = simbox.calculateShift(COM_pos, simbox.getCenter());
+
+    for (int j=0;j<3;j++)
+    {
+        COM_pos[j] += shift[j];
+    }
+
+    return COM_pos;
 }

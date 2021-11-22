@@ -58,6 +58,8 @@ class Calculation
         int getNumResidueGroups() const { return ResidueGroups_.size();}
         int getNumAtomGroups() const {return AtomGroups_.size();}
 
+        Real3 calcCOM(const Molecule::residue& residues);
+
         void registerOutputFunction(std::string name, outputFunc func);
         outputFunc& getOutputByName(std::string name);
         void registerPerIterOutputFunction(std::string name, perIteroutputFunc func);
@@ -128,6 +130,9 @@ class Calculation
         // string that holds the names of probe volumes to be excluded
         std::vector<std::string> NotInprobevolumeNames_;
         std::vector<ProbeVolume*> NotInprobevolumes_;
+
+        // COM mode 
+        std::string COM_mode_="mass";
 };
 
 namespace CalculationRegistry
@@ -139,4 +144,13 @@ namespace CalculationRegistry
 
     template <typename D>
     using registry_ = RegisterInFactory<Base, D, Key, const CalculationInput&>;
+};
+
+namespace CalculationTools
+{
+    using Real  = CommonTypes::Real;
+    using Real3 = CommonTypes::Real3;
+
+    Real3 getCOM(const Molecule::residue& residues, const SimulationState& simstate, std::vector<int>& indices_);
+    Real3 getCOC(const Molecule::residue& residues, const SimulationState& simstate, std::vector<int>& indices_);
 };
