@@ -79,6 +79,8 @@ class Calculation
 
         void initializeNotInProbeVolumes();
 
+        std::vector<int> InsidePVIndices(std::vector<Real3>& pos);
+
     protected:
         // output registry 
         OutputRegistry output_;

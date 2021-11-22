@@ -306,6 +306,66 @@ std::vector<int>& indices_)
     return COM_pos;
 }
 
+std::vector<int> Calculation::InsidePVIndices(std::vector<Real3>& pos)
+{
+    std::vector<int> insideindices;
+    OpenMP::OpenMP_buffer<std::vector<int>> insideindicesbuffer;
+    insideindicesbuffer.set_master_object(insideindices);
+
+    // first find which set of COM are inside of PV
+    #pragma omp parallel
+    {
+        auto& buffer_ = insideindicesbuffer.access_buffer_by_id();
+        buffer_.clear();
+
+        #pragma omp for
+        for (int i=0;i<pos.size();i++)
+        {
+            bool inPV = false;
+            for (auto pv : NotInprobevolumes_)
+            {
+                auto out = pv -> calculate(pos[i]);
+
+                if (out.hx_ == 1)
+                {
+                    // break breaks out of the closest enclosing for loop
+                    inPV = true;
+                    break;
+                }
+            }
+
+            if (! inPV)
+            {
+                for (auto pv : probevolumes_)
+                {
+                    auto out = pv -> calculate(pos[i]);
+                    if (out.hx_ == 1)
+                    {
+                        buffer_.push_back(i);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    int size=insideindices.size();
+    for (auto it = insideindicesbuffer.beginworker(); it != insideindicesbuffer.endworker(); it ++)
+    {
+        size += it -> size();
+    }
+
+    insideindices.reserve(size);
+
+    for (auto it = insideindicesbuffer.beginworker(); it != insideindicesbuffer.endworker(); it ++)
+    {
+        insideindices.insert(insideindices.end(), it -> begin(), it -> end());
+    }
+
+    return insideindices;
+}
+
+
 CalculationTools::Real3 CalculationTools::getCOG(const Molecule::residue& residueGroup, const SimulationState& simstate, \
 std::vector<int>& indices_)
 {
