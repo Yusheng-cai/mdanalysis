@@ -18,7 +18,6 @@ Pcost::Pcost(const CalculationInput& input)
     input.pack_.ReadArrayNumber("array", ParameterPack::KeyType::Optional, arr_);
     LinAlg3x3::normalize(arr_);
     input.pack_.ReadNumber("precision", ParameterPack::KeyType::Optional, precision_);
-    input.pack_.ReadString("probevolume", ParameterPack::KeyType::Required, ProbeVolumeName_);
 
     registerOutputFunction("histogram", [this](std::string name) -> void { this -> printHistogram(name);});
     registerOutputFunction("AtomIndices", [this](std::string name) -> void { this -> printAtomIndices(name);});
@@ -40,12 +39,12 @@ Pcost::Pcost(const CalculationInput& input)
     std::fill(histogram_.begin(), histogram_.end(), 0.0);
 
     initializeNotInProbeVolumes();
+    initializeProbeVolumes();
 }
 
 void Pcost::calculate()
 {
     auto& res = getResidueGroup(residueGroupName_).getResidues();
-    auto& pv  = simstate_.getProbeVolume(ProbeVolumeName_);
 
     // resize center of mass
     COM_.resize(res.size());
@@ -73,29 +72,7 @@ void Pcost::calculate()
 
     // check which COM are inside the probevolume
     InsideIndices_.clear();
-    for (int i=0;i<COM_.size();i++)
-    {
-        auto pvOutput = pv.calculate(COM_[i]);
-        bool excluded=false;
-
-        for (auto pv2 : NotInprobevolumes_) 
-        {
-            auto pv0 = pv2 -> calculate(COM_[i]);
-
-            if (pv0.hx_ == 1)
-            {
-                excluded=true;
-            }
-        }
-
-        if (! excluded)
-        {
-            if (pvOutput.hx_ == 1)
-            {
-                InsideIndices_.push_back(i);
-            }
-        }
-    }
+    InsideIndices_ = InsidePVIndices(COM_);
 
     std::cout << "Insideindices.size = " << InsideIndices_.size() << std::endl;
 

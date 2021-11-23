@@ -61,9 +61,6 @@ class Pcost : public Calculation
         // number of residues per bin
         std::vector<Real> numResiduePerBin_;
 
-        // name of probe volume
-        std::string ProbeVolumeName_;
-
         // name of the atom Indices output
         std::string AtomIndicesName_;
 
