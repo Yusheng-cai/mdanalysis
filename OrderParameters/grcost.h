@@ -22,6 +22,9 @@ class grcost : public Calculation
         grcost(const CalculationInput& input);
 
         virtual void calculate() override;
+        virtual void finishCalculate() override;
+
+        void printgrcost(std::string name);
 
     private:
         std::vector<Real3> COM_;
@@ -41,9 +44,14 @@ class grcost : public Calculation
 
         Real3 director_;
 
-        std::vector<std::vector<Real>> rdotdirector_;
-        std::vector<std::vector<Real>> dotproduct_;
         std::vector<std::vector<int>> histogramPerIter_;
         std::vector<std::vector<Real>> histogramDotProductPerIter_;
-        std::vector<std::vector<Real>> neighborDistance_;
+        OpenMP::OpenMP_buffer<std::vector<std::vector<Real>>> histogramDPPerIterBuffer_;
+        OpenMP::OpenMP_buffer<std::vector<std::vector<int>>> histogramPerIterBuffer_;
+
+
+        std::vector<std::vector<Real>> histogramDotProduct_;
+
+        int numtbins_;
+        int numrbins_;
 };

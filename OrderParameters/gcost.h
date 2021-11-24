@@ -53,6 +53,8 @@ class gcost : public Calculation
         std::vector<int> histogramPerIter_;
         std::vector<Real> histogramDotProductPerIter_;
 
+        std::vector<std::vector<Real>> histogramDotProduct2d_;
+
         OpenMP::OpenMP_buffer<std::vector<Real>> histogramDotProductPerIterbuffer_;
         OpenMP::OpenMP_buffer<std::vector<int>> histogramPerIterbuffer_;
 
