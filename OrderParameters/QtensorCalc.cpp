@@ -27,7 +27,11 @@ QtensorCalc::QtensorCalc(const CalculationInput& input)
     size_  = res.size();
     uij_.resize(size_);
 
+    // initialize Qtensor total --> Used to be averaged over the entire trajectory
+    QtensorTot_.fill({});
+
     // register per iter output
+    registerOutputFunction("Q", [this](std::string name) -> void {this -> printaverageQ(name);});
     registerPerIterOutputFunction("cos20", [this](std::ofstream& ofs) -> void {this -> printcos2thetaPerIter(ofs);});
     registerPerIterOutputFunction("cos0", [this](std::ofstream& ofs) -> void {this -> printcosPerIter(ofs);});
     registerPerIterOutputFunction("ev", [this](std::ofstream& ofs) -> void {this -> printevPerIter(ofs);});
@@ -44,6 +48,27 @@ void QtensorCalc::printQtensorPerIter(std::ofstream& ofs)
     auto result = Qtensor::orderedeig_Qtensor(Qtensor_);
     ofs << Qtensor_[0][0] << " " << Qtensor_[0][1] << " " << Qtensor_[0][2] << " " << Qtensor_[1][1] << " " << Qtensor_[1][2] \
     << " " << result.second[0] << " " << result.second[1] << " " << result.second[2] << "\n";
+}
+
+void QtensorCalc::printaverageQ(std::string name)
+{
+    std::ofstream ofs;
+    ofs.open(name);
+
+    auto res = Qtensor::orderedeig_Qtensor(QtensorTot_);    
+    Real3 eigenvector;
+    for (int i=0;i<3;i++)
+    {
+        eigenvector[i] = res.first[i][0];
+    }
+
+    Real p2 = res.second[0];
+
+    ofs << "# Qxx Qxy Qxz Qyy Qyz p2 v1x v1y v1z\n";
+    ofs << QtensorTot_[0][0] << " " << QtensorTot_[0][1] << " " << QtensorTot_[0][2] << " " << QtensorTot_[1][1] << " " << QtensorTot_[1][2] << " " << p2 << \
+    " " << eigenvector[0] << " " << eigenvector[1] << " " << eigenvector[2];
+
+    ofs.close();
 }
 
 void QtensorCalc::printevPerIter(std::ofstream& ofs)
@@ -108,12 +133,27 @@ void QtensorCalc::calculate()
     // calculate the actualy Qtensor
     Qtensor::matrix_mult_inplace(Qtensor_, 1/(2.0*num));
 
+    // Add the current Qtensor to Qtensortot
+    Qtensor::matrix_accum_inplace(QtensorTot_, Qtensor_);
+
     auto result = Qtensor::orderedeig_Qtensor(Qtensor_);
 
     eigenvector_=  result.first;
     eigenval_   = result.second;
 
     biaxiality_ = eigenval_[1] * 2.0 + eigenval_[0];
+}
+
+void QtensorCalc::finishCalculate()
+{
+    int numframes = simstate_.getTotalFrames();
+    for (int i=0;i<3;i++)
+    {
+        for (int j=0;j<3;j++)
+        {
+            QtensorTot_[i][j] /=  numframes;
+        }
+    }
 }
 
 void QtensorCalc::printcos2PerIter(std::ofstream& ofs)
