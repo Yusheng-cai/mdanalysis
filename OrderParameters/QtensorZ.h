@@ -6,6 +6,7 @@
 #include "Bin.h"
 #include "Qtensor.h"
 #include "SimulationState.h"
+#include "LinAlgTools.h"
 
 #include <vector>
 #include <iomanip>

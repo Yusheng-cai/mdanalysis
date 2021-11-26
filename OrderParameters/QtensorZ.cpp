@@ -8,7 +8,7 @@ namespace CalculationRegistry
 QtensorZ::QtensorZ(const CalculationInput& input)
 :Calculation(input)
 {
-    input.pack_.ReadString("residuegroup", ParameterPack::KeyType::Required, residueName_);
+    input.pack_.ReadString("residue", ParameterPack::KeyType::Required, residueName_);
     input.pack_.ReadString("direction", ParameterPack::KeyType::Optional, direction_);
     input.pack_.ReadNumber("headindex", ParameterPack::KeyType::Required, headIndex_);
     input.pack_.ReadNumber("tailindex", ParameterPack::KeyType::Required, tailIndex_);
@@ -80,7 +80,7 @@ void QtensorZ::binUsingMinMax()
     {
         if (COM_[i][2] > above_)
         {
-            zdir.push_back(COM_[i][2]);
+            zdir.push_back(COM_[i][index_]);
         }
     }
 
@@ -135,6 +135,7 @@ void QtensorZ::calculate()
         COM_[i] = COMperAtom_;
     }
 
+    // update the bins using COM min and max 
     if (usingMinMaxBins_)
     {
         binUsingMinMax();
@@ -162,10 +163,7 @@ void QtensorZ::calculate()
 
             // normalize the director and calculate the dyad
             Real3 diffnorm = Qtensor::normalize_director(diff);
-            Matrix dyad = Qtensor::vec_dyadic(diffnorm, diffnorm);
-
-            Qtensor::matrix_mult_inplace(dyad, 3.0);
-            Matrix Qlocal = Qtensor::matrix_sub(dyad, Qtensor::matrix_Identity());
+            Matrix Qlocal  = LinAlg3x3::LocalQtensor(diffnorm);
 
             Qtensor::matrix_accum_inplace(BinnedMatrixIter_[binNum], Qlocal);
 
@@ -174,6 +172,7 @@ void QtensorZ::calculate()
         }
     }
 
+    // obtain the per iter values
     for (int i=0;i<BinnedMatrixIter_.size();i++)
     {
         if (NumResPerBinIter_[i] != 0)
@@ -183,7 +182,6 @@ void QtensorZ::calculate()
             auto result = Qtensor::OP_Qtensor(BinnedMatrixIter_[i]);
             auto ev     = Qtensor::orderedeig_Qtensor(BinnedMatrixIter_[i]).first;
 
-            P2_[i] += result.first;
             P2PerIter_[i] = result.first;
 
             for (int k=0;k<3;k++)
@@ -194,7 +192,7 @@ void QtensorZ::calculate()
         }
     }
 
-    // sum up the matrices
+    // sum up the matrices from per iter to the total one
     for (int i=0;i<BinnedMatrixIter_.size();i++)
     {
         Qtensor::matrix_accum_inplace(BinnedMatrix_[i], BinnedMatrixIter_[i]);
@@ -284,16 +282,15 @@ void QtensorZ::printP2z(std::string name)
 
     ofs << std::fixed << std::setprecision(precision_);
 
-    ofs << "#z\tp2\tNumber\tQxx\tQxy\tQxz\tQyy\tQyz\tQzz\tnx\tny\tnz\tp2avg\n";
+    ofs << "#z\tp2\tNumber\tQxx\tQxy\tQxz\tQyy\tQyz\tQzz\tnx\tny\tnz\n";
 
-    for (int i=0;i<P2_.size();i++)
+    for (int i=0;i<P2avg_.size();i++)
     {
-        ofs << bin_->getLeftLocationOfBin(i) << "\t" << P2_[i] << "\t" << NumResPerBin_[i];
+        ofs << bin_->getLeftLocationOfBin(i) << "\t" << P2avg_[i] << "\t" << NumResPerBin_[i];
         ofs << "\t" << BinnedMatrix_[i][0][0] << "\t" << BinnedMatrix_[i][0][1] << "\t" << BinnedMatrix_[i][0][2]; 
         ofs << "\t" << BinnedMatrix_[i][1][1] << "\t" << BinnedMatrix_[i][1][2];
         ofs << "\t" << BinnedMatrix_[i][2][2];
-        ofs << "\t" << eigvec_[i][0] << "\t" << eigvec_[i][1] << "\t" << eigvec_[i][2] << "\t";
-        ofs << P2avg_[i] << "\n";
+        ofs << "\t" << eigvec_[i][0] << "\t" << eigvec_[i][1] << "\t" << eigvec_[i][2] << "\n";
     }
     ofs.close();
 }
@@ -345,48 +342,33 @@ void QtensorZ::finishCalculate()
     int totalFrames = simstate_.getTotalFrames();
     std::cout << "Total frame = " << totalFrames << std::endl;
 
-    // average the p2 over time
-    for (int i=0;i<P2_.size();i++)
-    {
-        P2_[i] /= totalFrames;
-        NumResPerBin_[i] /= totalFrames;
-
-        if ( NumResPerBin_[i] < ignoreP2LessThan_ )
-        {
-            P2_[i] = 0.0;
-        }
-    }
-
     // average the Qtensor over time
     P2avg_.resize(numbins_);
-    for (int i=0;i<BinnedMatrix_.size();i++)
+    for (int i=0;i<numbins_;i++)
     {
         Qtensor::matrix_mult_inplace(BinnedMatrix_[i], 1.0/totalFrames);
         if (NumResPerBin_[i] < ignoreP2LessThan_)
         {
             Qtensor::matrix_mult_inplace(BinnedMatrix_[i], 0.0);
         }
-        auto ans = Qtensor::OP_Qtensor(BinnedMatrix_[i]);
-        P2avg_[i] = ans.first;
+
+        NumResPerBin_[i] /= totalFrames;
     }
 
-    // average the eigenvectors over time
-    for (int i=0;i<eigvec_.size();i++)
+    ASSERT((eigvec_.size() == BinnedMatrix_.size()), "failed.");
+    for (int i=0;i<numbins_;i++)
     {
-        auto ev = Qtensor::orderedeig_Qtensor(BinnedMatrix_[i]).first;
+        auto ans = Qtensor::orderedeig_Qtensor(BinnedMatrix_[i]);
+        P2avg_[i] = ans.second[0];
+
         for (int j=0;j<3;j++)
         {
-            eigvec_[i][j] = ev[j][0];
-        }
-
-        if (NumResPerBin_[i] == 0 || NumResPerBin_[i] < ignoreP2LessThan_)
-        {
-            eigvec_[i] = {{0,0,0}};
+            eigvec_[i][j] = ans.first[j][0];
         }
     }
 
     // finally, make the number of residues per bin to be 0
-    for (int i=0;i<NumResPerBin_.size();i++)
+    for (int i=0;i<numbins_;i++)
     {
         if (NumResPerBin_[i] < ignoreP2LessThan_)
         {
