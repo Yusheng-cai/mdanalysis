@@ -78,7 +78,7 @@ void QtensorZ::binUsingMinMax()
     std::vector<Real> zdir;
     for (int i=0;i<COM_.size();i++)
     {
-        if (COM_[i][2] > above_)
+        if (COM_[i][index_] > above_)
         {
             zdir.push_back(COM_[i][index_]);
         }
