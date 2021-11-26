@@ -23,6 +23,10 @@ gcost::gcost(const CalculationInput& input)
     input.pack_.ReadString("residue", ParameterPack::KeyType::Required, residueName_);
     initializeResidueGroup(residueName_);
 
+    // costheta bins is always assumed to go from -1 to 1
+    input.pack_.ReadNumber("numtbins", ParameterPack::KeyType::Optional, numtbins_);
+    tbin_ = binptr(new Bin(trange_, numtbins_));
+
     registerOutputFunction("histogram", [this](std::string name) -> void {this->printHistogram(name);});
 
     input.pack_.ReadNumber("index", ParameterPack::KeyType::Optional, index_);
@@ -31,6 +35,9 @@ gcost::gcost(const CalculationInput& input)
 
     registerCalcFunc(1, [this](Real3& ui, Real3& uj) -> Real {return this -> calcg1(ui,uj);});
     registerCalcFunc(2, [this](Real3& ui, Real3& uj) -> Real {return this -> calcg2(ui,uj);});
+
+    // initialize histogram 2d which contains (R, t)
+    histogramDotProduct2d_.resize(numbins_, std::vector<Real>(numtbins_,0.0));
 }
 
 gcost::Real gcost::calcFactor(Real3& ui, Real3& uj)
@@ -176,11 +183,13 @@ void gcost::calculate()
     // for a single residue, let's bin it 
     histogramDotProductPerIterbuffer_.set_master_object(histogramDotProductPerIter_);
     histogramPerIterbuffer_.set_master_object(histogramPerIter_);
+    histogramDotProduct2dbuffer_.set_master_object(histogramDotProduct2d_);
 
     #pragma omp parallel
     {
         auto& dotbuffer = histogramDotProductPerIterbuffer_.access_buffer_by_id();
         auto& histbuffer = histogramPerIterbuffer_.access_buffer_by_id();
+        auto& hist2dbuffer = histogramDotProduct2dbuffer_.access_buffer_by_id();
 
         dotbuffer.clear();
         dotbuffer.resize(numbins_,0);
@@ -188,18 +197,27 @@ void gcost::calculate()
         histbuffer.clear();
         histbuffer.resize(numbins_,0);
 
+        hist2dbuffer.clear();
+        hist2dbuffer.resize(numbins_, std::vector<Real>(numtbins_,0.0));
+
         #pragma omp for
         for (int i=0;i<InsideIndices_.size();i++)
         {
             for (int j=i+1;j<InsideIndices_.size();j++)
             {
                 Real dist = neighborDistance_[i][j];
+                Real dotp = dotProduct_[i][j];
 
                 if (bin_ ->isInRange(dist))
                 {
+                    // find the bins
                     int binnum = bin_ -> findBin(dist);
-                    dotbuffer[binnum] += dotProduct_[i][j];
+                    int tbinum = tbin_ -> findBin(dotp);
+
+                    // add it to the histograms
                     histbuffer[binnum] += 1;
+                    dotbuffer[binnum] += dotProduct_[i][j];
+                    hist2dbuffer[binnum][tbinum] += 1;
                 }
             }
         }
@@ -210,6 +228,11 @@ void gcost::calculate()
             {
                 histogramDotProductPerIter_[i] += dotbuffer[i];
                 histogramPerIter_[i] += histbuffer[i];
+
+                for (int j=0;j<numtbins_;j++)
+                {
+                    histogramDotProduct2d_[i][j] += hist2dbuffer[i][j];
+                }
             }
         }
     }
@@ -251,5 +274,20 @@ void gcost::finishCalculate()
     for (int i=0;i<histogramDotProduct_.size();i++)
     {
         histogramDotProduct_[i] /= numframes;
+    }
+
+    // take care of histogram2d --> we can normalize over columns (costheta)
+    for (int i=0;i<numbins_;i++)
+    {
+        Real sum=0.0;
+        for (int j=0;j<numtbins_;j++)
+        {
+            sum += histogramDotProduct2d_[i][j];
+        }
+
+        for (int j=0;j<numtbins_;j++)
+        {
+            histogramDotProduct2d_[i][j] /= sum;
+        }
     }
 }

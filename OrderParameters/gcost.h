@@ -19,6 +19,7 @@ class gcost : public Calculation
     public:
         using binptr = std::unique_ptr<Bin>;
         using fcn    = std::function<Real(Real3&, Real3&)>;
+        using range  = std::array<Real,2>;
         gcost(const CalculationInput& input);
 
         virtual void calculate();
@@ -32,6 +33,7 @@ class gcost : public Calculation
 
     private:
         binptr bin_;
+        binptr tbin_;
         int headindex_=1;
         int tailindex_=2;
 
@@ -54,6 +56,7 @@ class gcost : public Calculation
         std::vector<Real> histogramDotProductPerIter_;
 
         std::vector<std::vector<Real>> histogramDotProduct2d_;
+        OpenMP::OpenMP_buffer<std::vector<std::vector<Real>>> histogramDotProduct2dbuffer_;
 
         OpenMP::OpenMP_buffer<std::vector<Real>> histogramDotProductPerIterbuffer_;
         OpenMP::OpenMP_buffer<std::vector<int>> histogramPerIterbuffer_;
@@ -61,4 +64,7 @@ class gcost : public Calculation
         std::map<int, fcn> MapIndexToFcn_;
 
         int index_=1;
+        int numtbins_=20;
+
+        Range trange_ = {{-1,1}};
 };
