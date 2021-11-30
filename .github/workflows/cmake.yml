@@ -22,7 +22,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Download fftw3
       # sudo apt install fftw3
-      run: wget http://www.fftw.org/fftw-3.3alpha1.tar.gz
+      run: wget http://www.fftw.org/fftw-3.3.10.tar.gz
     - name: install fftw3
       run: tar -xvf http://www.fftw.org/fftw-3.3.10.tar.gz
     - name: Configure CMake
