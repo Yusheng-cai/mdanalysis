@@ -74,6 +74,8 @@ void gcost::registerCalcFunc(int index, fcn function)
 void gcost::calculate()
 {
     const auto& res = getResidueGroup(residueName_).getResidues(); 
+    COM_.clear();
+    uij_.clear();
     COM_.resize(res.size());
     uij_.resize(res.size());
     histogramDotProductPerIter_.clear();

@@ -14,7 +14,6 @@ Cost::Cost(const CalculationInput& input)
 
     input.pack_.ReadArrayNumber("array", ParameterPack::KeyType::Optional, arr_);
     input.pack_.ReadNumber("precision", ParameterPack::KeyType::Optional, precision_);
-    initializeProbeVolumes();
     input.pack_.ReadNumber("numbins", ParameterPack::KeyType::Optional, numBins_);
 
     // normalize the vector 
@@ -52,6 +51,10 @@ Cost::Cost(const CalculationInput& input)
 
     // register for output file
     registerOutputFileOutputs("costheta", [this](void) -> Real {return this -> getCostheta2();});
+
+    // initialize the probe volumes 
+    initializeProbeVolumes();
+    initializeNotInProbeVolumes();
 }
 
 
