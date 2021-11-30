@@ -45,11 +45,11 @@ jobs:
            mkdir ${{env.BUILD_TYPE}}
            cd ${{env.BUILD_TYPE}}
            cmake ../
-      #cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      # cmake -B ${{github.workspace}}/${{env.BUILD_TYPE}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     - name: Build
       working-directory: ${{github.workspace}}
       # Build your program with the given configuration
       run: |
-           cd $${{env.BUILD_TYPE}}
+           cd ${{env.BUILD_TYPE}}
            make  
