@@ -71,8 +71,8 @@ class QtensorZ : public Calculation
         std::vector<Matrix> BinnedMatrix_;
 
         // The head and tail index within the 5CB molecule
-        int headIndex_;
-        int tailIndex_;
+        int headIndex_=1;
+        int tailIndex_=2;
 
         std::vector<Real> P2_;
         std::vector<Real> P2avg_;

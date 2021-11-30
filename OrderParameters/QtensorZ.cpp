@@ -10,8 +10,8 @@ QtensorZ::QtensorZ(const CalculationInput& input)
 {
     input.pack_.ReadString("residue", ParameterPack::KeyType::Required, residueName_);
     input.pack_.ReadString("direction", ParameterPack::KeyType::Optional, direction_);
-    input.pack_.ReadNumber("headindex", ParameterPack::KeyType::Required, headIndex_);
-    input.pack_.ReadNumber("tailindex", ParameterPack::KeyType::Required, tailIndex_);
+    input.pack_.ReadNumber("headindex", ParameterPack::KeyType::Optional, headIndex_);
+    input.pack_.ReadNumber("tailindex", ParameterPack::KeyType::Optional, tailIndex_);
     input.pack_.ReadNumber("ignorelessthan", ParameterPack::KeyType::Optional, ignoreP2LessThan_);
 
     registerOutputFunction("p2z", [this](std::string name) -> void{this -> printP2z(name);});
