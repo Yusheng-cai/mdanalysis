@@ -46,6 +46,14 @@ list(APPEND OMP_TEST "TestCalculation/TestRdfResidue")
 set(PROGRAM_PATH "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mdanalysis")
 set(TEST_RUN_SCRIPT "${CMAKE_CURRENT_LIST_DIR}/run_test.sh")
 
+# Find bash
+find_program(BASH bash)
+if(NOT BASH)
+  message(FATAL_ERROR "Unable to find bash for testing")
+else()
+  message("BASH = ${BASH}")
+endif()
+
 # Add the test and run with the bash script run_test.sh
 foreach(TEST_NAME IN LISTS OMP_TEST)
     foreach(THREADS IN LISTS OMP_THREADS)
@@ -61,7 +69,6 @@ foreach(TEST_NAME IN LISTS OMP_TEST)
                 COMMAND ${TEST_CMD}
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/
         ) 
-        message("${TEST_CMD}")
     endforeach()
 endforeach()
 
