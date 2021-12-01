@@ -26,10 +26,10 @@ QtensorZ::QtensorZ(const CalculationInput& input)
     initializeResidueGroup(residueName_);
     headIndex_--;
     tailIndex_--;
- 
+    
+    // initialize bin
     auto binPack = input.pack_.findParamPack("bin", ParameterPack::KeyType::Optional);
-
-    // create the bin object
+    // create the bin object , if specified, then used user specified bin, else we use min max of the COM
     if (binPack != nullptr)
     {
         bin_ = Binptr(new Bin(*binPack));
@@ -43,6 +43,7 @@ QtensorZ::QtensorZ(const CalculationInput& input)
         usingMinMaxBins_ = true;
     }
 
+    // initialize direction
     auto it = MapNameToDirection.find(direction_);
     ASSERT((it != MapNameToDirection.end()), "The direction " << direction_ << " is not recognized.");
     index_ = it -> second;
@@ -115,22 +116,14 @@ void QtensorZ::calculate()
 
     // make all the matrix in vector zero
     Matrix zeroMatrix;
-    for (int i=0;i<3;i++)
-    {
-        for (int j=0;j<3;j++)
-        {
-            zeroMatrix[i][j] = 0;
-        }
-    }
+    zeroMatrix.fill({});
     BinnedMatrixIter_.resize(numbins_, zeroMatrix);
     NumResPerBinIter_.resize(numbins_, 0.0);
 
     // obtain the center of mass of each of the residues
     for (int i=0;i<res.size();i++)
     {
-        int residueSize = res[i].atoms_.size();
         Real3 COMperAtom_;
-
         COMperAtom_ = CalculationTools::getCOM(res[i], simstate_, COMIndices_);
         COM_[i] = COMperAtom_;
     }
