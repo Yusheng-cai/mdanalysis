@@ -7,7 +7,7 @@ while getopts ":p:i:d:n:f:r:o:s:" opt; do
     case $opt in 
         p) program=${OPTARG};;
         i) input=${OPTARG};;
-	    n) num_threads=${OPTARG};;
+	n) num_threads=${OPTARG};;
         d) test_dir=${OPTARG};;
         f) ref_dir=${OPTARG};;
         r) output_ref+=(${OPTARG});;
