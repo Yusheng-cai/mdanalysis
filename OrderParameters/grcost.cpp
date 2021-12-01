@@ -99,7 +99,7 @@ void grcost::calculate()
 
     #pragma omp parallel
     {
-        auto& DPPerIter = histogramDPPerIterBuffer_.access_buffer_by_id();
+        auto& DPPerIter   = histogramDPPerIterBuffer_.access_buffer_by_id();
         auto& histPerIter = histogramPerIterBuffer_.access_buffer_by_id();
 
         DPPerIter.clear();
