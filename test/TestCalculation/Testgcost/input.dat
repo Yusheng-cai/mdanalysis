@@ -1,0 +1,40 @@
+xdrfile = {
+	path = 5CBSAM.xtc
+}
+
+grofile = {
+    path = 5CBSAM.gro
+}
+
+topology = {
+    path = 5CB.itp
+}
+
+probevolume = {
+	name = v
+	type = simbox
+}
+
+residuegroup = {
+	name = lc
+	selection = [ resname 5CB ]
+}
+
+calculation = {
+    type = gcost
+    residue = lc
+    bin = {
+        range = [ 0 2 ]
+        numbins = 100
+    }
+    headindex = 1
+    tailindex = 2
+    probevolumes = [ v ]
+    outputs = [ histogram ]
+    outputNames = [ p.out ]
+    COMIndices = [ 1 2 ]
+}
+
+driver = {
+	startingframe = 0
+}
