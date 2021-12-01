@@ -21,11 +21,11 @@ class ProbeVolumeCylinder : public ProbeVolume
         // The x here is already pbc corrected and shifted to the correct frame of reference 
         virtual ProbeVolumeOutput calculate(const Real3& x) const;
 
-        void setGeometry(Real Rmax, Real zmax, Real ac, Real sigma);
+        void setGeometry(Real Rmin, Real Rmax, Real zmax, Real ac, Real sigma);
     
     private:
         IndicatorFunction2d zfunc_;
-        IndicatorFunction1d rfunc_;
+        IndicatorFunction2d rfunc_;
         
         Range rrange_;
         Range zrange_;

@@ -6,9 +6,9 @@ ProbeVolumeCylinder::ProbeVolumeCylinder(ProbeVolumeInput& input)
     //ASSERT((! isDynamic()), "The cylinder probe volume does not yet support dynamic atom group.");
 }
 
-void ProbeVolumeCylinder::setGeometry(Real rmax, Real zmax, Real ac, Real sigma)
+void ProbeVolumeCylinder::setGeometry(Real rmin, Real rmax, Real zmax, Real ac, Real sigma)
 {
-    rrange_[0] = 0;
+    rrange_[0] = rmin;
     rrange_[1] = rmax;
 
     // z goes from 0 to zmax
@@ -19,7 +19,7 @@ void ProbeVolumeCylinder::setGeometry(Real rmax, Real zmax, Real ac, Real sigma)
     sigma_ = sigma;
 
     zfunc_ = IndicatorFunction2d(sigma_, ac_, zrange_[0], zrange_[1]);
-    rfunc_ = IndicatorFunction1d(sigma_, ac_, rmax);
+    rfunc_ = IndicatorFunction2d(sigma_, ac_, rrange_[0], rrange_[1]);
 }
 
 ProbeVolumeOutput ProbeVolumeCylinder::calculate(const Real3& x) const
