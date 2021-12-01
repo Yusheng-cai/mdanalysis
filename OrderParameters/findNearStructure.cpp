@@ -23,6 +23,11 @@ findNearStructure::findNearStructure(const CalculationInput& input)
         pack_.ReadString("atomgroup", ParameterPack::KeyType::Required, agName_);
         addAtomgroup(agName_);
     }
+    else if (mode_ == "atomres")
+    {
+        pack_.ReadString("residue", ParameterPack::KeyType::Required, resName_);
+        addResidueGroup(resName_);
+    }
     else
     {
         ASSERT((true==false), "mode " << mode_ << " is not supported currently");
@@ -124,6 +129,74 @@ void findNearStructure::calculateAtom()
     }
 }
 
+void findNearStructure::calculateAtomRes()
+{
+    AtomIndices_.clear();
+
+    auto& res = simstate_.getResidueGroup(resName_).getResidues();
+
+    // find the inside indices 
+    std::vector<int> ResidueIndices;
+    std::map<int,bool> MapresIndTobool;
+    for (int i=0;i<res.size();i++)
+    {
+        bool inside =false;
+        for (int j=0;j<res[i].atoms_.size();j++)
+        {
+            if (inside)
+            {
+                break;
+            }
+
+            auto& atom = res[i].atoms_[j];
+            bool inpv = false;
+            for (auto pv: NotInprobevolumes_)
+            {
+                auto output = pv -> calculate(atom.positions_);
+
+                if(output.hx_ == 1)
+                {
+                    inpv = true;
+                }
+            }
+
+            if (! inpv)
+            {
+                // TODO: this does not work if we have union
+                for (auto pv : probevolumes_)
+                {
+                    auto output = pv->calculate(atom.positions_);
+                    if (output.hx_ == 1)
+                    {
+                        ResidueIndices.push_back(i);
+                        inside = true;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // let's check for duplicates in residue indices 
+    std::map<int, bool> DuplicateMap;
+    for (int i=0;i<ResidueIndices.size();i++)
+    {
+        auto it = DuplicateMap.find(ResidueIndices[i]);
+
+        ASSERT((it == DuplicateMap.end()), "There is duplicate residue indices, something wrong with the code.");
+    }
+
+    // Then let's add the atom indices 
+    for (int i=0;i<ResidueIndices.size();i++)
+    {
+        int index = ResidueIndices[i];
+        for (int j=0;j<res[index].atoms_.size();j++)
+        {
+            AtomIndices_.push_back(res[index].atoms_[j].atomNumber_-1);
+        }
+    }
+}
+
 void findNearStructure::printAtomIndicesPerIter(std::ofstream& ofs)
 {
     ofs << simstate_.getStep() << " ";
@@ -143,5 +216,9 @@ void findNearStructure::calculate()
     else if (mode_ == "residue")
     {
         calculateRes();
+    }
+    else if (mode_ == "atomres")
+    {
+        calculateAtomRes();
     }
 }
