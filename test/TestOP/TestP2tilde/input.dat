@@ -45,9 +45,8 @@ orderparameter = {
     probevolume = v2
 }
 
-
 outputfile = {
     name = op.out
-    value = [ a.p2tilde a.ntilde a.n a2.p2tilde a2.ntilde a2.n ] 
+    value = [ a.p2tilde a.ntilde a.n a.eig1 a.eig2 a2.p2tilde a2.ntilde a2.n a2.eig1 a2.eig2 ] 
     precision = 2
 }
