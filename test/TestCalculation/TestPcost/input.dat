@@ -31,7 +31,7 @@ calculation = {
     }
     headindex = 1
     tailindex = 2
-    probevolume = v
+    probevolumes = [ v ]
     outputs = [ histogram ] 
     outputNames = [ op.out ]
 }
