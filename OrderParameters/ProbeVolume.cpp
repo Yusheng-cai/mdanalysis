@@ -3,11 +3,20 @@
 ProbeVolume::ProbeVolume(ProbeVolumeInput& input):simstate_(input.simstate), simbox_(simstate_.getSimulationBox())
 {
     // read in dynamic group
-    isDynamic_ = input.ParamPack.ReadString("dynamicgroup", ParameterPack::KeyType::Optional, dynamicAtomName_);
+    isDynamicA_ = input.ParamPack.ReadString("dynamicgroup", ParameterPack::KeyType::Optional, dynamicAtomName_);
+    isDynamicR_ = input.ParamPack.ReadString("dynamicresgroup", ParameterPack::KeyType::Optional, dynamicResGroup_);
 
     if (isDynamic())
     {
-        addDynamicAtomGroup(dynamicAtomName_);
+        if (isDynamicA_)
+        {
+            addDynamicAtomGroup(dynamicAtomName_);
+        }
+
+        if (isDynamicR_)
+        {
+            addDynamicResidueGroup(dynamicResGroup_);
+        }
     }
 
     // read in alphaC and sigma

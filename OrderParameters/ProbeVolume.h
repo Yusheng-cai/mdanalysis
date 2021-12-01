@@ -48,7 +48,7 @@ class ProbeVolume
         virtual ProbeVolumeOutput calculate(const Real3& x) const = 0;
         virtual void setGeometry(){};
 
-        bool isDynamic(){return isDynamic_;}
+        bool isDynamic(){return isDynamicA_ || isDynamicR_;}
 
         // Obtain the simulation state reference
         const SimulationState& getSimulationState() const{return simstate_;}
@@ -75,7 +75,8 @@ class ProbeVolume
         Real ac_=0.02;
 
         // default Dynamic to be false
-        bool isDynamic_=false;
+        bool isDynamicA_=false;
+        bool isDynamicR_=false;
 
         SimulationState& simstate_;
         SimulationBox& simbox_;
