@@ -24,7 +24,6 @@ class Cost : public Calculation
         using BFptr = std::unique_ptr<BetaFactorWriter>;
         using Binptr = std::unique_ptr<Bin>;
 
-
         Cost(const CalculationInput& input);
 
         virtual void calculate() override;
@@ -34,7 +33,8 @@ class Cost : public Calculation
         void printavgCosthetaPerIter(std::ofstream& ofs);
         void printNtilde(std::ofstream& ofs);
 
-        Real getCostheta2() {return avgCostheta_;}
+        Real getCostheta2() const {return avgCostheta_;}
+        Real getNumCOM() const {return numCOM_;}
 
     private:
         // bin pointer
@@ -69,4 +69,6 @@ class Cost : public Calculation
         // histogram 
         std::vector<Real> histogram_;
         Real avgCostheta_;
+
+        int numCOM_;
 };

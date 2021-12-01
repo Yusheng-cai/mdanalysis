@@ -51,6 +51,7 @@ Cost::Cost(const CalculationInput& input)
 
     // register for output file
     registerOutputFileOutputs("costheta", [this](void) -> Real {return this -> getCostheta2();});
+    registerOutputFileOutputs("numCOM", [this](void) -> Real {return this->getNumCOM();});
 
     // initialize the probe volumes 
     initializeProbeVolumes();
@@ -129,6 +130,8 @@ void Cost::calculate()
     }
 
     avgCostheta_ /= InsideIndices.size();
+
+    numCOM_ = InsideIndices.size();
 }
 
 void Cost::printavgCosthetaPerIter(std::ofstream& ofs)
