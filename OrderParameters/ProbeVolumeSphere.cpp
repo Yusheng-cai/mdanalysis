@@ -10,11 +10,7 @@ ProbeVolumeSphere::ProbeVolumeSphere(ProbeVolumeInput& input)
 {
     input.ParamPack.ReadNumber("radius", ParameterPack::KeyType::Required, r_);
 
-    if (isDynamic())
-    {
-        addDynamicResidueGroup(dynamicResGroup_);
-    }
-    else
+    if (! isDynamic())
     {
         input.ParamPack.ReadArrayNumber("center", ParameterPack::KeyType::Required, center_);
     }
