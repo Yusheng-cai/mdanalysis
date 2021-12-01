@@ -18,7 +18,7 @@ residuegroup = {
 probevolume = {
 	name = v
 	type = sphere
-	dynamicgroup = NP
+	dynamicresgroup = NP
 	radius = 4.5 
 }
 
@@ -30,7 +30,8 @@ residuegroup = {
 calculation = {
     type = findnearstructure
     residue = lc
-    probevolume = v
+    probevolumes = [ v ]
     perIteroutputs = [ atomindices ] 
     perIteroutputNames = [ op.out ]
+    mode = residue
 }
