@@ -42,5 +42,6 @@ class ProbeVolumeTiltedCylinder : public ProbeVolume
         // The rotation matrix 
         Matrix rotationMat_;
 
-        Real radius_;
+        Real Rmax_;
+        Real Rmin_=0;
 };

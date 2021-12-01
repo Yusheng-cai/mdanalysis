@@ -8,7 +8,9 @@ namespace ProbeVolumes
 ProbeVolumeTiltedCylinder::ProbeVolumeTiltedCylinder(ProbeVolumeInput& input)
 : ProbeVolume(input)
 {
-    input.ParamPack.ReadNumber("radius", ParameterPack::KeyType::Required, radius_);
+    input.ParamPack.ReadNumber("Rmax", ParameterPack::KeyType::Required, Rmax_);
+    input.ParamPack.ReadNumber("Rmin", ParameterPack::KeyType::Optional, Rmin_);
+
     cylinder_ = cylinderPtr(new ProbeVolumeCylinder(input));
 
     if (isDynamic())
@@ -34,7 +36,7 @@ ProbeVolumeTiltedCylinder::ProbeVolumeTiltedCylinder(ProbeVolumeInput& input)
 
         rotationMat_ = LinAlg3x3::RotationMatrix(Zvector_, refVector);
 
-        cylinder_ -> setGeometry(radius_, dist_, ac_, sigma_);
+        cylinder_ -> setGeometry(Rmin_, Rmax_, dist_, ac_, sigma_);
     }
 }
 
@@ -62,7 +64,7 @@ void ProbeVolumeTiltedCylinder::setGeometry()
         // make the rotation matrix 
         rotationMat_ = LinAlg3x3::RotationMatrix(Zvector_, refVector);
 
-        cylinder_ -> setGeometry(radius_, distance_, ac_, sigma_);
+        cylinder_ -> setGeometry(Rmin_, Rmax_, distance_, ac_, sigma_);
 
         Real3 rotated = LinAlg3x3::MatrixDotVector(rotationMat_, Zvector_);
     }
