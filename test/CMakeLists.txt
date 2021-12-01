@@ -61,6 +61,7 @@ foreach(TEST_NAME IN LISTS OMP_TEST)
                 COMMAND ${TEST_CMD}
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/
         ) 
+        message("${TEST_CMD}")
     endforeach()
 endforeach()
 
