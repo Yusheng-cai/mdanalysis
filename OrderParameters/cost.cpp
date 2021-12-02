@@ -50,8 +50,9 @@ Cost::Cost(const CalculationInput& input)
     registerPerIterOutputFunction("Ntilde", [this](std::ofstream& ofs) -> void { this -> printNtilde(ofs);});
 
     // register for output file
-    registerOutputFileOutputs("costheta", [this](void) -> Real {return this -> getCostheta2();});
+    registerOutputFileOutputs("costheta", [this](void) -> Real {return this -> getavgCostheta2();});
     registerOutputFileOutputs("numCOM", [this](void) -> Real {return this->getNumCOM();});
+    registerOutputFileOutputs("costhetaE", [this](void) -> Real {return this -> getCostheta2();});
 
     // initialize the probe volumes 
     initializeProbeVolumes();
@@ -129,6 +130,7 @@ void Cost::calculate()
         histogram_[binNum] += 1;
     }
 
+    Costheta_ = avgCostheta_;
     avgCostheta_ /= InsideIndices.size();
 
     numCOM_ = InsideIndices.size();
