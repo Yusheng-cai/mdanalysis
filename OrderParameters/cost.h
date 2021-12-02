@@ -33,8 +33,9 @@ class Cost : public Calculation
         void printavgCosthetaPerIter(std::ofstream& ofs);
         void printNtilde(std::ofstream& ofs);
 
-        Real getCostheta2() const {return avgCostheta_;}
+        Real getavgCostheta2() const {return avgCostheta_;}
         Real getNumCOM() const {return numCOM_;}
+        Real getCostheta2() const {return Costheta_;}
 
     private:
         // bin pointer
@@ -69,6 +70,7 @@ class Cost : public Calculation
         // histogram 
         std::vector<Real> histogram_;
         Real avgCostheta_;
+        Real Costheta_;
 
         int numCOM_;
 };
