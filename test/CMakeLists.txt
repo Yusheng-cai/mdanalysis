@@ -42,6 +42,7 @@ list(APPEND OMP_TEST "TestOP/TestIndus/sphere")
 list(APPEND OMP_TEST "TestOP/TestP2")
 list(APPEND OMP_TEST "TestOP/TestP2tilde")
 list(APPEND OMP_TEST "TestCalculation/TestRdfResidue")
+list(APPEND OMP_TEST "TestCalculation/Testgcost")
 
 set(PROGRAM_PATH "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mdanalysis")
 set(TEST_RUN_SCRIPT "${CMAKE_CURRENT_LIST_DIR}/run_test.sh")
