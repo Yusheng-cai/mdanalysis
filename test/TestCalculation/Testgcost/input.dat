@@ -31,7 +31,7 @@ calculation = {
     tailindex = 2
     probevolumes = [ v ]
     outputs = [ histogram ]
-    outputNames = [ p.out ]
+    outputNames = [ op.out ]
     COMIndices = [ 1 2 ]
 }
 
