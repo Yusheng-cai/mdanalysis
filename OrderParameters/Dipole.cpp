@@ -12,6 +12,7 @@ Dipole::Dipole(const CalculationInput& input)
     pack_.ReadArrayNumber("direction", ParameterPack::KeyType::Optional, direction_);
 
     registerOutputFunction("costheta", [this](std::string name) -> void {this -> printHistogram(name);});
+    registerOutputFunction("costhetasquared", [this](std::string name) -> void {this -> printHistogramsquared(name);});
 
     // add the corresponding residuegroup
     addResidueGroup(residueName_);
@@ -21,7 +22,6 @@ Dipole::Dipole(const CalculationInput& input)
     dipoledirection_.resize(res.size());
 
     initializeBins();
-
     initializeAtomIndices();
 }
 
@@ -43,11 +43,16 @@ void Dipole::initializeAtomIndices()
 
 void Dipole::initializeBins()
 {
+    // initialize histogram and bin for cosine theta 
     auto binPack = pack_.findParamPack("bin", ParameterPack::KeyType::Required);
-
     bin_ = Binptr(new Bin(*binPack));
-
     histogram_.resize(bin_->getNumbins(), 0.0);
+
+    // initialize histogram and bin for cosine squared theta
+    pack_.ReadNumber("numbinssquared", ParameterPack::KeyType::Optional, numsquaredbin_);
+    Range range = {{0,1}}; 
+    binsquared_ = Binptr(new Bin(range, numsquaredbin_));
+    histogramsquared_.resize(numsquaredbin_, 0.0);
 }
 
 void Dipole::calculate()
@@ -57,6 +62,7 @@ void Dipole::calculate()
     int residueSize = res.size();
 
     std::vector<Real> costheta(residueSize,0.0);
+    std::vector<Real> costhetasquared(residueSize,0.0);
     
     // calculate the dipoles
     for (int i=0;i<residueSize;i++)
@@ -90,6 +96,7 @@ void Dipole::calculate()
         LinAlg3x3::normalize(dipole);
         Real dot_product = LinAlg3x3::DotProduct(dipole, direction_);
         costheta[i] = dot_product;
+        costhetasquared[i] = dot_product * dot_product;
 
         #ifdef MY_DEBUG
         std::cout << "dipole for the " << i << "th molecule is " << dipole[0] << " " << dipole[1] << " " << dipole[2] << std::endl;
@@ -104,6 +111,12 @@ void Dipole::calculate()
         {
             int binNum = bin_ -> findBin(costheta[i]);
             histogram_[binNum] += 1;
+        }
+
+        if (binsquared_ -> isInRange(costhetasquared[i]))
+        {
+            int binNum = binsquared_ -> findBin(costhetasquared[i]);
+            histogramsquared_[binNum] += 1;
         }
     }
 }
@@ -120,6 +133,11 @@ void Dipole::finishCalculate()
     {
         histogram_[i] /= numSteps;
     }
+
+    for (int i=0;i<histogramsquared_.size();i++)
+    {
+        histogramsquared_[i] /= numSteps;
+    }
 }
 
 void Dipole::printHistogram(std::string name)
@@ -132,6 +150,21 @@ void Dipole::printHistogram(std::string name)
     for (int i=0;i<histogram_.size();i++)
     {
         ofs_ << bin_->getCenterLocationOfBin(i) << "\t" << histogram_[i] << "\n"; 
+    }
+
+    ofs_.close();
+}
+
+void Dipole::printHistogramsquared(std::string name)
+{
+    std::ofstream ofs_;
+    ofs_ << std::fixed << std::setprecision(precision_);
+    ofs_.open(name);
+
+    ofs_ << "# positions  Number\n";
+    for (int i=0;i<histogramsquared_.size();i++)
+    {
+        ofs_ << binsquared_->getCenterLocationOfBin(i) << "\t" << histogramsquared_[i] << "\n";
     }
 
     ofs_.close();
