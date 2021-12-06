@@ -41,6 +41,8 @@ class QtensorZ : public Calculation
         void printPerIterP2zBeta(std::ofstream& ofs);
         void printPerItereveczBeta(std::ofstream& ofs);
 
+        void printevBeta(std::string name);
+
         std::vector<Real>& getP2() {return P2_;}
 
     private:
