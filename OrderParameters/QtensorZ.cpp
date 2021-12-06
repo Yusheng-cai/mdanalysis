@@ -75,6 +75,31 @@ QtensorZ::QtensorZ(const CalculationInput& input)
     BetaFactors_.resize(res.getAtomSize(),0.0);
 }
 
+void QtensorZ::printP2zbeta(std::string name)
+{
+    std::ofstream ofs;
+    ofs.open(name);
+
+    int numframes = simstate_.getTotalFrames();
+    auto& res = getResidueGroup(residueName_).getResidues();
+    int totalatoms = getResidueGroup(residueName_).getAtomSize();
+
+    std::vector<Real> betaFactors(totalatoms,0.0);
+
+    for (int j=0;j<res.size();j++)
+    {
+        int binindex = ResIndexToBinIndex_[j];
+
+        Real val = P2_[binindex];
+
+        for (int k=0;k<res[j].atoms_.size();k++)
+        {
+            int index = res[j].atoms_[k].atomNumber_ - 1;
+            betaFactors[index] = val;
+        }
+    }
+}
+
 void QtensorZ::printevBeta(std::string name)
 {
     std::ofstream ofs;
