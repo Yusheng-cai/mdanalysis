@@ -88,7 +88,7 @@ void Dipole::calculate()
             std::cout << "Atom charge for " << id_ << " atom is " << atoms[id_].charge_ << std::endl;
             #endif 
 
-            LinAlg3x3::normalize(dist); 
+            // LinAlg3x3::normalize(dist); 
 
             for(int k=0;k<3;k++)
             {
