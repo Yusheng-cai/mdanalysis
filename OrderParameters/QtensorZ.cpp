@@ -247,7 +247,7 @@ void QtensorZ::printPerItereveczBeta(std::ofstream& ofs)
     {
         int binNum = ResIndexToBinIndex_[i];
         Real3 ev = evPerIter_[binNum];
-        Real  val= std::pow(ev[2],2); 
+        Real  val= std::abs(ev[2]); 
 
         for (int j=0;j<res[i].atoms_.size();j++)
         {
