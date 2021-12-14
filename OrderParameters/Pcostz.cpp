@@ -8,9 +8,23 @@ namespace CalculationRegistry
 Pcostz::Pcostz(const CalculationInput& input)
 :Calculation(input)
 {
-    auto zbinPack = input.pack_.findParamPack("zbin", ParameterPack::KeyType::Required);
+    // initialize the bins first
+    auto zbinPack = input.pack_.findParamPack("zbin", ParameterPack::KeyType::Optional);
     auto costBinPack = input.pack_.findParamPack("tbin", ParameterPack::KeyType::Required);
-    input.pack_.ReadString("residuegroup", ParameterPack::KeyType::Required, residueGroupName_);
+    costBin_ = Binptr(new Bin(*costBinPack));
+    if(zbinPack != nullptr)
+    {
+        zBin_    = Binptr(new Bin(*zbinPack));
+    }
+    else
+    {
+        input.pack_.ReadNumber("Znumbins", ParameterPack::KeyType::Required, Znumbins_);
+        input.pack_.ReadNumber("above", ParameterPack::KeyType::Required, above_);
+        zBin_    = Binptr(new Bin());
+        usingMinMax_ = true;
+    }
+
+    input.pack_.ReadString("residue", ParameterPack::KeyType::Required, residueGroupName_);
     input.pack_.ReadNumber("headindex", ParameterPack::KeyType::Required,headIndex_);
     input.pack_.ReadNumber("tailindex", ParameterPack::KeyType::Required,tailIndex_);
     input.pack_.ReadString("direction", ParameterPack::KeyType::Optional, direction_);
@@ -26,8 +40,7 @@ Pcostz::Pcostz(const CalculationInput& input)
 
     // find the direction
     directionIndex_ = MapdirectionToIndex_.find(direction_) -> second;
-    costBin_ = Binptr(new Bin(*costBinPack));
-    zBin_    = Binptr(new Bin(*zbinPack));
+
 
     // initialize residue group
     initializeResidueGroup(residueGroupName_);
@@ -70,6 +83,11 @@ void Pcostz::calculate()
     histogramIter_.clear();
     histogramIter_.resize(histogram2d_.size(), std::vector<Real>(histogram2d_[0].size(), 0.0));
 
+    if (usingMinMax_)
+    {
+        binUsingMinMax();
+    }
+
     // find the distances between all pairs of residues
     for (int i=0;i<res.size();i++)
     {
@@ -90,6 +108,27 @@ void Pcostz::calculate()
             numResiduePerBinIter_[zbinNum] += 1;
         }
     }
+}
+
+void Pcostz::binUsingMinMax()
+{
+    std::vector<Real> ZdirectionNum(COM_.size(),0.0);
+
+    for (int i=0;i<COM_.size();i++)
+    {
+        ZdirectionNum[i] = COM_[i][directionIndex_];
+    }
+
+    auto maxit = std::max_element(ZdirectionNum.begin(), ZdirectionNum.end());
+    auto minit = std::min_element(ZdirectionNum.begin(), ZdirectionNum.end());
+
+    Real max = *maxit;
+    Real min = *minit;
+    Range2 range = {{max, min}};
+
+    std::cout << "Max = " << max << " Min = " << min << std::endl;
+
+    zBin_ -> update(range, Znumbins_);
 }
 
 void Pcostz::finishCalculate()

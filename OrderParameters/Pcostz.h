@@ -18,6 +18,7 @@ class Pcostz : public Calculation
 {
     public:
         using Binptr = std::unique_ptr<Bin>;
+        using Range2 = std::array<Real,2>;
 
         Pcostz(const CalculationInput& input);
 
@@ -26,6 +27,8 @@ class Pcostz : public Calculation
 
         void printHistogram(std::string name);
         void printHistogramPerIter(std::ofstream& ofs);
+
+        void binUsingMinMax();
 
     private:
         Binptr costBin_;
@@ -66,4 +69,9 @@ class Pcostz : public Calculation
         std::vector<Real> numResiduePerBinIter_;
 
         int ignoreBelow_ = 0;
+
+        // we are binning z directions using min/max of the COM
+        int Znumbins_;
+        Real above_;
+        bool usingMinMax_=false;
 };
