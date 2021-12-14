@@ -88,12 +88,14 @@ void Dipole::calculate()
             std::cout << "Atom charge for " << id_ << " atom is " << atoms[id_].charge_ << std::endl;
             #endif 
 
+            LinAlg3x3::normalize(dist); 
+
             for(int k=0;k<3;k++)
             {
                 dipole[k] += atoms[id_].charge_* dist[k];
             }
         }
-        LinAlg3x3::normalize(dipole);
+        // LinAlg3x3::normalize(dipole);
         Real dot_product = LinAlg3x3::DotProduct(dipole, direction_);
         costheta[i] = dot_product;
         costhetasquared[i] = dot_product * dot_product;
