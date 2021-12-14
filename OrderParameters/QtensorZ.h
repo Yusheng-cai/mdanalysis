@@ -33,6 +33,8 @@ class QtensorZ : public Calculation
         void binUsingMinMax();
 
         void printP2z(std::string name);
+        void printP2zbeta(std::string name);
+
         void printPerIterP2z(std::ofstream& ofs);
         void printPerIterev(std::ofstream& ofs);
         void printPerIterNum(std::ofstream& ofs);
@@ -40,6 +42,8 @@ class QtensorZ : public Calculation
 
         void printPerIterP2zBeta(std::ofstream& ofs);
         void printPerItereveczBeta(std::ofstream& ofs);
+
+        void printevBeta(std::string name);
 
         std::vector<Real>& getP2() {return P2_;}
 

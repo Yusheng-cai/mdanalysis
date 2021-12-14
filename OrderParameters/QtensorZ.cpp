@@ -15,6 +15,7 @@ QtensorZ::QtensorZ(const CalculationInput& input)
     input.pack_.ReadNumber("ignorelessthan", ParameterPack::KeyType::Optional, ignoreP2LessThan_);
 
     registerOutputFunction("p2z", [this](std::string name) -> void{this -> printP2z(name);});
+    registerOutputFunction("evbeta", [this](std::string name) -> void {this -> printevBeta(name);});
     registerPerIterOutputFunction("p2z", [this](std::ofstream& ofs) -> void {this -> printPerIterP2z(ofs);});
     registerPerIterOutputFunction("Qtensor", [this](std::ofstream& ofs) -> void {this -> printPerIterQtensor(ofs);});
     registerPerIterOutputFunction("ev", [this](std::ofstream& ofs) -> void{this -> printPerIterev(ofs);});
@@ -72,6 +73,66 @@ QtensorZ::QtensorZ(const CalculationInput& input)
     // res index to bin index 
     ResIndexToBinIndex_.resize(res.size(),0);
     BetaFactors_.resize(res.getAtomSize(),0.0);
+}
+
+void QtensorZ::printP2zbeta(std::string name)
+{
+    std::ofstream ofs;
+    ofs.open(name);
+
+    int numframes = simstate_.getTotalFrames();
+    auto& res = getResidueGroup(residueName_).getResidues();
+    int totalatoms = getResidueGroup(residueName_).getAtomSize();
+
+    std::vector<Real> betaFactors(totalatoms,0.0);
+
+    for (int j=0;j<res.size();j++)
+    {
+        int binindex = ResIndexToBinIndex_[j];
+
+        Real val = P2_[binindex];
+
+        for (int k=0;k<res[j].atoms_.size();k++)
+        {
+            int index = res[j].atoms_[k].atomNumber_ - 1;
+            betaFactors[index] = val;
+        }
+    }
+}
+
+void QtensorZ::printevBeta(std::string name)
+{
+    std::ofstream ofs;
+    ofs.open(name);
+
+    int numframes = simstate_.getTotalFrames();
+    auto& res = getResidueGroup(residueName_).getResidues();
+    int totalatoms = getResidueGroup(residueName_).getAtomSize();
+
+    std::vector<Real> betaFactors(totalatoms,0.0);
+
+    for (int j=0;j<res.size();j++)
+    {
+        int binindex = ResIndexToBinIndex_[j];
+
+        Real val = eigvec_[binindex][2] * eigvec_[binindex][2];
+
+        for (int k=0;k<res[j].atoms_.size();k++)
+        {
+            int index = res[j].atoms_[k].atomNumber_ - 1;
+            betaFactors[index] = val;
+        }
+    }
+
+    ofs << 0  << " ";
+
+    for (int j=0;j<betaFactors.size();j++)
+    {
+        ofs << betaFactors[j] << " ";
+    }
+    ofs << "\n";
+
+    ofs.close();
 }
 
 void QtensorZ::binUsingMinMax()
