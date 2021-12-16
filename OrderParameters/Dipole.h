@@ -31,8 +31,8 @@ class Dipole : public Calculation
         std::string residueName_;
         std::vector<Real3> dipoledirection_;
 
-        std::vector<Real> histogram_;
-        std::vector<Real> histogramsquared_;
+        std::vector<Real3> histogram_;
+        std::vector<Real3> histogramsquared_;
 
         // The atom indices in which we want to find the dipoles 
         std::vector<int> Atomindices_;
