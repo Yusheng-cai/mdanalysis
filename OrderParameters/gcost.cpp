@@ -268,7 +268,7 @@ void gcost::printHistogram2d(std::string name)
     {
         for (int j=0;j<numtbins_;j++)
         {
-            ofs << i << "\t" << j << "\t" << bin_ -> getCenterLocationOfBin(i) << "\t" << tbin_ -> getCenterLocationOfBin(i) \
+            ofs << i << "\t" << j << "\t" << bin_ -> getCenterLocationOfBin(i) << "\t" << tbin_ -> getCenterLocationOfBin(j) \
             << "\t" << histogramDotProduct2d_[i][j] << "\n";
         }
     }
