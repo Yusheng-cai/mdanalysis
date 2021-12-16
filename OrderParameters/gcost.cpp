@@ -310,7 +310,10 @@ void gcost::finishCalculate()
 
         for (int j=0;j<numtbins_;j++)
         {
-            histogramDotProduct2d_[i][j] /= sum;
+            if (sum != 0)
+            {
+                histogramDotProduct2d_[i][j] /= sum;
+            }
         }
     }
 }
