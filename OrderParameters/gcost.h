@@ -25,6 +25,7 @@ class gcost : public Calculation
         virtual void calculate();
         virtual void finishCalculate() override;
         void printHistogram(std::string name);
+        void printHistogram2d(std::string name);
 
         Real calcFactor(Real3& ui, Real3& uj);
         Real calcg1(Real3& ui, Real3& uj);
@@ -55,6 +56,7 @@ class gcost : public Calculation
         std::vector<int> histogramPerIter_;
         std::vector<Real> histogramDotProductPerIter_;
 
+        std::vector<std::vector<Real>> histogramDotProduct2dPerIter_;
         std::vector<std::vector<Real>> histogramDotProduct2d_;
         OpenMP::OpenMP_buffer<std::vector<std::vector<Real>>> histogramDotProduct2dbuffer_;
 

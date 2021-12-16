@@ -27,8 +27,7 @@ gcost::gcost(const CalculationInput& input)
     input.pack_.ReadNumber("numtbins", ParameterPack::KeyType::Optional, numtbins_);
     tbin_ = binptr(new Bin(trange_, numtbins_));
 
-    registerOutputFunction("histogram", [this](std::string name) -> void {this->printHistogram(name);});
-
+    // read in the index for calculation
     input.pack_.ReadNumber("index", ParameterPack::KeyType::Optional, index_);
 
     histogramDotProduct_.resize(numbins_,0.0);
@@ -38,6 +37,9 @@ gcost::gcost(const CalculationInput& input)
 
     // initialize histogram 2d which contains (R, t)
     histogramDotProduct2d_.resize(numbins_, std::vector<Real>(numtbins_,0.0));
+
+    registerOutputFunction("histogram", [this](std::string name) -> void {this->printHistogram(name);});
+    registerOutputFunction("histogram2d", [this](std::string name) -> void {this ->printHistogram2d(name);});
 }
 
 gcost::Real gcost::calcFactor(Real3& ui, Real3& uj)
@@ -82,6 +84,8 @@ void gcost::calculate()
     histogramDotProductPerIter_.resize(numbins_,0.0);
     histogramPerIter_.clear();
     histogramPerIter_.resize(numbins_,0);
+    histogramDotProduct2dPerIter_.clear();
+    histogramDotProduct2dPerIter_.resize(numbins_, std::vector<Real>(numtbins_,0.0));
 
     // find the COM 
     #pragma omp parallel for
@@ -185,7 +189,7 @@ void gcost::calculate()
     // for a single residue, let's bin it 
     histogramDotProductPerIterbuffer_.set_master_object(histogramDotProductPerIter_);
     histogramPerIterbuffer_.set_master_object(histogramPerIter_);
-    histogramDotProduct2dbuffer_.set_master_object(histogramDotProduct2d_);
+    histogramDotProduct2dbuffer_.set_master_object(histogramDotProduct2dPerIter_);
 
     #pragma omp parallel
     {
@@ -239,7 +243,7 @@ void gcost::calculate()
         }
     }
 
-    // divide histogram dot product by histogram
+    // divide histogram dot product by histogram --> finding average costheta  --> <cos(theta)>
     for (int i=0;i<histogramDotProductPerIter_.size();i++)
     {
         if (histogramPerIter_[i] != 0)
@@ -253,6 +257,23 @@ void gcost::calculate()
     {
         histogramDotProduct_[i] += histogramDotProductPerIter_[i];
     }
+}
+
+void gcost::printHistogram2d(std::string name)
+{
+    std::ofstream ofs;
+    ofs.open(name);
+
+    for (int i=0;i<numbins_;i++)
+    {
+        for (int j=0;j<numtbins_;j++)
+        {
+            ofs << i << "\t" << j << "\t" << bin_ -> getCenterLocationOfBin(i) << "\t" << tbin_ -> getCenterLocationOfBin(i) \
+            << "\t" << histogramDotProduct2d_[i][j] << "\n";
+        }
+    }
+
+    ofs.close();
 }
 
 void gcost::printHistogram(std::string name)
@@ -278,7 +299,7 @@ void gcost::finishCalculate()
         histogramDotProduct_[i] /= numframes;
     }
 
-    // take care of histogram2d --> we can normalize over columns (costheta)
+    // take care of histogram2d --> we can normalize over columns (costheta) , no need to time average 
     for (int i=0;i<numbins_;i++)
     {
         Real sum=0.0;
