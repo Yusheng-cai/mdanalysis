@@ -122,8 +122,11 @@ void grcostorientation::calculate()
     {
         for (int j=0;j<numtbins_;j++)
         {
-            histogram2dPerIter_[i][j] /= numhistogram[i][j];
-            histogram2d_[i][j] += histogram2dPerIter_[i][j];
+            if (numhistogram[i][j] != 0)
+            {
+                histogram2dPerIter_[i][j] /= numhistogram[i][j];
+                histogram2d_[i][j] += histogram2dPerIter_[i][j];
+            }
         }
     }
 }
