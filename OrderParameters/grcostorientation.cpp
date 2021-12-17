@@ -41,6 +41,10 @@ grcostorientation::grcostorientation(const CalculationInput& input)
 
     // register outputs
     registerOutputFunction("histogram2d", [this](std::string name) -> void {this -> printHistogram2d(name);});
+
+    // read max r and max cos
+    // pack_.ReadNumber("maxr", ParameterPack::KeyType::Required, rmax_);
+    // pack_.ReadNumber("maxcos", ParameterPack::KeyType::Required, maxcos_);
 }
 
 void grcostorientation::calculate()
@@ -96,11 +100,23 @@ void grcostorientation::calculate()
         }
     }
 
+    // for (int i=0;i<size;i++)
+    // {
+    //     for (int j=i+1;j<size;j++)
+    //     {
+    //         if (pairDistances[i][j] < rmax_ && costhetaPair[i][j] < maxcos_)
+    //         {
+
+    //         }
+    //     }
+    // }
+
     // now we start binning and write to data 
     for (int i=0;i<size;i++)
     {
         // find the angle that the molecule forms with the surface 
-        Real angle = AngleWithSurface_[i];
+        int index  = InsideIndices[i]; 
+        Real angle = AngleWithSurface_[index];
 
         int binangle = tbin_ -> findBin(angle); 
 
