@@ -101,8 +101,8 @@ void DistributionGivenDimer::calculate()
             int index2 = InsideIndices[j];
             if (pairDistances[i][j] <= rmax_ && costhetaPair[i][j] <= cosmax_)
             {
-                Real angle1 = AngleWithSurface[index1];
-                Real angle2 = AngleWithSurface[index2];
+                Real angle1 = AngleWithSurface_[index1];
+                Real angle2 = AngleWithSurface_[index2];
 
                 if(count ==0)
                 {
