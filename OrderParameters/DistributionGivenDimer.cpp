@@ -119,15 +119,14 @@ void DistributionGivenDimer::calculate()
         if (bin_ -> isInRange(angle))
         {
             int binnum = bin_ -> findBin(angle);
-            histogram_[binnum] += 1;
 
             if (DimerPerResidue_[i] > 0)
             {
-                histogram_[index] += 1;
+                histogram_[binnum] += 1;
             }
             else
             {
-                histogramNotDimer_[index] += 1;
+                histogramNotDimer_[binnum] += 1;
             }
         }
     }

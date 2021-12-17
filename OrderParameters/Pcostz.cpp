@@ -112,11 +112,16 @@ void Pcostz::calculate()
 
 void Pcostz::binUsingMinMax()
 {
-    std::vector<Real> ZdirectionNum(COM_.size(),0.0);
+    std::vector<Real> ZdirectionNum;
 
     for (int i=0;i<COM_.size();i++)
     {
-        ZdirectionNum[i] = COM_[i][directionIndex_];
+        Real val = COM_[i][directionIndex_];
+
+        if (val > above_)
+        {
+            ZdirectionNum.push_back(val);
+        }
     }
 
     auto maxit = std::max_element(ZdirectionNum.begin(), ZdirectionNum.end());
