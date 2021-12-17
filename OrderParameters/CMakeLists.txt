@@ -47,6 +47,7 @@ target_sources(mdaOrderParameters PRIVATE
     "LocalOrder.cpp"
     "gcost.cpp"
     "grcost.cpp"
+    "grcostorientation.cpp"
 )
 
 set(mdaOrderParameters_HEADER
@@ -95,6 +96,7 @@ set(mdaOrderParameters_HEADER
     "QtensorCalc.h"
     "gcost.h"
     "grcost.h"
+    "grcostorientation.h"
 )
 
 
