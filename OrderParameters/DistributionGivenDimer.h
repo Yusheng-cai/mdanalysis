@@ -25,6 +25,7 @@ class DistributionGivenDimer : public Calculation
         void printHistogram(std::string name);
         void printNumDimerPerIter(std::ofstream& ofs);
         void printNumDimerPerResiduePerIter(std::ofstream& ofs);
+        void printHistogramNotdimer(std::string name);
 
         Real getNumDimers() {return numDimersPerIter_;}
 
@@ -41,6 +42,7 @@ class DistributionGivenDimer : public Calculation
         std::vector<Real3> uij_;
 
         std::vector<Real> histogram_;
+        std::vector<Real> histogramNotDimer_;
 
         binptr bin_;
         int numbins_;

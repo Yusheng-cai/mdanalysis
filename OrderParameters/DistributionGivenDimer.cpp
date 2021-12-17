@@ -28,6 +28,7 @@ DistributionGivenDimer::DistributionGivenDimer(const CalculationInput& input)
     bin_ = binptr(new Bin(*binPack));
     numbins_ = bin_ -> getNumbins();
     histogram_.resize(numbins_,0.0);
+    histogramNotDimer_.resize(numbins_,0.0);
 
     // read in the surface normal
     pack_.ReadArrayNumber("surfacenormal", ParameterPack::KeyType::Optional, surfaceNormal_);
@@ -40,6 +41,7 @@ DistributionGivenDimer::DistributionGivenDimer(const CalculationInput& input)
     initializeNotInProbeVolumes();
 
     registerOutputFunction("histogram", [this](std::string name) -> void {this->printHistogram(name);});
+    registerOutputFunction("histogramnotdimer", [this](std::string name) -> void {this->printHistogramNotdimer(name);});
     registerPerIterOutputFunction("dimers", [this](std::ofstream& ofs) -> void {this -> printNumDimerPerIter(ofs);});
     registerOutputFileOutputs("dimers", [this](void) -> Real {return this->getNumDimers();});
     registerPerIterOutputFunction("dimerperres", [this](std::ofstream& ofs) -> void {this -> printNumDimerPerResiduePerIter(ofs);});
@@ -97,37 +99,35 @@ void DistributionGivenDimer::calculate()
     numDimersPerIter_ = 0;
     for (int i=0;i<size;i++)
     {
-        int index1 = InsideIndices[i];
-        int count = 0;
         for (int j=i+1;j<size;j++)
         {
-            int index2 = InsideIndices[j];
             if (pairDistances[i][j] <= rmax_ && costhetaPair[i][j] <= cosmax_)
             {
-                Real angle1 = AngleWithSurface_[index1];
-                Real angle2 = AngleWithSurface_[index2];
-
-                if(DimerPerResidue_[i] ==0)
-                {
-                    if (bin_ ->isInRange(angle1))
-                    {
-                        int binnum1 = bin_ -> findBin(angle1);
-                        histogram_[binnum1] += 1;
-                    }
-                }
-
-                if (DimerPerResidue_[j] == 0)
-                {
-                    if (bin_ -> isInRange(angle2))
-                    {
-                        int binnum2 = bin_ -> findBin(angle2);
-                        histogram_[binnum2] += 1;
-                    }
-                }
-
                 DimerPerResidue_[i] += 1;
                 DimerPerResidue_[j] += 1;
                 numDimersPerIter_ += 1;
+            }
+        }
+    }
+
+    for (int i=0;i<DimerPerResidue_.size();i++)
+    {
+        int index = InsideIndices[i];
+
+        Real angle = AngleWithSurface_[index];
+
+        if (bin_ -> isInRange(angle))
+        {
+            int binnum = bin_ -> findBin(angle);
+            histogram_[binnum] += 1;
+
+            if (DimerPerResidue_[i] > 0)
+            {
+                histogram_[index] += 1;
+            }
+            else
+            {
+                histogramNotDimer_[index] += 1;
             }
         }
     }
@@ -141,6 +141,18 @@ void DistributionGivenDimer::finishCalculate()
     {
         histogram_[i] /= numFrames;
     }
+}
+
+void DistributionGivenDimer::printHistogramNotdimer(std::string name)
+{
+    std::ofstream ofs;
+    ofs.open(name);
+
+    for (int i=0;i<histogramNotDimer_.size();i++)
+    {
+        ofs << bin_->getCenterLocationOfBin(i) << "\t" << histogramNotDimer_[i] << "\n";
+    }
+    ofs.close();
 }
 
 void DistributionGivenDimer::printNumDimerPerResiduePerIter(std::ofstream& ofs)
