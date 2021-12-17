@@ -47,7 +47,7 @@ void DistributionGivenDimer::calculate()
 {
     auto& res = getResidueGroup(resName_).getResidues();
     std::vector<int> InsideIndices;
-
+    std::cout << "Got to before first loop" << std::endl;
     for (int i=0;i<res.size();i++)
     {
         COM_[i] = CalculationTools::getCOM(res[i], simstate_, COMIndices_);
