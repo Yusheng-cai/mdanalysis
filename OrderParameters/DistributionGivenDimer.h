@@ -28,8 +28,8 @@ class DistributionGivenDimer : public Calculation
         Real rmax_;
         Real cosmax_;
 
-        int headindex_;
-        int tailindex_;
+        int headindex_=1;
+        int tailindex_=2;
 
         std::string resName_;
         int numres_;

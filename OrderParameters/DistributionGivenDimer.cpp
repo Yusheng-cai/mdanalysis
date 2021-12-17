@@ -19,7 +19,7 @@ DistributionGivenDimer::DistributionGivenDimer(const CalculationInput& input)
     uij_.resize(numres_);
 
     // read head index and tail index
-    pack_.ReadNumber("heaindex", ParameterPack::KeyType::Optional, headindex_);
+    pack_.ReadNumber("headindex", ParameterPack::KeyType::Optional, headindex_);
     pack_.ReadNumber("tailindex", ParameterPack::KeyType::Optional, tailindex_);
     headindex_--;
     tailindex_--;
@@ -47,7 +47,6 @@ void DistributionGivenDimer::calculate()
 {
     auto& res = getResidueGroup(resName_).getResidues();
     std::vector<int> InsideIndices;
-    std::cout << "Got to before first loop" << std::endl;
     for (int i=0;i<res.size();i++)
     {
         COM_[i] = CalculationTools::getCOM(res[i], simstate_, COMIndices_);
@@ -64,7 +63,6 @@ void DistributionGivenDimer::calculate()
         AngleWithSurface_[i] = LinAlg3x3::DotProduct(distance, surfaceNormal_);
         uij_[i] = distance;
     }
-    std::cout << "Got here." << std::endl;
 
     // find the inside indices 
     InsideIndices = InsidePVIndices(COM_);
