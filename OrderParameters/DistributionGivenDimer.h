@@ -23,6 +23,10 @@ class DistributionGivenDimer : public Calculation
         virtual void finishCalculate() override;
 
         void printHistogram(std::string name);
+        void printNumDimerPerIter(std::ofstream& ofs);
+        void printNumDimerPerResiduePerIter(std::ofstream& ofs);
+
+        Real getNumDimers() {return numDimersPerIter_;}
 
     private:
         Real rmax_;
@@ -51,4 +55,7 @@ class DistributionGivenDimer : public Calculation
 
         // Dimer per residue 
         std::vector<Real> DimerPerResidue_;
+
+        // number of pairs of dimers formed per time step
+        int numDimersPerIter_;
 };

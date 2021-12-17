@@ -15,7 +15,6 @@ DistributionGivenDimer::DistributionGivenDimer(const CalculationInput& input)
     numres_ = res.size();
     AngleWithSurface_.resize(numres_,0.0);
     COM_.resize(numres_);
-    DimerPerResidue_.resize(numres_);
     uij_.resize(numres_);
 
     // read head index and tail index
@@ -41,6 +40,9 @@ DistributionGivenDimer::DistributionGivenDimer(const CalculationInput& input)
     initializeNotInProbeVolumes();
 
     registerOutputFunction("histogram", [this](std::string name) -> void {this->printHistogram(name);});
+    registerPerIterOutputFunction("dimers", [this](std::ofstream& ofs) -> void {this -> printNumDimerPerIter(ofs);});
+    registerOutputFileOutputs("dimers", [this](void) -> Real {return this->getNumDimers();});
+    registerPerIterOutputFunction("dimerperres", [this](std::ofstream& ofs) -> void {this -> printNumDimerPerResiduePerIter(ofs);});
 }
 
 void DistributionGivenDimer::calculate()
@@ -69,6 +71,8 @@ void DistributionGivenDimer::calculate()
     int size = InsideIndices.size();
     std::vector<std::vector<Real>> pairDistances(size, std::vector<Real>(size,0.0));
     std::vector<std::vector<Real>> costhetaPair(size, std::vector<Real>(size,0.0));
+    DimerPerResidue_.clear();
+    DimerPerResidue_.resize(size,0.0);
 
     #pragma omp parallel for
     for (int i=0;i<size;i++)
@@ -90,6 +94,7 @@ void DistributionGivenDimer::calculate()
         }
     }
 
+    numDimersPerIter_ = 0;
     for (int i=0;i<size;i++)
     {
         int index1 = InsideIndices[i];
@@ -102,7 +107,7 @@ void DistributionGivenDimer::calculate()
                 Real angle1 = AngleWithSurface_[index1];
                 Real angle2 = AngleWithSurface_[index2];
 
-                if(count ==0)
+                if(DimerPerResidue_[i] ==0)
                 {
                     if (bin_ ->isInRange(angle1))
                     {
@@ -111,13 +116,18 @@ void DistributionGivenDimer::calculate()
                     }
                 }
 
-                if (bin_ -> isInRange(angle2))
+                if (DimerPerResidue_[j] == 0)
                 {
-                    int binnum2 = bin_ -> findBin(angle2);
-                    histogram_[binnum2] += 1;
+                    if (bin_ -> isInRange(angle2))
+                    {
+                        int binnum2 = bin_ -> findBin(angle2);
+                        histogram_[binnum2] += 1;
+                    }
                 }
 
-                count += 1;
+                DimerPerResidue_[i] += 1;
+                DimerPerResidue_[j] += 1;
+                numDimersPerIter_ += 1;
             }
         }
     }
@@ -131,6 +141,23 @@ void DistributionGivenDimer::finishCalculate()
     {
         histogram_[i] /= numFrames;
     }
+}
+
+void DistributionGivenDimer::printNumDimerPerResiduePerIter(std::ofstream& ofs)
+{
+    for (int i=0;i<DimerPerResidue_.size();i++)
+    {
+        ofs << DimerPerResidue_[i] << "\t";
+    }
+    
+    ofs << "\n";
+}
+
+void DistributionGivenDimer::printNumDimerPerIter(std::ofstream& ofs)
+{
+    int time = simstate_.getTime();
+
+    ofs << time << "\t" << numDimersPerIter_ << "\n";
 }
 
 void DistributionGivenDimer::printHistogram(std::string name)
