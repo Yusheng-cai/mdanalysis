@@ -47,7 +47,7 @@ class DistributionGivenDimer : public Calculation
         Real3 surfaceNormal_={{0,0,1}};
 
         // Angle with surface 
-        std::vector<Real> AngleWithSurface;
+        std::vector<Real> AngleWithSurface_;
 
         // Dimer per residue 
         std::vector<Real> DimerPerResidue_;

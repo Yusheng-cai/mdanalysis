@@ -13,7 +13,7 @@ DistributionGivenDimer::DistributionGivenDimer(const CalculationInput& input)
     initializeResidueGroup(resName_);
     auto& res = getResidueGroup(resName_).getResidues();
     numres_ = res.size();
-    AngleWithSurface.resize(numres_,0.0);
+    AngleWithSurface_.resize(numres_,0.0);
     COM_.resize(numres_);
     DimerPerResidue_.resize(numres_);
     uij_.resize(numres_);
@@ -61,9 +61,10 @@ void DistributionGivenDimer::calculate()
         
         LinAlg3x3::normalize(distance);
 
-        AngleWithSurface[i] = LinAlg3x3::DotProduct(distance, surfaceNormal_);
+        AngleWithSurface_[i] = LinAlg3x3::DotProduct(distance, surfaceNormal_);
         uij_[i] = distance;
     }
+    std::cout << "Got here." << std::endl;
 
     // find the inside indices 
     InsideIndices = InsidePVIndices(COM_);
