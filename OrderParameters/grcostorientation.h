@@ -36,9 +36,6 @@ class grcostorientation : public Calculation
         std::vector<std::vector<Real>> histogram2d_;
         std::vector<std::vector<Real>> histogram2dPerIter_;
 
-        // The 1d histogram
-        std::vector<Real> histogram_;
-
         // rbin 
         binptr rbin_;
         int numrbins_;
@@ -62,10 +59,4 @@ class grcostorientation : public Calculation
 
         // the uij for each LC molecule
         std::vector<Real3> uij_;
-
-        // max of the r 
-        Real rmax_;
-
-        // max of the cosine
-        Real maxcos_;
 };
