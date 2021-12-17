@@ -135,10 +135,21 @@ void DistributionGivenDimer::calculate()
 void DistributionGivenDimer::finishCalculate()
 {
     int numFrames = simstate_.getTotalFrames();
-
+    Real sum1=0.0;
+    Real sum2=0.0;
     for (int i=0;i<histogram_.size();i++)
     {
         histogram_[i] /= numFrames;
+        histogramNotDimer_[i] /= numFrames;
+
+        sum1 += histogram_[i];
+        sum2 += histogramNotDimer_[i];
+    }
+
+    for (int i=0;i<histogram_.size();i++)
+    {
+        histogram_[i] /= sum1;
+        histogramNotDimer_[i] /= sum2;
     }
 }
 
