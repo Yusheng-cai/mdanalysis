@@ -16,6 +16,7 @@ DistributionGivenDimer::DistributionGivenDimer(const CalculationInput& input)
     AngleWithSurface.resize(numres_,0.0);
     COM_.resize(numres_);
     DimerPerResidue_.resize(numres_);
+    uij_.resize(numres_);
 
     // read head index and tail index
     pack_.ReadNumber("heaindex", ParameterPack::KeyType::Optional, headindex_);
@@ -61,6 +62,7 @@ void DistributionGivenDimer::calculate()
         LinAlg3x3::normalize(distance);
 
         AngleWithSurface[i] = LinAlg3x3::DotProduct(distance, surfaceNormal_);
+        uij_[i] = distance;
     }
 
     // find the inside indices 
