@@ -38,18 +38,29 @@ class gcost : public Calculation
         int headindex_=1;
         int tailindex_=2;
 
+        int numatoms_;
+        int numresidues_;
+
+        // COM of whether or not a molecule is inside a PV
         std::vector<Real3> COM_;
+        std::vector<Real3> distanceCOM_;
+
+        // COMIndices for calculating the g(costheta)
+        std::vector<int> distanceCOMIndices_;
+
         std::vector<Real3> uij_;
         std::string residueName_;
 
         std::vector<std::vector<Real>> neighborDistance_;
+        std::vector<std::vector<Real>> neighborOutsideDistance_;
 
         int numbins_;
 
         std::vector<int> InsideIndices_;
-        OpenMP::OpenMP_buffer<std::vector<int>> InsideIndicesBuffer_;
+        std::vector<int> OutsideIndices_;
 
         std::vector<std::vector<Real>> dotProduct_;
+        std::vector<std::vector<Real>> dotProductOutside_;
 
         std::vector<Real> histogram_;
         std::vector<Real> histogramDotProduct_;

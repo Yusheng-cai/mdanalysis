@@ -22,6 +22,18 @@ gcost::gcost(const CalculationInput& input)
 
     input.pack_.ReadString("residue", ParameterPack::KeyType::Required, residueName_);
     initializeResidueGroup(residueName_);
+    auto& res = getResidueGroup(residueName_);
+    numresidues_ = res.getResidues().size();
+    numatoms_ = res[0].atoms_.size();
+
+    distanceCOMIndices_.resize(numatoms_,0);
+    std::iota(distanceCOMIndices_.begin(), distanceCOMIndices_.end(), 1);
+    input.pack_.ReadVectorNumber("distanceCOM", ParameterPack::KeyType::Optional, distanceCOMIndices_);
+    for (int i=0;i<distanceCOMIndices_.size();i++)
+    {
+        distanceCOMIndices_[i] -= 1;
+    }
+
 
     // costheta bins is always assumed to go from -1 to 1
     input.pack_.ReadNumber("numtbins", ParameterPack::KeyType::Optional, numtbins_);
@@ -78,6 +90,8 @@ void gcost::calculate()
     const auto& res = getResidueGroup(residueName_).getResidues(); 
     COM_.clear();
     uij_.clear();
+    distanceCOM_.clear();
+    distanceCOM_.resize(res.size());
     COM_.resize(res.size());
     uij_.resize(res.size());
     histogramDotProductPerIter_.clear();
@@ -92,6 +106,7 @@ void gcost::calculate()
     for (int i=0;i<COM_.size();i++)
     {
         COM_[i] = calcCOM(res[i]); 
+        distanceCOM_[i] = CalculationTools::getCOM(res[i], simstate_, distanceCOMIndices_);
 
         Real3 headpos = res[i].atoms_[headindex_].positions_;
         Real3 tailpos = res[i].atoms_[tailindex_].positions_;
@@ -104,64 +119,13 @@ void gcost::calculate()
         uij_[i] = distance;
     }
 
-    InsideIndicesBuffer_.set_master_object(InsideIndices_);
-
-    // first find which set of COM are inside of PV
-    #pragma omp parallel
-    {
-        auto& buffer_ = InsideIndicesBuffer_.access_buffer_by_id();
-        buffer_.clear();
-
-        #pragma omp for
-        for (int i=0;i<COM_.size();i++)
-        {
-            bool inPV = false;
-            for (auto pv : NotInprobevolumes_)
-            {
-                auto out = pv -> calculate(COM_[i]);
-
-                if (out.hx_ == 1)
-                {
-                    // break breaks out of the closest enclosing for loop
-                    inPV = true;
-                    break;
-                }
-            }
-
-            if (! inPV)
-            {
-                for (auto pv : probevolumes_)
-                {
-                    auto out = pv -> calculate(COM_[i]);
-                    if (out.hx_ == 1)
-                    {
-                        buffer_.push_back(i);
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-
+    InsideIndices_ = InsidePVIndices(COM_, OutsideIndices_);
     int size = InsideIndices_.size();
-    for (auto it = InsideIndicesBuffer_.beginworker(); it != InsideIndicesBuffer_.endworker(); it ++)
-    {
-        size += it -> size();
-    }
-
-    InsideIndices_.reserve(size);
-
-    for (auto it = InsideIndicesBuffer_.beginworker(); it != InsideIndicesBuffer_.endworker(); it ++)
-    {
-        InsideIndices_.insert(InsideIndices_.end(), it -> begin(), it -> end());
-    }
-
 
     neighborDistance_.clear();
     dotProduct_.clear();
-    neighborDistance_.resize(InsideIndices_.size(), std::vector<Real>(InsideIndices_.size(),0.0));
-    dotProduct_.resize(InsideIndices_.size(), std::vector<Real>(InsideIndices_.size(),0.0));
+    neighborDistance_.resize(size, std::vector<Real>(InsideIndices_.size(),0.0));
+    dotProduct_.resize(size, std::vector<Real>(InsideIndices_.size(),0.0));
 
     // find the distance between pair of COM 
     #pragma omp parallel for
@@ -175,7 +139,7 @@ void gcost::calculate()
 
             int index1 = InsideIndices_[i];
             int index2 = InsideIndices_[j];
-            simstate_.getSimulationBox().calculateDistance(COM_[index1], COM_[index2], distance, val);
+            simstate_.getSimulationBox().calculateDistance(distanceCOM_[index1], distanceCOM_[index2], distance, val);
 
             Real3 u1 = uij_[index1];
             Real3 u2 = uij_[index2];
@@ -183,6 +147,32 @@ void gcost::calculate()
 
             neighborDistance_[i][j] = std::sqrt(val);
             dotProduct_[i][j] = dotproduct;
+        }
+    }
+
+    // calculate the distribution b/t inside the pv and outside pv
+    neighborOutsideDistance_.resize(size, std::vector<Real>(OutsideIndices_.size(), 0.0));
+    dotProductOutside_.resize(size, std::vector<Real>(OutsideIndices_.size(),0.0));
+
+    #pragma omp parallel for
+    for (int i=0;i<size;i++)
+    {
+        for (int j=0;j<OutsideIndices_.size();j++)
+        {
+            Real3 distance;
+            Real val;
+
+            int index1 = InsideIndices_[i];
+            int index2 = OutsideIndices_[j];
+
+            simstate_.getSimulationBox().calculateDistance(distanceCOM_[index1], distanceCOM_[index2], distance, val);
+
+            neighborOutsideDistance_[i][j] = std::sqrt(val);
+
+            Real3 u1 = uij_[index1];
+            Real3 u2 = uij_[index2];
+
+            dotProductOutside_[i][j] = calcFactor(u1,u2);
         }
     }
 
@@ -207,9 +197,9 @@ void gcost::calculate()
         hist2dbuffer.resize(numbins_, std::vector<Real>(numtbins_,0.0));
 
         #pragma omp for
-        for (int i=0;i<InsideIndices_.size();i++)
+        for (int i=0;i<size;i++)
         {
-            for (int j=i+1;j<InsideIndices_.size();j++)
+            for (int j=i+1;j<size;j++)
             {
                 Real dist = neighborDistance_[i][j];
                 Real dotp = dotProduct_[i][j];
@@ -224,6 +214,27 @@ void gcost::calculate()
                     histbuffer[binnum] += 1;
                     dotbuffer[binnum] += dotProduct_[i][j];
                     hist2dbuffer[binnum][tbinum] += 1;
+                }
+            }
+        }
+
+        #pragma omp for 
+        for (int i=0;i<size;i++)
+        {
+            for (int j=0;j<OutsideIndices_.size();j++)
+            {
+                Real dist = neighborOutsideDistance_[i][j];
+                Real cos = dotProductOutside_[i][j];
+
+                if (bin_ -> isInRange(dist))
+                {
+                    int binnum = bin_ -> findBin(dist);
+                    int tbinnum = tbin_ -> findBin(cos);
+
+                    histbuffer[binnum] += 1;
+                    dotbuffer[binnum] += dotProductOutside_[i][j];
+
+                    hist2dbuffer[binnum][tbinnum] += 1;
                 }
             }
         }
