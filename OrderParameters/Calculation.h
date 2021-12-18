@@ -80,6 +80,7 @@ class Calculation
         void initializeNotInProbeVolumes();
 
         std::vector<int> InsidePVIndices(std::vector<Real3>& pos);
+        std::vector<int> InsidePVIndices(std::vector<Real3>& pos, std::vector<int>& outsideIndices);
 
     protected:
         // output registry 

@@ -365,6 +365,93 @@ std::vector<int> Calculation::InsidePVIndices(std::vector<Real3>& pos)
     return insideindices;
 }
 
+std::vector<int> Calculation::InsidePVIndices(std::vector<Real3>& pos, std::vector<int>& outsideIndices)
+{
+    std::vector<int> insideindices;
+    outsideIndices.clear();
+
+    OpenMP::OpenMP_buffer<std::vector<int>> insideindicesbuffer;
+    OpenMP::OpenMP_buffer<std::vector<int>> outsideindicesbuffer;
+
+    insideindicesbuffer.set_master_object(insideindices);
+    outsideindicesbuffer.set_master_object(outsideIndices);
+
+    // first find which set of COM are inside of PV
+    #pragma omp parallel
+    {
+        auto& buffer_ = insideindicesbuffer.access_buffer_by_id();
+        auto& outsidebuffer = outsideindicesbuffer.access_buffer_by_id();
+        buffer_.clear();
+        outsidebuffer.clear();
+
+        #pragma omp for
+        for (int i=0;i<pos.size();i++)
+        {
+            bool inPV = false;
+            for (auto pv : NotInprobevolumes_)
+            {
+                auto out = pv -> calculate(pos[i]);
+
+                if (out.hx_ == 1)
+                {
+                    // break breaks out of the closest enclosing for loop
+                    inPV = true;
+                    break;
+                }
+            }
+
+            if (! inPV)
+            {
+                bool foundinpv=false;
+                for (auto pv : probevolumes_)
+                {
+                    auto out = pv -> calculate(pos[i]);
+                    if (out.hx_ == 1)
+                    {
+                        buffer_.push_back(i);
+                        foundinpv = true;
+                        break;
+                    }
+                }
+
+                if (! foundinpv)
+                {
+                    outsidebuffer.push_back(i);
+                }
+            }
+        }
+    }
+
+    int size=insideindices.size();
+    int outsidesize = outsideIndices.size();
+
+    for (auto it = insideindicesbuffer.beginworker(); it != insideindicesbuffer.endworker(); it ++)
+    {
+        size += it -> size();
+    }
+
+    for (auto it = outsideindicesbuffer.beginworker(); it != outsideindicesbuffer.endworker(); it ++)
+    {
+        outsidesize += it -> size();
+    }
+
+    insideindices.reserve(size);
+    outsideIndices.reserve(outsidesize);
+
+    for (auto it = insideindicesbuffer.beginworker(); it != insideindicesbuffer.endworker(); it ++)
+    {
+        insideindices.insert(insideindices.end(), it -> begin(), it -> end());
+    }
+
+    for (auto it = outsideindicesbuffer.beginworker(); it != outsideindicesbuffer.endworker(); it ++)
+    {
+        outsideIndices.insert(outsideIndices.end(), it -> begin(), it -> end());
+    }
+
+    return insideindices;
+}
+
+
 
 CalculationTools::Real3 CalculationTools::getCOG(const Molecule::residue& residueGroup, const SimulationState& simstate, \
 std::vector<int>& indices_)
