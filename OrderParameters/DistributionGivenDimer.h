@@ -27,6 +27,7 @@ class DistributionGivenDimer : public Calculation
         void printNumDimerPerResiduePerIter(std::ofstream& ofs);
         void printHistogramNotdimer(std::string name);
         void printDimerBetaFactor(std::ofstream& ofs);
+        void printNotDimerBetaFactor(std::ofstream& ofs);
 
         Real getNumDimers() {return numDimersPerIter_;}
 
@@ -39,6 +40,8 @@ class DistributionGivenDimer : public Calculation
 
         std::string resName_;
         int numres_;
+        // atoms per residue
+        int numatoms_;
 
         std::vector<Real3> uij_;
 
@@ -49,6 +52,7 @@ class DistributionGivenDimer : public Calculation
         int numbins_;
 
         std::vector<Real3> COM_;
+        std::vector<Real3> COMdistance_;
 
         // surface normal
         Real3 surfaceNormal_={{0,0,1}};
@@ -61,4 +65,9 @@ class DistributionGivenDimer : public Calculation
 
         // number of pairs of dimers formed per time step
         int numDimersPerIter_;
+
+        std::vector<int> InsideIndices_;
+
+        // indices of COM for calculating distances
+        std::vector<int> DistanceCOM_;
 };

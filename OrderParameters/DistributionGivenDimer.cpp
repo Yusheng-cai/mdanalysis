@@ -13,8 +13,10 @@ DistributionGivenDimer::DistributionGivenDimer(const CalculationInput& input)
     initializeResidueGroup(resName_);
     auto& res = getResidueGroup(resName_).getResidues();
     numres_ = res.size();
+    numatoms_ = res[0].atoms_.size();
     AngleWithSurface_.resize(numres_,0.0);
     COM_.resize(numres_);
+    COMdistance_.resize(numres_);
     uij_.resize(numres_);
 
     // read head index and tail index
@@ -33,6 +35,15 @@ DistributionGivenDimer::DistributionGivenDimer(const CalculationInput& input)
     // read in the surface normal
     pack_.ReadArrayNumber("surfacenormal", ParameterPack::KeyType::Optional, surfaceNormal_);
 
+    // read the COM indices for calculating distances between molecules
+    DistanceCOM_.resize(numatoms_,0.0);
+    std::iota(DistanceCOM_.begin(), DistanceCOM_.end(), 1);
+    pack_.ReadVectorNumber("distanceCOM", ParameterPack::KeyType::Optional, DistanceCOM_);
+    for (int i=0;i<DistanceCOM_.size();i++)
+    {
+        DistanceCOM_[i] -= 1;
+    }
+
     // read in the cosine theta max and r max 
     pack_.ReadNumber("cosmax", ParameterPack::KeyType::Required, cosmax_);
     pack_.ReadNumber("rmax", ParameterPack::KeyType::Required, rmax_);
@@ -44,6 +55,7 @@ DistributionGivenDimer::DistributionGivenDimer(const CalculationInput& input)
     registerOutputFunction("histogramnotdimer", [this](std::string name) -> void {this->printHistogramNotdimer(name);});
     registerPerIterOutputFunction("dimers", [this](std::ofstream& ofs) -> void {this -> printNumDimerPerIter(ofs);});
     registerPerIterOutputFunction("dimerbetafactor", [this](std::ofstream& ofs) -> void {this -> printDimerBetaFactor(ofs);});
+    registerPerIterOutputFunction("notdimerbetafactor", [this](std::ofstream& ofs) -> void {this -> printNotDimerBetaFactor(ofs);});
     registerOutputFileOutputs("dimers", [this](void) -> Real {return this->getNumDimers();});
     registerPerIterOutputFunction("dimerperres", [this](std::ofstream& ofs) -> void {this -> printNumDimerPerResiduePerIter(ofs);});
 }
@@ -51,10 +63,10 @@ DistributionGivenDimer::DistributionGivenDimer(const CalculationInput& input)
 void DistributionGivenDimer::calculate()
 {
     auto& res = getResidueGroup(resName_).getResidues();
-    std::vector<int> InsideIndices;
     for (int i=0;i<res.size();i++)
     {
         COM_[i] = CalculationTools::getCOM(res[i], simstate_, COMIndices_);
+        COMdistance_[i] = CalculationTools::getCOM(res[i], simstate_, DistanceCOM_);
 
         Real3 headpos = res[i].atoms_[headindex_].positions_;
         Real3 tailpos = res[i].atoms_[tailindex_].positions_;
@@ -70,8 +82,8 @@ void DistributionGivenDimer::calculate()
     }
 
     // find the inside indices 
-    InsideIndices = InsidePVIndices(COM_);
-    int size = InsideIndices.size();
+    InsideIndices_ = InsidePVIndices(COM_);
+    int size = InsideIndices_.size();
     std::vector<std::vector<Real>> pairDistances(size, std::vector<Real>(size,0.0));
     std::vector<std::vector<Real>> costhetaPair(size, std::vector<Real>(size,0.0));
     DimerPerResidue_.clear();
@@ -82,13 +94,13 @@ void DistributionGivenDimer::calculate()
     {
         for (int j=i+1;j<size;j++)
         {
-            int index1 = InsideIndices[i];
-            int index2 = InsideIndices[j];
+            int index1 = InsideIndices_[i];
+            int index2 = InsideIndices_[j];
 
             Real3 distance;
             Real distsq;
 
-            simstate_.getSimulationBox().calculateDistance(COM_[index1], COM_[index2], distance, distsq);
+            simstate_.getSimulationBox().calculateDistance(COMdistance_[index1], COMdistance_[index2], distance, distsq);
 
             pairDistances[i][j] = std::sqrt(distsq);
 
@@ -113,7 +125,7 @@ void DistributionGivenDimer::calculate()
 
     for (int i=0;i<DimerPerResidue_.size();i++)
     {
-        int index = InsideIndices[i];
+        int index = InsideIndices_[i];
 
         Real angle = AngleWithSurface_[index];
 
@@ -186,13 +198,35 @@ void DistributionGivenDimer::printDimerBetaFactor(std::ofstream& ofs)
     {
         if (DimerPerResidue_[i] > 0)
         {
-            for (int j=0;j<res[i].atoms_.size();j++)
+            int index = InsideIndices_[i];
+            for (int j=0;j<res[index].atoms_.size();j++)
             {
-                ofs << res[i].atoms_[j].atomNumber_ - 1 << " ";
+                ofs << res[index].atoms_[j].atomNumber_ - 1 << " ";
             }
         }
     }
 
+    ofs << "\n";
+}
+
+void DistributionGivenDimer::printNotDimerBetaFactor(std::ofstream& ofs)
+{
+    auto& res = getResidueGroup(resName_).getResidues();
+
+    int timestep = simstate_.getStep(); 
+    ofs << timestep << " ";
+
+    for (int i=0;i<DimerPerResidue_.size();i++)
+    {
+        if (DimerPerResidue_[i] == 0)
+        {
+            int index = InsideIndices_[i];
+            for (int j=0;j<res[index].atoms_.size();j++)
+            {
+                ofs << res[index].atoms_[j].atomNumber_ -1 << " ";
+            }
+        }
+    }
     ofs << "\n";
 }
 
