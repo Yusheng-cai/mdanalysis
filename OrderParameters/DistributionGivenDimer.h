@@ -26,6 +26,7 @@ class DistributionGivenDimer : public Calculation
         void printNumDimerPerIter(std::ofstream& ofs);
         void printNumDimerPerResiduePerIter(std::ofstream& ofs);
         void printHistogramNotdimer(std::string name);
+        void printDimerBetaFactor(std::ofstream& ofs);
 
         Real getNumDimers() {return numDimersPerIter_;}
 

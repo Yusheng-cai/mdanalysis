@@ -43,6 +43,7 @@ DistributionGivenDimer::DistributionGivenDimer(const CalculationInput& input)
     registerOutputFunction("histogram", [this](std::string name) -> void {this->printHistogram(name);});
     registerOutputFunction("histogramnotdimer", [this](std::string name) -> void {this->printHistogramNotdimer(name);});
     registerPerIterOutputFunction("dimers", [this](std::ofstream& ofs) -> void {this -> printNumDimerPerIter(ofs);});
+    registerPerIterOutputFunction("dimerbetafactor", [this](std::ofstream& ofs) -> void {this -> printDimerBetaFactor(ofs);});
     registerOutputFileOutputs("dimers", [this](void) -> Real {return this->getNumDimers();});
     registerPerIterOutputFunction("dimerperres", [this](std::ofstream& ofs) -> void {this -> printNumDimerPerResiduePerIter(ofs);});
 }
@@ -172,6 +173,26 @@ void DistributionGivenDimer::printNumDimerPerResiduePerIter(std::ofstream& ofs)
         ofs << DimerPerResidue_[i] << "\t";
     }
     
+    ofs << "\n";
+}
+
+void DistributionGivenDimer::printDimerBetaFactor(std::ofstream& ofs)
+{
+    auto& res = getResidueGroup(resName_).getResidues();
+    int timestep = simstate_.getStep();
+    ofs <<  timestep << " ";
+
+    for (int i=0;i<DimerPerResidue_.size();i++)
+    {
+        if (DimerPerResidue_[i] > 0)
+        {
+            for (int j=0;j<res[i].atoms_.size();j++)
+            {
+                ofs << res[i].atoms_[j].atomNumber_ - 1 << " ";
+            }
+        }
+    }
+
     ofs << "\n";
 }
 
