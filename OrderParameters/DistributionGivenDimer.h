@@ -4,6 +4,7 @@
 #include "tools/Assert.h"
 #include "SimulationState.h"
 #include "tools/CommonTypes.h"
+#include "parallel/OpenMP.h"
 #include "LinAlgTools.h"
 #include "Bin.h"
 
@@ -67,6 +68,7 @@ class DistributionGivenDimer : public Calculation
         int numDimersPerIter_;
 
         std::vector<int> InsideIndices_;
+        std::vector<int> OutsideIndices_;
 
         // indices of COM for calculating distances
         std::vector<int> DistanceCOM_;

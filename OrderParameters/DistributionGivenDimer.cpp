@@ -82,12 +82,12 @@ void DistributionGivenDimer::calculate()
     }
 
     // find the inside indices 
-    InsideIndices_ = InsidePVIndices(COM_);
+    InsideIndices_ = InsidePVIndices(COM_, OutsideIndices_);
     int size = InsideIndices_.size();
+    int outsidesize = OutsideIndices_.size();
     std::vector<std::vector<Real>> pairDistances(size, std::vector<Real>(size,0.0));
     std::vector<std::vector<Real>> costhetaPair(size, std::vector<Real>(size,0.0));
-    DimerPerResidue_.clear();
-    DimerPerResidue_.resize(size,0.0);
+ 
 
     #pragma omp parallel for
     for (int i=0;i<size;i++)
@@ -109,20 +109,71 @@ void DistributionGivenDimer::calculate()
         }
     }
 
-    numDimersPerIter_ = 0;
+    std::vector<std::vector<Real>> outsidePairDistance(size, std::vector<Real>(outsidesize,0.0));
+    std::vector<std::vector<Real>> outsidecosthetaPair(size, std::vector<Real>(outsidesize,0.0));
+
+    #pragma omp parallel for 
     for (int i=0;i<size;i++)
     {
-        for (int j=i+1;j<size;j++)
+        for (int j=0;j<outsidesize;j++)
         {
-            if (pairDistances[i][j] <= rmax_ && costhetaPair[i][j] <= cosmax_)
-            {
-                DimerPerResidue_[i] += 1;
-                DimerPerResidue_[j] += 1;
-                numDimersPerIter_ += 1;
-            }
+            int index1 = InsideIndices_[i];
+            int index2 = OutsideIndices_[j];
+
+            Real3 distance;
+            Real distsq;
+
+            simstate_.getSimulationBox().calculateDistance(COMdistance_[index1], COMdistance_[index2], distance, distsq);
+
+            outsidePairDistance[i][j] = std::sqrt(distsq);
+
+            Real costheta = LinAlg3x3::DotProduct(uij_[index1], uij_[index2]);
+            outsidecosthetaPair[i][j] = costheta;
         }
     }
 
+    DimerPerResidue_.clear();
+    DimerPerResidue_.resize(size,0.0);
+
+    #pragma omp parallel
+    {
+        std::vector<Real> dbuffer(size,0.0);
+        int numdimers = 0;
+
+        #pragma omp for
+        for (int i=0;i<size;i++)
+        {
+            for (int j=i+1;j<size;j++)
+            {
+                if (pairDistances[i][j] <= rmax_ && costhetaPair[i][j] <= cosmax_)
+                {
+                    dbuffer[i] += 1;
+                    dbuffer[j] += 1;
+                }
+            }
+        }
+
+        #pragma omp for
+        for (int i=0;i<size;i++)
+        {
+            for (int j=0;j<outsidesize;j++)
+            {
+                if (outsidePairDistance[i][j] <= rmax_ && outsidecosthetaPair[i][j] <= cosmax_)
+                {
+                    dbuffer[i] += 1;
+                }
+            }
+        }
+
+        #pragma omp critical
+        for (int i=0;i<size;i++)
+        {
+            DimerPerResidue_[i] += dbuffer[i];
+        }
+    }
+
+    // bin it into histograms
+    numDimersPerIter_ = 0;
     for (int i=0;i<DimerPerResidue_.size();i++)
     {
         int index = InsideIndices_[i];
@@ -136,6 +187,7 @@ void DistributionGivenDimer::calculate()
             if (DimerPerResidue_[i] > 0)
             {
                 histogram_[binnum] += 1;
+                numDimersPerIter_ += 1;
             }
             else
             {
