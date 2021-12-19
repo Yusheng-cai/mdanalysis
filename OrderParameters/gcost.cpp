@@ -91,6 +91,7 @@ void gcost::calculate()
     COM_.clear();
     uij_.clear();
     distanceCOM_.clear();
+
     distanceCOM_.resize(res.size());
     COM_.resize(res.size());
     uij_.resize(res.size());
@@ -129,9 +130,9 @@ void gcost::calculate()
 
     // find the distance between pair of COM 
     #pragma omp parallel for
-    for (int i=0;i<InsideIndices_.size();i++)
+    for (int i=0;i<size;i++)
     {
-        for (int j=0;j<InsideIndices_.size();j++)
+        for (int j=i+1;j<size;j++)
         {
             // find the distance between ith and jth COM 
             Real3 distance;
@@ -151,6 +152,8 @@ void gcost::calculate()
     }
 
     // calculate the distribution b/t inside the pv and outside pv
+    neighborOutsideDistance_.clear();
+    dotProductOutside_.clear();
     neighborOutsideDistance_.resize(size, std::vector<Real>(OutsideIndices_.size(), 0.0));
     dotProductOutside_.resize(size, std::vector<Real>(OutsideIndices_.size(),0.0));
 
