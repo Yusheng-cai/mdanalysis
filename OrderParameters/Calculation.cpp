@@ -448,6 +448,8 @@ std::vector<int> Calculation::InsidePVIndices(std::vector<Real3>& pos, std::vect
         outsideIndices.insert(outsideIndices.end(), it -> begin(), it -> end());
     }
 
+    outsideindicesbuffer.clearMasterObject();
+
     return insideindices;
 }
 
