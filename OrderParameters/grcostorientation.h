@@ -53,10 +53,16 @@ class grcostorientation : public Calculation
 
         // COM vector
         std::vector<Real3> COM_;
+        std::vector<Real3> distanceCOM_;
+        std::vector<int> distanceCOMIndices_;
+        int numatoms;
 
         // Angle with surface 
         std::vector<Real> AngleWithSurface_;
 
         // the uij for each LC molecule
         std::vector<Real3> uij_;
+
+        // outside indices 
+        std::vector<int> outsideIndices_;
 };

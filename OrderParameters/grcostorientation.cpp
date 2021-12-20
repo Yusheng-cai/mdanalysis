@@ -31,9 +31,19 @@ grcostorientation::grcostorientation(const CalculationInput& input)
     pack_.ReadString("residue", ParameterPack::KeyType::Required, resName_);
     initializeResidueGroup(resName_);
     auto& res = getResidueGroup(resName_);
+    numatoms  = res[0].atoms_.size();
     COM_.resize(res.getResidues().size());
+    distanceCOM_.resize(res.getResidues().size());
     AngleWithSurface_.resize(res.getResidues().size(),0.0);
     uij_.resize(res.getResidues().size());
+
+    distanceCOMIndices_.resize(numatoms);
+    std::iota(distanceCOMIndices_.begin(), distanceCOMIndices_.end(),1);
+    pack_.ReadVectorNumber("distanceCOM", ParameterPack::KeyType::Optional, distanceCOMIndices_);
+    for (int i=0;i<distanceCOMIndices_.size();i++)
+    {
+        distanceCOMIndices_[i] -= 1;
+    }
 
     // initialize probe volumes
     initializeProbeVolumes();
@@ -56,6 +66,7 @@ void grcostorientation::calculate()
     for (int i=0;i<res.size();i++)
     {
         COM_[i] = CalculationTools::getCOM(res[i], simstate_, COMIndices_);
+        distanceCOM_[i] = CalculationTools::getCOM(res[i], simstate_, distanceCOMIndices_);
 
         Real3 headpos = res[i].atoms_[headindex_].positions_;
         Real3 tailpos = res[i].atoms_[tailindex_].positions_;
@@ -71,10 +82,14 @@ void grcostorientation::calculate()
     }
 
     // find the inside indices 
-    InsideIndices = InsidePVIndices(COM_);
+    outsideIndices_.clear();
+    InsideIndices = InsidePVIndices(COM_, outsideIndices_);
     int size = InsideIndices.size();
+    int outsidesize = outsideIndices_.size();
     std::vector<std::vector<Real>> pairDistances(size, std::vector<Real>(size,0.0));
     std::vector<std::vector<Real>> costhetaPair(size, std::vector<Real>(size,0.0));
+    std::vector<std::vector<Real>> outsidePairDistances(size, std::vector<Real>(outsidesize,0.0));
+    std::vector<std::vector<Real>> outsidecosthetaPair(size, std::vector<Real>(outsidesize,0.0));
 
     #pragma omp parallel for
     for (int i=0;i<size;i++)
@@ -87,12 +102,32 @@ void grcostorientation::calculate()
             Real3 distance;
             Real distsq;
 
-            simstate_.getSimulationBox().calculateDistance(COM_[index1], COM_[index2], distance, distsq);
+            simstate_.getSimulationBox().calculateDistance(distanceCOM_[index1], distanceCOM_[index2], distance, distsq);
 
             pairDistances[i][j] = std::sqrt(distsq);
 
             Real costheta = LinAlg3x3::DotProduct(uij_[index1], uij_[index2]);
             costhetaPair[i][j] = costheta;
+        }
+    }
+
+    // we calculate between within the pv and outside pv 
+    #pragma omp parallel for 
+    for (int i=0;i<size;i++)
+    {
+        for (int j=0;j<outsidesize;j++)
+        {
+            int index1 = InsideIndices[i];
+            int index2 = outsideIndices_[j];
+
+            Real3 distance;
+            Real distsq;
+
+            simstate_.getSimulationBox().calculateDistance(distanceCOM_[index1], distanceCOM_[index2], distance, distsq);
+
+            outsidePairDistances[i][j] = std::sqrt(distsq);
+            Real costheta = LinAlg3x3::DotProduct(uij_[index1], uij_[index2]);
+            outsidecosthetaPair[i][j]  = costheta;
         }
     }
 
@@ -114,6 +149,28 @@ void grcostorientation::calculate()
                 int binR = rbin_ -> findBin(pD);
 
                 histogram2dPerIter_[binR][binangle] += costhetaPair[i][j];
+                numhistogram[binR][binangle] += 1;
+            }
+        }
+    }
+
+    // binning inside & outside 
+    for (int i=0;i<size;i++)
+    {
+        int index = InsideIndices[i];
+        Real angle = AngleWithSurface_[index];
+
+        int binangle = tbin_ -> findBin(angle);
+
+        for (int j=0;j<outsidesize;j++)
+        {
+            Real pD = outsidePairDistances[i][j];
+
+            if (rbin_ -> isInRange(pD))
+            {
+                int binR = rbin_ -> findBin(pD);
+
+                histogram2dPerIter_[binR][binangle] += outsidecosthetaPair[i][j];
                 numhistogram[binR][binangle] += 1;
             }
         }
