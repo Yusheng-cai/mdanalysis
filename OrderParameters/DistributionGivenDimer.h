@@ -63,6 +63,7 @@ class DistributionGivenDimer : public Calculation
 
         // Dimer per residue 
         std::vector<Real> DimerPerResidue_;
+        std::vector<Real> outsideDimerPerResidue_;
 
         // number of pairs of dimers formed per time step
         int numDimersPerIter_;

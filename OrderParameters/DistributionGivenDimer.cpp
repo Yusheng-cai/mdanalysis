@@ -134,10 +134,14 @@ void DistributionGivenDimer::calculate()
 
     DimerPerResidue_.clear();
     DimerPerResidue_.resize(size,0.0);
+    outsideDimerPerResidue_.clear();
+    outsideDimerPerResidue_.resize(outsidesize,0.0);
+    numDimersPerIter_ = 0;
 
     #pragma omp parallel
     {
         std::vector<Real> dbuffer(size,0.0);
+        std::vector<Real> outsidedbuffer(outsidesize,0.0);
         int numdimers = 0;
 
         #pragma omp for
@@ -149,6 +153,7 @@ void DistributionGivenDimer::calculate()
                 {
                     dbuffer[i] += 1;
                     dbuffer[j] += 1;
+                    numdimers += 1;
                 }
             }
         }
@@ -161,6 +166,8 @@ void DistributionGivenDimer::calculate()
                 if (outsidePairDistance[i][j] <= rmax_ && outsidecosthetaPair[i][j] <= cosmax_)
                 {
                     dbuffer[i] += 1;
+                    outsidedbuffer[j] += 1;
+                    numdimers += 1;
                 }
             }
         }
@@ -170,10 +177,18 @@ void DistributionGivenDimer::calculate()
         {
             DimerPerResidue_[i] += dbuffer[i];
         }
+
+        #pragma omp critical
+        for (int i=0;i<outsidesize;i++)
+        {
+            outsideDimerPerResidue_[i] += outsidedbuffer[i];
+        }
+
+        #pragma omp critical 
+        numDimersPerIter_ += numdimers;
     }
 
     // bin it into histograms
-    numDimersPerIter_ = 0;
     for (int i=0;i<DimerPerResidue_.size();i++)
     {
         int index = InsideIndices_[i];
@@ -187,7 +202,6 @@ void DistributionGivenDimer::calculate()
             if (DimerPerResidue_[i] > 0)
             {
                 histogram_[binnum] += 1;
-                numDimersPerIter_ += 1;
             }
             else
             {
@@ -251,6 +265,18 @@ void DistributionGivenDimer::printDimerBetaFactor(std::ofstream& ofs)
         if (DimerPerResidue_[i] > 0)
         {
             int index = InsideIndices_[i];
+            for (int j=0;j<res[index].atoms_.size();j++)
+            {
+                ofs << res[index].atoms_[j].atomNumber_ - 1 << " ";
+            }
+        }
+    }
+
+    for (int i=0;i<outsideDimerPerResidue_.size();i++)
+    {
+        if (outsideDimerPerResidue_[i] > 0)
+        {
+            int index = OutsideIndices_[i];
             for (int j=0;j<res[index].atoms_.size();j++)
             {
                 ofs << res[index].atoms_[j].atomNumber_ - 1 << " ";
