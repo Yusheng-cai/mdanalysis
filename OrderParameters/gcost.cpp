@@ -157,6 +157,9 @@ void gcost::calculate()
     neighborOutsideDistance_.resize(size, std::vector<Real>(OutsideIndices_.size(), 0.0));
     dotProductOutside_.resize(size, std::vector<Real>(OutsideIndices_.size(),0.0));
 
+    ASSERT((OutsideIndices_.size() + InsideIndices_.size() == res.size()), "The number of residues inside pv + number of residues \
+    outside pv does not add up to " << res.size() << " and is equal to " << OutsideIndices_.size() + InsideIndices_.size());
+
     #pragma omp parallel for
     for (int i=0;i<size;i++)
     {
