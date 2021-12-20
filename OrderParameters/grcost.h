@@ -28,6 +28,8 @@ class grcost : public Calculation
 
     private:
         std::vector<Real3> COM_;
+        std::vector<Real3> distanceCOM_;
+        std::vector<int> distanceCOMIndices_;
         std::vector<Real3> uij_;
 
         binptr tbin_;
@@ -41,6 +43,7 @@ class grcost : public Calculation
         Matrix Qtensor_;
 
         std::vector<int> InsideIndices_;
+        std::vector<int> OutsideIndices_;
 
         Real3 director_;
 
@@ -54,4 +57,10 @@ class grcost : public Calculation
 
         int numtbins_;
         int numrbins_;
+
+        int numresidues_;
+        int numatoms_;
+
+        Real3 arr_;
+        bool arrayRead_=false;
 };

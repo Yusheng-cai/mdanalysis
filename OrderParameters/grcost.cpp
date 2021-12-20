@@ -18,8 +18,19 @@ grcost::grcost(const CalculationInput& input)
     tbin_ = binptr(new Bin(*tbinPack));
     rbin_ = binptr(new Bin(*rbinPack));
 
+    // read information about residues 
     input.pack_.ReadString("residue", ParameterPack::KeyType::Required, residueName_);
     initializeResidueGroup(residueName_);
+    auto& res = getResidueGroup(residueName_).getResidues();
+    numresidues_ = res.size();
+    numatoms_ = res[0].atoms_.size();
+    distanceCOMIndices_.resize(numatoms_,0);
+    std::iota(distanceCOMIndices_.begin(), distanceCOMIndices_.end(),1);
+    input.pack_.ReadVectorNumber("distanceCOM", ParameterPack::KeyType::Optional, distanceCOMIndices_);
+    for (int i=0;i<distanceCOMIndices_.size();i++)
+    {
+        distanceCOMIndices_[i] -= 1;
+    }
 
     input.pack_.ReadNumber("headindex", ParameterPack::KeyType::Optional, headindex_);
     input.pack_.ReadNumber("tailindex", ParameterPack::KeyType::Optional, tailindex_);
@@ -30,6 +41,9 @@ grcost::grcost(const CalculationInput& input)
     numrbins_ = rbin_ -> getNumbins();
 
     histogramDotProduct_.resize(numrbins_, std::vector<Real>(numtbins_,0.0));
+
+    // read in the array 
+    arrayRead_ = input.pack_.ReadArrayNumber("array", ParameterPack::KeyType::Optional, arr_);
 
     registerOutputFunction("histogram", [this](std::string name) -> void {this -> printgrcost(name);});
 }
@@ -42,6 +56,8 @@ void grcost::calculate()
     COM_.resize(res.size());
     uij_.clear();
     uij_.resize(res.size());
+    distanceCOM_.clear();
+    distanceCOM_.resize(res.size());
 
     Qtensor_.fill({});
 
@@ -49,6 +65,7 @@ void grcost::calculate()
     for (int i=0;i<res.size();i++)
     {
         COM_[i] = calcCOM(res[i]);
+        distanceCOM_[i] = CalculationTools::getCOM(res[i], simstate_, distanceCOMIndices_);
 
         Real3 headpos = res[i].atoms_[headindex_].positions_;
         Real3 tailpos = res[i].atoms_[tailindex_].positions_;
@@ -63,7 +80,8 @@ void grcost::calculate()
         uij_[i] = distance;
     }
 
-    InsideIndices_ = InsidePVIndices(COM_);
+    OutsideIndices_.clear();
+    InsideIndices_ = InsidePVIndices(COM_, OutsideIndices_);
     int N = InsideIndices_.size();
 
     // first let's calculate the Qtensor inside of the probe volume 
@@ -88,10 +106,21 @@ void grcost::calculate()
 
     Qtensor::matrix_mult_inplace(Qtensor_, 1.0/(2.0*N));
     auto result = Qtensor::orderedeig_Qtensor(Qtensor_);
+
     // get the director out of the result
-    for (int i=0;i<3;i++)
+    if (! arrayRead_)
     {
-        director_[i] = result.first[i][0];
+        for (int i=0;i<3;i++)
+        {
+            director_[i] = result.first[i][0];
+        }
+    }
+    else
+    {
+        for (int i=0;i<3;i++)
+        {
+            director_[i] = arr_[i];
+        }
     }
 
     histogramDPPerIterBuffer_.set_master_object(histogramDotProductPerIter_);
@@ -118,7 +147,37 @@ void grcost::calculate()
                 int index1 = InsideIndices_[i];
                 int index2 = InsideIndices_[j];
 
-                simstate_.getSimulationBox().calculateDistance(COM_[index1], COM_[index2], distance, distance_sq);
+                simstate_.getSimulationBox().calculateDistance(distanceCOM_[index1], distanceCOM_[index2], distance, distance_sq);
+
+                LinAlg3x3::normalize(distance);
+                Real rdotd = LinAlg3x3::DotProduct(distance, director_);
+                Real dist = std::sqrt(distance_sq);
+
+                Real dotproduct = LinAlg3x3::DotProduct(uij_[index1], uij_[index2]);
+
+                if (tbin_->isInRange(rdotd) && rbin_->isInRange(dist))
+                {
+                    int i1 = rbin_->findBin(dist);
+                    int i2 = tbin_->findBin(rdotd);
+
+                    histPerIter[i1][i2] += 1;
+                    DPPerIter[i1][i2] += dotproduct;
+                }
+            }
+        }
+
+        #pragma omp for
+        for (int i=0;i<N;i++)
+        {
+            for (int j=0;j<OutsideIndices_.size();j++)
+            {
+                Real3 distance;
+                Real distance_sq;
+
+                int index1 = InsideIndices_[i];
+                int index2 = OutsideIndices_[j];
+
+                simstate_.getSimulationBox().calculateDistance(distanceCOM_[index1], distanceCOM_[index2], distance, distance_sq);
 
                 LinAlg3x3::normalize(distance);
                 Real rdotd = LinAlg3x3::DotProduct(distance, director_);
