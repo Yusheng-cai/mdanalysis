@@ -12,14 +12,27 @@
 #include <memory>
 #include <vector>
 #include <array>
+/**
+ * @brief Distribution of the cos(theta) given that an nCB molecule is r away from another molecule and forms an angle
+ * cos(theta2) with a reference vector
+ */
 
 class DistributionGivenDimer : public Calculation
 {
     public:
         using binptr = std::unique_ptr<Bin>;
 
+        /**
+         * @brief Construct a new Distribution Given Dimer object
+         * 
+         * @param input The calculation input pack 
+         */
         DistributionGivenDimer(const CalculationInput& input);
 
+        /**
+         * @brief Perform calculation 
+         * 
+         */
         virtual void calculate() override;
         virtual void finishCalculate() override;
 
