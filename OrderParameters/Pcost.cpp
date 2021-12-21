@@ -18,11 +18,14 @@ Pcost::Pcost(const CalculationInput& input)
     input.pack_.ReadArrayNumber("array", ParameterPack::KeyType::Optional, arr_);
     LinAlg3x3::normalize(arr_);
     input.pack_.ReadNumber("precision", ParameterPack::KeyType::Optional, precision_);
+    input.pack_.ReadNumber("originalValue", ParameterPack::KeyType::Optional, originalValue_);
+    input.pack_.ReadNumber("tolerance", ParameterPack::KeyType::Optional, tolerance_);
 
     registerOutputFunction("histogram", [this](std::string name) -> void { this -> printHistogram(name);});
     registerOutputFunction("AtomIndices", [this](std::string name) -> void { this -> printAtomIndices(name);});
 
     registerPerIterOutputFunction("costheta", [this](std::ofstream& ofs) -> void { this -> printcosthetaHistogramPerIter(ofs);});
+    registerPerIterOutputFunction("costhetabeta", [this](std::ofstream& ofs) -> void {this -> printcosthetaBetaFactor(ofs);});
 
     headIndex_--;
     tailIndex_--;
@@ -53,6 +56,8 @@ void Pcost::calculate()
     histogramPerIter_.clear();
     histogramPerIter_.resize(costBin_->getNumbins(),0.0);
 
+
+
     // find all the COM of the residues in the system
     #pragma omp parallel for
     for (int i=0;i<res.size();i++)
@@ -73,8 +78,8 @@ void Pcost::calculate()
     // check which COM are inside the probevolume
     InsideIndices_.clear();
     InsideIndices_ = InsidePVIndices(COM_);
-
-    std::cout << "Insideindices.size = " << InsideIndices_.size() << std::endl;
+    costhetaVec_.clear();
+    costhetaVec_.resize(InsideIndices_.size());
 
     std::vector<int> AtomIndicesINPVIter;
     // get the atom indices in the pv per iteration
@@ -93,6 +98,8 @@ void Pcost::calculate()
         int k = InsideIndices_[i];
         Real cost = Qtensor::vec_dot(uij_[k], arr_);
 
+        costhetaVec_[i] = cost;
+
         // ASSERT((cost >= -1 && cost <= 1), "cosine(theta) is not within range of -1 and 1");
 
         int binNum = costBin_->findBin(cost);
@@ -109,6 +116,27 @@ void Pcost::printcosthetaHistogramPerIter(std::ofstream& ofs)
     {
         ofs << histogramPerIter_[i] << "\t";
     }
+    ofs << "\n";
+}
+
+void Pcost::printcosthetaBetaFactor(std::ofstream& ofs)
+{
+    auto& res = getResidueGroup(residueGroupName_);
+    int timestep = simstate_.getTime();
+    ofs << timestep << " ";
+
+    for (int i=0;i<costhetaVec_.size();i++)
+    {
+        int index = InsideIndices_[i];
+        if (std::abs(costhetaVec_[i] - originalValue_) <= tolerance_)
+        {
+            for (int j=0;j<res[index].atoms_.size();j++)
+            {
+                ofs << res[index].atoms_[j].atomNumber_ - 1 << " ";
+            }
+        }
+    }
+
     ofs << "\n";
 }
 

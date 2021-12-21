@@ -32,6 +32,8 @@ class Pcost : public Calculation
 
         void printcosthetaHistogramPerIter(std::ofstream& ofs);
 
+        void printcosthetaBetaFactor(std::ofstream& ofs);
+
     protected:
         Binptr costBin_;
 
@@ -50,6 +52,7 @@ class Pcost : public Calculation
         int directionIndex_;
 
         std::vector<Real3> uij_;
+        std::vector<Real> costhetaVec_;
 
         // the vector in which all the molecules are to calculate their cos theta against
         // assumes z direction if not specified
@@ -68,4 +71,8 @@ class Pcost : public Calculation
         std::vector<std::vector<int>> AtomIndicesInPV_;
 
         std::vector<int> InsideIndices_;
+
+        // This is for writing beta factors, we want to find all the values of costheta that are tolerance close to originalValue
+        Real originalValue_=0;
+        Real tolerance_=0.02;
 };
