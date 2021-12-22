@@ -15,25 +15,27 @@ gcost::gcost(const CalculationInput& input)
     bin_ = binptr(new Bin(*binPack));
     numbins_ = bin_ ->getNumbins();
 
-    input.pack_.ReadNumber("headindex", ParameterPack::KeyType::Optional,headindex_);
-    input.pack_.ReadNumber("tailindex", ParameterPack::KeyType::Optional, tailindex_);
-    headindex_--;
-    tailindex_--;
+    input.pack_.ReadNumber("headindex1", ParameterPack::KeyType::Optional,headindex1_);
+    input.pack_.ReadNumber("tailindex1", ParameterPack::KeyType::Optional, tailindex1_);
+    input.pack_.ReadNumber("headindex2", ParameterPack::KeyType::Optional, headindex2_);
+    input.pack_.ReadNumber("tailindex2", ParameterPack::KeyType::Optional, tailindex2_);
+    headindex1_--;
+    tailindex1_--;
 
-    input.pack_.ReadString("residue", ParameterPack::KeyType::Required, residueName_);
-    initializeResidueGroup(residueName_);
-    auto& res = getResidueGroup(residueName_);
-    numresidues_ = res.getResidues().size();
-    numatoms_ = res[0].atoms_.size();
+    // read 2 residues 
+    input.pack_.ReadString("residue1", ParameterPack::KeyType::Required, residueName_);
+    initializeResidueGroup(residueName_, COMIndices1_, "COMIndices1", COM1_);
+    input.pack_.ReadString("residue2", ParameterPack::KeyType::Required, residueName2_);
+    initializeResidueGroup(residueName2_, COMIndices2_, "COMIndices2", COM2_);
+    auto& res1 = getResidueGroup(residueName_);
+    numresidues1_ = res1.getResidues().size();
+    numatoms1_ = res1[0].atoms_.size();
+    auto& res2 = getResidueGroup(residueName2_);
+    numresidues2_ = res2.getResidues().size();
+    numatoms2_ = res2[0].atoms_.size();
 
-    distanceCOMIndices_.resize(numatoms_,0);
-    std::iota(distanceCOMIndices_.begin(), distanceCOMIndices_.end(), 1);
-    input.pack_.ReadVectorNumber("distanceCOM", ParameterPack::KeyType::Optional, distanceCOMIndices_);
-    for (int i=0;i<distanceCOMIndices_.size();i++)
-    {
-        distanceCOMIndices_[i] -= 1;
-    }
-
+    // initialize the distance COM
+    initializeDistanceCOM();
 
     // costheta bins is always assumed to go from -1 to 1
     input.pack_.ReadNumber("numtbins", ParameterPack::KeyType::Optional, numtbins_);
@@ -52,6 +54,25 @@ gcost::gcost(const CalculationInput& input)
 
     registerOutputFunction("histogram", [this](std::string name) -> void {this->printHistogram(name);});
     registerOutputFunction("histogram2d", [this](std::string name) -> void {this ->printHistogram2d(name);});
+}
+
+void gcost::initializeDistanceCOM()
+{
+    distanceCOMIndices1_.resize(numatoms1_,0);
+    std::iota(distanceCOMIndices1_.begin(), distanceCOMIndices1_.end(), 1);
+    pack_.ReadVectorNumber("distanceCOM1", ParameterPack::KeyType::Optional, distanceCOMIndices1_);
+    for (int i=0;i<distanceCOMIndices1_.size();i++)
+    {
+        distanceCOMIndices1_[i] -= 1;
+    }
+
+    distanceCOMIndices2_.resize(numatoms2_,0);
+    std::iota(distanceCOMIndices2_.begin(), distanceCOMIndices2_.end(), 1);
+    pack_.ReadVectorNumber("distanceCOM2", ParameterPack::KeyType::Optional, distanceCOMIndices1_);
+    for (int i=0;i<distanceCOMIndices2_.size();i++)
+    {
+        distanceCOMIndices2_[i] -= 1;
+    }
 }
 
 gcost::Real gcost::calcFactor(Real3& ui, Real3& uj)
@@ -87,14 +108,17 @@ void gcost::registerCalcFunc(int index, fcn function)
 
 void gcost::calculate()
 {
-    const auto& res = getResidueGroup(residueName_).getResidues(); 
-    COM_.clear();
-    uij_.clear();
-    distanceCOM_.clear();
+    const auto& res1 = getResidueGroup(residueName_).getResidues(); 
+    const auto& res2 = getResidueGroup(residueName2_).getResidues();
+    COM1_.clear();
+    uij1_.clear();
+    COM2_.clear();
+    uij2_.clear();
+    distanceCOM1_.clear();
+    distanceCOM1_.resize(res1.size());
+    COM2_.resize(res2.size());
+    uij2_.resize(res2.size());
 
-    distanceCOM_.resize(res.size());
-    COM_.resize(res.size());
-    uij_.resize(res.size());
     histogramDotProductPerIter_.clear();
     histogramDotProductPerIter_.resize(numbins_,0.0);
     histogramPerIter_.clear();
@@ -102,31 +126,53 @@ void gcost::calculate()
     histogramDotProduct2dPerIter_.clear();
     histogramDotProduct2dPerIter_.resize(numbins_, std::vector<Real>(numtbins_,0.0));
 
-    // find the COM 
-    #pragma omp parallel for
-    for (int i=0;i<COM_.size();i++)
+    // find the COM of 1 & 2
+    #pragma omp parallel
     {
-        COM_[i] = calcCOM(res[i]); 
-        distanceCOM_[i] = CalculationTools::getCOM(res[i], simstate_, distanceCOMIndices_);
+        #pragma omp for
+        for (int i=0;i<numresidues1_;i++)
+        {
+            COM1_[i] = calcCOM(res1[i]); 
+            distanceCOM1_[i] = CalculationTools::getCOM(res1[i], simstate_, distanceCOMIndices1_);
 
-        Real3 headpos = res[i].atoms_[headindex_].positions_;
-        Real3 tailpos = res[i].atoms_[tailindex_].positions_;
-        Real3 distance;
-        Real distance_sq;
-        simstate_.getSimulationBox().calculateDistance(headpos, tailpos, distance, distance_sq);
+            Real3 headpos = res1[i].atoms_[headindex1_].positions_;
+            Real3 tailpos = res1[i].atoms_[tailindex1_].positions_;
+            Real3 distance;
+            Real distance_sq;
+            simstate_.getSimulationBox().calculateDistance(headpos, tailpos, distance, distance_sq);
 
-        LinAlg3x3::normalize(distance);
+            LinAlg3x3::normalize(distance);
 
-        uij_[i] = distance;
+            uij1_[i] = distance;
+        }
+
+        #pragma omp for
+        for (int i=0;<numresidues2_;i++)
+        {
+            COM2_[i] = calcCOM(res2[i]);
+            distanceCOM2_[i] = CalculationTools::getCOM(res2[i], simstate_, distanceCOMIndices2_);
+
+            Real3 headpos = res2[i].atoms_[headindex2_].positions_;
+            Real3 tailpos = res2[i].atoms_[tailindex2_].positions_;
+            Real3 distance;
+            Real distance_sq;
+            simstate_.getSimulationBox().calculateDistance(headpos, tailpos, distance, distance_sq);
+
+            LinAlg3x3::normalize(distance);
+
+            uij2_[i] = distance;
+        }
     }
 
-    InsideIndices_ = InsidePVIndices(COM_, OutsideIndices_);
-    int size = InsideIndices_.size();
+    InsideIndices1_ = InsidePVIndices(COM1_, OutsideIndices1_);
+    InsideIndices2_ = InsidePVIndices(COM2_, OutsideIndices2_);
+    int size1 = InsideIndices1_.size();
+    int size2 = InsideIndices2_.size();
 
     neighborDistance_.clear();
     dotProduct_.clear();
-    neighborDistance_.resize(size, std::vector<Real>(InsideIndices_.size(),0.0));
-    dotProduct_.resize(size, std::vector<Real>(InsideIndices_.size(),0.0));
+    neighborDistance_.resize(size1, std::vector<Real>(size2,0.0));
+    dotProduct_.resize(size1, std::vector<Real>(size2,0.0));
 
     // find the distance between pair of COM 
     #pragma omp parallel for
@@ -319,18 +365,9 @@ void gcost::finishCalculate()
     // take care of histogram2d --> we can normalize over columns (costheta) , no need to time average 
     for (int i=0;i<numbins_;i++)
     {
-        Real sum=0.0;
         for (int j=0;j<numtbins_;j++)
         {
-            sum += histogramDotProduct2d_[i][j];
-        }
-
-        for (int j=0;j<numtbins_;j++)
-        {
-            if (sum != 0)
-            {
-                histogramDotProduct2d_[i][j] /= sum;
-            }
+            histogramDotProduct2d_[i][j] /= numframes;
         }
     }
 }
