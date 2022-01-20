@@ -1,0 +1,37 @@
+xdrfile = {
+	path = test.xtc
+}
+
+grofile = {
+    path = test.gro
+}
+
+topology = {
+    path = topol.top
+}
+
+probevolume = {
+	name = v
+	type = box
+	xrange =  [ 0 7.0 ]
+	yrange =  [ 0 7.0 ]
+	zrange =  [ 2.5 4.0 ]
+}
+residuegroup = {
+	name = lc
+	selection = [ resname 5CB ]
+}
+
+residuegroup = {
+	name = OH
+	selection = [ resname OH ]
+}
+
+calculation = {
+    type = SRE
+    solvent = lc
+    solute = OH
+    outputsPerIter = [ energy  ] 
+    outputPerIterNames = [ e.out ]
+    epsilon = 0.384195
+}

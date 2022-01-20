@@ -1,0 +1,35 @@
+# This file was created Wed Jan 19 23:04:15 2022
+# Created by:
+#                 :-) GROMACS - gmx energy, 2020.2-MODIFIED (-:
+# 
+# Executable:   /usr/local/gromacs/bin/gmx
+# Data prefix:  /usr/local/gromacs
+# Working dir:  /Users/caiyusheng/Dropbox/INDUS/5OHSAM_295/EnergyGroups
+# Command line:
+#   gmx energy -f test.edr -o e.xvg
+# gmx energy is part of G R O M A C S:
+#
+# Gyas ROwers Mature At Cryogenic Speed
+#
+@    title "GROMACS Energies"
+@    xaxis  label "Time (ps)"
+@    yaxis  label "(kJ/mol)"
+@TYPE xy
+@ view 0.15, 0.15, 0.75, 0.85
+@ legend on
+@ legend box on
+@ legend loctype view
+@ legend 0.78, 0.8
+@ legend length 2
+@ s0 legend "Coul-SR:5CB-OH"
+    0.000000  -2304.754639
+    0.002000  -2290.499268
+    0.004000  -2279.239014
+    0.006000  -2270.711426
+    0.008000  -2265.602051
+    0.010000  -2263.616699
+    0.012000  -2264.035400
+    0.014000  -2266.375488
+    0.016000  -2270.385010
+    0.018000  -2275.579346
+    0.020000  -2280.689209
