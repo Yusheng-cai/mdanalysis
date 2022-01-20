@@ -7,6 +7,7 @@ SimulationBox::SimulationBox(Matrix& box)
         length_[i] = box[i][i];
         hlength_[i] = 0.5*length_[i];
         mhlength_[i] = -hlength_[i];
+        center_[i] = length_[i] * 0.5;
     }
 }
 
@@ -20,6 +21,7 @@ SimulationBox::SimulationBox(Real lx, Real ly, Real lz)
     {
         hlength_[i] = 0.5*length_[i];
         mhlength_[i] = -hlength_[i];
+        center_[i] = length_[i] * 0.5;
     }
 }
 
@@ -30,6 +32,7 @@ SimulationBox::SimulationBox(Real3& length)
     {
         hlength_[i] = 0.5*length_[i];
         mhlength_[i] = -hlength_[i];
+        center_[i] = length_[i] * 0.5;
     }
 }
 
@@ -61,6 +64,19 @@ SimulationBox::Real3 SimulationBox::calculateShift(const Real3& x1, const Real3&
     }
 
     return shift;
+}
+
+SimulationBox::Real3 SimulationBox::shiftIntoBox(const Real3& x1) const 
+{
+    Real3 shift = calculateShift(x1, center_);
+
+    Real3 ret = {};
+    for (int i=0;i<3;i++)
+    {
+        ret[i] = x1[i] + shift[i];
+    }
+
+    return ret;
 }
 
 void SimulationBox::setBoxMatrix(const Matrix& box)
