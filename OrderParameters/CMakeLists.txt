@@ -49,6 +49,8 @@ target_sources(mdaOrderParameters PRIVATE
     "grcost.cpp"
     "grcostorientation.cpp"
     "DistributionGivenDimer.cpp"
+    "SRE.cpp"
+    "CellGrid.cpp"
 )
 
 set(mdaOrderParameters_HEADER
@@ -99,6 +101,8 @@ set(mdaOrderParameters_HEADER
     "grcost.h"
     "grcostorientation.h"
     "DistributionGivenDimer.h"
+    "SRE.h"
+    "CellGrid.h"
 )
 
 
