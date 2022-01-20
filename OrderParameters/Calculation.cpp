@@ -139,6 +139,54 @@ void Calculation::initializeResidueGroup(const std::string& residueName)
     COM_.resize(res.size());
 }
 
+void Calculation::initializeResidueGroup(const std::string& residueName, std::string COMName, std::vector<int>& COMIndices, \
+std::vector<Real3>& COM)
+{
+    ASSERT((! residueName.empty()), "The residue name is not provided.");
+
+    // add the residue group
+    addResidueGroup(residueName);
+
+    // initialize the COM indice
+    auto& res = getResidueGroup(residueName).getResidues();
+    COMIndices.resize(res[0].atoms_.size());
+    std::iota(COMIndices.begin(), COMIndices.end(), 1);
+
+    // COMIndices are in 1-based counting 
+    pack_.ReadVectorNumber(COMName, ParameterPack::KeyType::Optional, COMIndices);
+    for (int i=0;i<COMIndices.size();i++)
+    {
+        COMIndices[i] -= 1;
+    }
+
+    // resize the COM 
+    COM.resize(res.size());
+}
+
+bool Calculation::isInPV(Real3& pos)
+{
+    for (auto pv : NotInprobevolumes_)
+    {
+        auto out = pv -> calculate(pos);
+
+        if (out.hx_ == 1)
+        {
+            return false;
+        }
+    }
+
+    for (auto pv : probevolumes_)
+    {
+        auto out = pv -> calculate(pos);
+        if (out.hx_ == 1)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void Calculation::printOutput()
 {
     for (int i=0;i<vectorOutputs_.size();i++)
@@ -321,30 +369,9 @@ std::vector<int> Calculation::InsidePVIndices(std::vector<Real3>& pos)
         #pragma omp for
         for (int i=0;i<pos.size();i++)
         {
-            bool inPV = false;
-            for (auto pv : NotInprobevolumes_)
+            if (isInPV(pos[i]))
             {
-                auto out = pv -> calculate(pos[i]);
-
-                if (out.hx_ == 1)
-                {
-                    // break breaks out of the closest enclosing for loop
-                    inPV = true;
-                    break;
-                }
-            }
-
-            if (! inPV)
-            {
-                for (auto pv : probevolumes_)
-                {
-                    auto out = pv -> calculate(pos[i]);
-                    if (out.hx_ == 1)
-                    {
-                        buffer_.push_back(i);
-                        break;
-                    }
-                }
+                buffer_.push_back(i);
             }
         }
     }
@@ -387,37 +414,13 @@ std::vector<int> Calculation::InsidePVIndices(std::vector<Real3>& pos, std::vect
         #pragma omp for
         for (int i=0;i<pos.size();i++)
         {
-            bool inPV = false;
-            for (auto pv : NotInprobevolumes_)
+            if (isInPV(pos[i]))
             {
-                auto out = pv -> calculate(pos[i]);
-
-                if (out.hx_ == 1)
-                {
-                    // break breaks out of the closest enclosing for loop
-                    inPV = true;
-                    break;
-                }
+                buffer_.push_back(i);
             }
-
-            if (! inPV)
+            else
             {
-                bool foundinpv=false;
-                for (auto pv : probevolumes_)
-                {
-                    auto out = pv -> calculate(pos[i]);
-                    if (out.hx_ == 1)
-                    {
-                        buffer_.push_back(i);
-                        foundinpv = true;
-                        break;
-                    }
-                }
-
-                if (! foundinpv)
-                {
-                    outsidebuffer.push_back(i);
-                }
+                outsidebuffer.push_back(i);
             }
         }
     }

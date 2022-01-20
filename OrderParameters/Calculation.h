@@ -72,15 +72,17 @@ class Calculation
         void closeAllOutputPerIter();
 
         void initializeResidueGroup(const std::string& residueName);
+        void initializeResidueGroup(const std::string& residueName, std::string COMName, std::vector<int>& COMIndices, \
+        std::vector<Real3>& COM);
 
         const ResidueGroup& getResidueGroup(std::string name) const;
 
         void initializeProbeVolumes();
-
         void initializeNotInProbeVolumes();
 
         std::vector<int> InsidePVIndices(std::vector<Real3>& pos);
         std::vector<int> InsidePVIndices(std::vector<Real3>& pos, std::vector<int>& outsideIndices);
+        bool isInPV(Real3& pos);
 
     protected:
         // output registry 
