@@ -6,6 +6,7 @@
 #include "parallel/OpenMP.h"
 #include "LinAlgTools.h"
 #include "SimulationState.h"
+#include "tools/Constants.h"
 
 #include <vector>
 #include <memory>
@@ -24,55 +25,64 @@ class gcost : public Calculation
 
         virtual void calculate();
         virtual void finishCalculate() override;
+
         void printHistogram(std::string name);
         void printHistogram2d(std::string name);
+        void printrdfhist2d(std::string name);
+        void printnumneighbors(std::string name);
 
         Real calcFactor(Real3& ui, Real3& uj);
         Real calcg1(Real3& ui, Real3& uj);
         Real calcg2(Real3& ui, Real3& uj);
         void registerCalcFunc(int i, fcn function);
 
+        void initializeDistanceCOM();
+
     private:
         binptr bin_;
         binptr tbin_;
-        int headindex_=1;
-        int tailindex_=2;
+        int headindex1_=1;
+        int tailindex1_=2;
+        int headindex2_=1;
+        int tailindex2_=2;
 
-        int numatoms_;
-        int numresidues_;
+        int numatoms1_;
+        int numatoms2_;
+        int numresidues1_;
+        int numresidues2_;
 
         // COM of whether or not a molecule is inside a PV
-        std::vector<Real3> COM_;
-        std::vector<Real3> distanceCOM_;
+        std::vector<Real3> COM1_;
+        std::vector<Real3> COM2_;
+        std::vector<Real3> distanceCOM1_;
+        std::vector<Real3> distanceCOM2_;
 
         // COMIndices for calculating the g(costheta)
-        std::vector<int> distanceCOMIndices_;
+        std::vector<int> COMIndices1_;
+        std::vector<int> COMIndices2_;
+        std::vector<int> distanceCOMIndices1_;
+        std::vector<int> distanceCOMIndices2_;
 
-        std::vector<Real3> uij_;
-        std::string residueName_;
+        // volume for normalizing the r part 
+        std::vector<Real> volume_;
 
-        std::vector<std::vector<Real>> neighborDistance_;
-        std::vector<std::vector<Real>> neighborOutsideDistance_;
+        std::vector<Real3> uij1_;
+        std::vector<Real3> uij2_;
+        std::string residueName1_;
+        std::string residueName2_;
 
         int numbins_;
 
-        std::vector<int> InsideIndices_;
-        std::vector<int> OutsideIndices_;
-
-        std::vector<std::vector<Real>> dotProduct_;
-        std::vector<std::vector<Real>> dotProductOutside_;
+        std::vector<int> InsideIndices1_;
+        std::vector<int> InsideIndices2_;
+        std::vector<int> OutsideIndices1_;
+        std::vector<int> OutsideIndices2_;
 
         std::vector<Real> histogram_;
         std::vector<Real> histogramDotProduct_;
-        std::vector<int> histogramPerIter_;
-        std::vector<Real> histogramDotProductPerIter_;
-
         std::vector<std::vector<Real>> histogramDotProduct2dPerIter_;
         std::vector<std::vector<Real>> histogramDotProduct2d_;
-        OpenMP::OpenMP_buffer<std::vector<std::vector<Real>>> histogramDotProduct2dbuffer_;
-
-        OpenMP::OpenMP_buffer<std::vector<Real>> histogramDotProductPerIterbuffer_;
-        OpenMP::OpenMP_buffer<std::vector<int>> histogramPerIterbuffer_;
+        std::vector<std::vector<Real>> histogramDotProduct2drdf_;
 
         std::map<int, fcn> MapIndexToFcn_;
 
@@ -80,4 +90,6 @@ class gcost : public Calculation
         int numtbins_=20;
 
         Range trange_ = {{-1,1}};
+
+        bool selfinteraction_=true;
 };
