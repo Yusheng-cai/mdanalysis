@@ -116,7 +116,7 @@ void TopologyReader::Parse(std::string& name)
 
     MakeResnameAtomNameToTypeMap();
     MakeResnameAtomTypeToMassMap();
-    MakeResnameAtomTypeToChargeMap();
+    MakeResnameAtomNameToChargeMap();
 }
 
 void TopologyReader::MakeResnameAtomNameToTypeMap()
@@ -139,35 +139,36 @@ void TopologyReader::MakeResnameAtomNameToTypeMap()
     }
 }
 
-void TopologyReader::MakeResnameAtomTypeToChargeMap()
+void TopologyReader::MakeResnameAtomNameToChargeMap()
 {
-    ResNameAtomTypeToChargeMap_.clear();
+    ResNameAtomNameToChargeMap_.clear();
 
     for (int i=0;i<atomtypes_.size();i++)
     {
         std::vector<std::string> str_vec_(2);
         str_vec_[0] = atomtypes_[i].resname_;
-        str_vec_[1] = atomtypes_[i].type_;
+        str_vec_[1] = atomtypes_[i].atomName_;
 
-        auto it = ResNameAtomTypeToChargeMap_.find(str_vec_);
+        auto it = ResNameAtomNameToChargeMap_.find(str_vec_);
 
-        if (it == ResNameAtomTypeToChargeMap_.end())
+        // There might be repeated atom definition
+        if (it == ResNameAtomNameToChargeMap_.end())
         {
-            ResNameAtomTypeToChargeMap_.insert(std::make_pair(str_vec_, atomtypes_[i].charge_));
+            ResNameAtomNameToChargeMap_.insert(std::make_pair(str_vec_, atomtypes_[i].charge_));
         }
     }
 }
 
-TopologyReader::Real TopologyReader::getChargeFromAtomTypeResname(const std::string& resname, const std::string& atomType)
+TopologyReader::Real TopologyReader::getChargeFromAtomNameResname(const std::string& resname, const std::string& atomName)
 {
     std::vector<std::string> str_vec_(2);
 
     str_vec_[0] = resname;
-    str_vec_[1] = atomType;
+    str_vec_[1] = atomName;
 
-    auto it = ResNameAtomTypeToChargeMap_.find(str_vec_);
+    auto it = ResNameAtomNameToChargeMap_.find(str_vec_);
 
-    ASSERT((it != ResNameAtomTypeToChargeMap_.end()), "The atom with resname " << resname << " and type " << atomType << " does not exist in topology.");
+    ASSERT((it != ResNameAtomNameToChargeMap_.end()), "The atom with resname " << resname << " and name " << atomName << " does not exist in topology.");
 
     return it -> second;
 }
