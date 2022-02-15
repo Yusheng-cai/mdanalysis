@@ -24,7 +24,15 @@ class RDFresidue : public Calculation
     
         virtual void calculate() override;
         virtual void finishCalculate() override;
-        virtual void printOutput() override;
+
+        // print out the radial distribution function that is not normalized by rho
+        void printRDFUnnormalized(std::string name);
+
+        // print out the normal radial distribution function
+        void printRDF(std::string name);
+
+        // just print the averaged number of neighbors 
+        void printNumNeighbors(std::string name);
 
     private:
         std::string resname1_;
@@ -36,13 +44,10 @@ class RDFresidue : public Calculation
         std::vector<Real3> COM1_;
         std::vector<Real3> COM2_;
 
-        std::vector<Real> distance_;
-
         Binptr bins_;
 
-        OpenMP::OpenMP_buffer<std::vector<Real>> distanceBuffer_;
-
         std::vector<Real> rdf_;
+        Real rho_;
 
         std::vector<Real> volume_;
 
