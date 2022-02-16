@@ -22,6 +22,7 @@ Driver::Driver(std::string filename, CommandLineArguments& cmd)
     auto Top_Pack = pack_.findParamPack("topology", ParameterPack::KeyType::Optional);
     auto res_pack = pack_.findParamPacks("residuegroup", ParameterPack::KeyType::Optional);
 
+
     // Read the xdr file inputted, this must be provided
     initializeXdr(xdr_pack);
 

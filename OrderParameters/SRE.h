@@ -24,6 +24,8 @@ class SRE : public Calculation
         virtual void finishCalculate() override {};
         virtual void update() override;
 
+        Real getEnergy() {return energy_;}
+
         void printEnergyPerIter(std::ofstream& ofs);
 
     private:

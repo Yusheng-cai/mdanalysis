@@ -22,7 +22,7 @@ void CellGrid::update()
     // Example like 5 / 3 --> 1 but N should be 2  -- > 0 1
     for (int i=0;i<3;i++)
     {
-        N_[i] = (int)std::floor(Sides[i]/dL_) + 1;
+        N_[i] = (int)std::ceil(Sides[i]/dL_);
     }
 }
 
@@ -45,6 +45,7 @@ CellGrid::index3 CellGrid::getCellGridIndex(const Real3& pos)
     for (int i=0;i<3;i++)
     {
         index[i] = (int)std::floor(shiftedPos[i] / dL_ );
+        ASSERT(index[i] < N_[i], "Index out of range.");
     }
 
     return index;

@@ -23,8 +23,9 @@ SRE::SRE(const CalculationInput& input)
 
     // register the printing function for energy 
     registerPerIterOutputFunction("energy", [this](std::ofstream& ofs) -> void {this -> printEnergyPerIter(ofs);});
+    registerOutputFileOutputs("energy", [this](void) -> Real {return this -> getEnergy();});
 
-    cell_ = Cellptr(new CellGrid(simstate_, epsilon_,3));
+    cell_ = Cellptr(new CellGrid(simstate_, cutoff_,1));
 }
 
 void SRE::update()
@@ -50,16 +51,28 @@ void SRE::calculate()
         celllist_[ind].push_back(i);
     }
 
+    // ignore the atoms with zero charges
+    std::vector<int> SolventIndices;
+    for (int i=0;i<solvent.size();i++)
+    {
+        Real qi = solvent[i].charge_;
+        if (qi != 0)
+        {
+            SolventIndices.push_back(i);
+        }
+    }
+
     // iterate over all the atoms in solvent and solute
     energy_ = 0.0;
     #pragma omp parallel
     {
         Real sum = 0.0;
         #pragma omp for
-        for (int i=0;i<solvent.size();i++)
+        for (int i=0;i<SolventIndices.size();i++)
         {
-            Real3 possv = solvent[i].positions_;
-            Real qi     = solvent[i].charge_;
+            int solventInd = SolventIndices[i];
+            Real3 possv = solvent[solventInd].positions_;
+            Real qi     = solvent[solventInd].charge_;
             std::vector<int> Neighbors = cell_ -> getNeighborIndex(possv);
 
             for (int ind : Neighbors)
