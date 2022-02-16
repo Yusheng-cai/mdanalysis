@@ -52,6 +52,12 @@ class Calculation
 
         void addAtomgroup(std::string name);
         void addResidueGroup(std::string name);
+        // add group dynamically based on what it can find in simulation state
+        // this could either be atomgroup or residuegroup
+        void addGroup(std::string name);
+
+        // get group dyanmically based on which kind of group it is
+        void getGroup(std::string name);
 
         std::string getName() {return name_;}
 
