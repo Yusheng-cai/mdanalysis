@@ -64,6 +64,11 @@ class SimulationState
 
         ProbeVolume& accessProbeVolume(const std::string name);
 
+        // obtain the name to residue map
+        const std::map<std::string, ResidueGroup>& getResidueMap() const {return MapName2ResidueGroup_;}
+
+        // obtain the name to atom group map
+        const std::map<std::string, AtomGroup>& getAtomGroupMap() const {return MapName2AtomGroup_;}
         
 
     private:
