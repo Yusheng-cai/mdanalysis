@@ -19,6 +19,8 @@ SRE::SRE(const CalculationInput& input)
     alpha_ = 1.0 / epsilon_;
     // read in the mode (Brute/NS)
     pack_.ReadString("mode", ParameterPack::KeyType::Optional, mode_);
+
+    pack_.Readbool("onlyattractive", ParameterPack::KeyType::Optional, onlyattrative_);
     ASSERT((mode_ == "NS" || mode_ == "Brute"), "The mode can only be Brute or NS.");
 
     cutoffsq_ = cutoff_ * cutoff_;
@@ -106,6 +108,16 @@ void SRE::calculateWithNS()
                 {
                     Real3 possl = solute[index].positions_;
                     Real qj     = solute[index].charge_;
+                    Real qiqj = qi * qj;
+
+                    if (onlyattrative_)
+                    {
+                        if (qiqj > 0)
+                        {
+                            continue;
+                        }
+                    }
+
                     Real3 dist;
                     Real distsq;
 
@@ -115,7 +127,7 @@ void SRE::calculateWithNS()
                     {
                         Real r = std::sqrt(distsq);
 
-                        sum += factor_ * qi * qj * std::erfc(r * alpha_) / r;
+                        sum += factor_ * qiqj * std::erfc(r * alpha_) / r;
                     }
                 }
             }

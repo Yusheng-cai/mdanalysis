@@ -54,4 +54,7 @@ class SRE : public Calculation
 
         // mode at which we want to operate at 
         std::string mode_="NS";
+
+        // option to only consider attrative parts 
+        bool onlyattrative_=false;
 };
