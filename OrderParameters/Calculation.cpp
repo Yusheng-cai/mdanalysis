@@ -137,11 +137,6 @@ void Calculation::addGroup(std::string name)
     }
 }
 
-void Calculation::getGroup(std::string name)
-{
-
-}
-
 const ResidueGroup& Calculation::getResidueGroup(std::string name) const 
 {
     auto it  = MapResidueGroupNameToIndex_.find(name);

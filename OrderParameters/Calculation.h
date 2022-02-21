@@ -56,8 +56,6 @@ class Calculation
         // this could either be atomgroup or residuegroup
         void addGroup(std::string name);
 
-        // get group dyanmically based on which kind of group it is
-        void getGroup(std::string name);
 
         std::string getName() {return name_;}
 

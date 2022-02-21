@@ -30,11 +30,29 @@ SRE::SRE(const CalculationInput& input)
 
     // register the printing function for energy 
     registerPerIterOutputFunction("energy", [this](std::ofstream& ofs) -> void {this -> printEnergyPerIter(ofs);});
+    registerPerIterOutputFunction("energyperatom", [this](std::ofstream& ofs) -> void {this -> printEnergyPerAtomPerIter(ofs);});
     registerOutputFileOutputs("energy", [this](void) -> Real {return this -> getEnergy();});
 
     cell_ = Cellptr(new CellGrid(simstate_, cutoff_,1));
 
-    getNonZeroCharges();
+    initializeProbeVolumes();
+    initializeNotInProbeVolumes();
+}
+
+void SRE::getInsidePVIndices()
+{
+    const auto& solvent  = getResidueGroup(SolventName_).getTotalResidue().atoms_;
+    InsidePVIndices_.clear();
+
+    for (int i=0;i<solvent.size();i++)
+    {
+        Real3 pos = solvent[i].positions_;
+
+        if (isInPV(pos))
+        {
+            InsidePVIndices_.push_back(i);
+        }
+    }
 }
 
 void SRE::getNonZeroCharges()
@@ -42,13 +60,17 @@ void SRE::getNonZeroCharges()
     const auto& solvent = getResidueGroup(SolventName_).getTotalResidue().atoms_;
     const auto& solute  = getResidueGroup(SoluteName_).getTotalResidue().atoms_;
 
-    for (int i=0;i<solvent.size();i++)
+    NonZeroSolvent_.clear();
+    NonZeroSolute_.clear();
+
+    for (int i=0;i<InsidePVIndices_.size();i++)
     {
-        Real charge = solvent[i].charge_;
+        int index = InsidePVIndices_[i];
+        Real charge = solvent[index].charge_;
 
         if (charge != 0)
         {
-            NonZeroSolvent_.push_back(i);
+            NonZeroSolvent_.push_back(index);
         }
     }
     
@@ -66,12 +88,20 @@ void SRE::getNonZeroCharges()
 void SRE::update()
 {
     cell_ -> update();
+
+    getInsidePVIndices();
+    getNonZeroCharges();
+
+    PerAtomContribution_.clear();
 }
 
 void SRE::calculateWithNS()
 {
     const auto& solvent = getResidueGroup(SolventName_).getTotalResidue().atoms_;
     const auto& solute  = getResidueGroup(SoluteName_).getTotalResidue().atoms_;
+
+
+    PerAtomContribution_.resize(solvent.size());
 
     // make all solute into cellgrid
     int num = cell_->getSize();
@@ -101,6 +131,8 @@ void SRE::calculateWithNS()
             Real qi     = solvent[solventInd].charge_;
             std::vector<int> Neighbors = cell_ -> getNeighborIndex(possv);
 
+            Real localsum = 0.0;
+
             for (int ind : Neighbors)
             {
                 ASSERT((ind < num), "Ind is " << ind << " max is " << num);
@@ -127,10 +159,15 @@ void SRE::calculateWithNS()
                     {
                         Real r = std::sqrt(distsq);
 
-                        sum += factor_ * qiqj * std::erfc(r * alpha_) / r;
+                        Real value = factor_ * qiqj * std::erfc(r * alpha_) / r; 
+
+                        sum += value;
+                        localsum += value;
                     }
                 }
             }
+
+            PerAtomContribution_[solventInd] = localsum;
         }
 
         #pragma omp critical
@@ -145,6 +182,9 @@ void SRE::calculateWithoutNS()
     const auto& solvent = getResidueGroup(SolventName_).getTotalResidue().atoms_;
     const auto& solute  = getResidueGroup(SoluteName_).getTotalResidue().atoms_;
 
+    PerAtomContribution_.clear();
+    PerAtomContribution_.resize(solvent.size(),0.0);
+
     #pragma omp parallel
     {
         Real sum = 0.0;
@@ -154,6 +194,8 @@ void SRE::calculateWithoutNS()
             int solvIndex = NonZeroSolvent_[i];
             Real3 possv = solvent[solvIndex].positions_;
             Real qi     = solvent[solvIndex].charge_;
+
+            Real localSum = 0.0;
 
             for (int j=0;j<NonZeroSolute_.size();j++)
             {
@@ -166,9 +208,13 @@ void SRE::calculateWithoutNS()
                 simstate_.getSimulationBox().calculateDistance(possv, possl, dist, distsq);
 
                 Real r = std::sqrt(distsq);
+                Real value = factor_ * qi * qj * std::erfc(r * alpha_)  / r; 
 
-                sum += factor_ * qi * qj * std::erfc(r * alpha_)  / r;
+                sum += value;
+                localSum += value;
             }
+
+            PerAtomContribution_[solvIndex] = localSum;
         }
 
         #pragma omp critical
@@ -198,4 +244,17 @@ void SRE::calculate()
 void SRE::printEnergyPerIter(std::ofstream& ofs)
 {
     ofs << energy_ << "\n";
+}
+
+void SRE::printEnergyPerAtomPerIter(std::ofstream& ofs)
+{
+    int timestep  =simstate_.getTime();
+    ofs << timestep << " ";
+
+    for (int i=0;i<PerAtomContribution_.size();i++)
+    {
+        ofs << PerAtomContribution_[i] << " ";
+    }
+
+    ofs << "\n";
 }
