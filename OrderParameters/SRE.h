@@ -27,6 +27,8 @@ class SRE : public Calculation
         void calculateWithNS();
         void calculateWithoutNS();
 
+        void initializeSoluteSolventIndices();
+
         void getNonZeroCharges();
         void getInsidePVIndices();
 
@@ -65,4 +67,8 @@ class SRE : public Calculation
 
         // per atom contribution to the SRE energy 
         std::vector<Real> PerAtomContribution_;
+
+        // solute indices per residue 
+        std::vector<int> SoluteIndices_;
+        std::vector<int> SolventIndices_;
 };
