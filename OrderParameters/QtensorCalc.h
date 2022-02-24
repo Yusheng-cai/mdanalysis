@@ -69,7 +69,5 @@ class QtensorCalc : public Calculation
         int atomSize_;
         int size_;
 
-        std::string pvName_;
-
         Real3 arr_ = {{0,0,1}};
 };

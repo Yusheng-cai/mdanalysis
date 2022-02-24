@@ -13,9 +13,6 @@ QtensorCalc::QtensorCalc(const CalculationInput& input)
     head_index_--;
     tail_index_--;
 
-    // Read in the probeVolume
-    pack_.ReadString("probevolume", ParameterPack::KeyType::Required, pvName_);
-
     // read in the residue 
     pack_.ReadString("residue", ParameterPack::KeyType::Required, residue_name_);
     initializeResidueGroup(residue_name_);
@@ -41,6 +38,10 @@ QtensorCalc::QtensorCalc(const CalculationInput& input)
 
     // register output
     registerOutputFileOutputs("biaxiality", [this](void) -> Real {this -> getBiaxiality();});
+
+    // initialize the probe volumes
+    initializeProbeVolumes();
+    initializeNotInProbeVolumes();
 }
 
 void QtensorCalc::printQtensorPerIter(std::ofstream& ofs)
@@ -97,7 +98,6 @@ void QtensorCalc::calculate()
     auto& res = getResidueGroup(residue_name_).getResidues();
     int N = res.size();
 
-    auto& pv  = simstate_.getProbeVolume(pvName_);
     COM_.clear();
     COM_.resize(N);
 
@@ -108,26 +108,24 @@ void QtensorCalc::calculate()
         COM_[i] = CalculationTools::getCOM(res[i], simstate_, COMIndices_);
     }
 
+    std::vector<int> InsideIndices = InsidePVIndices(COM_);
+
     int num = 0;
-    for (int i=0;i<N;i++)
+    for (int i=0;i<InsideIndices.size();i++)
     { 
-        auto result = pv.calculate(COM_[i]);
+        int index = InsideIndices[i];
+        num ++;
+        const auto& r = res[index];
+        const auto& atoms = r.atoms_;
+        Real3 distance;
+        Real dist_sq;
 
-        if (result.hx_ == 1)
-        {
-            num ++;
-            const auto& r = res[i];
-            const auto& atoms = r.atoms_;
-            Real3 distance;
-            Real dist_sq;
+        simstate_.getSimulationBox().calculateDistance(atoms[head_index_].positions_, atoms[tail_index_].positions_, distance, dist_sq);
 
-            simstate_.getSimulationBox().calculateDistance(atoms[head_index_].positions_, atoms[tail_index_].positions_, distance, dist_sq);
+        uij_[i] = Qtensor::normalize_director(distance);
+        Matrix localQ = LinAlg3x3::LocalQtensor(uij_[i]);
 
-            uij_[i] = Qtensor::normalize_director(distance);
-            Matrix localQ = LinAlg3x3::LocalQtensor(uij_[i]);
-
-            Qtensor::matrix_accum_inplace(Qtensor_, localQ);
-        }
+        Qtensor::matrix_accum_inplace(Qtensor_, localQ);
     }
 
     // calculate the actualy Qtensor
