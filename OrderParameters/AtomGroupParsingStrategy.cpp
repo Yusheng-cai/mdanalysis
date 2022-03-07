@@ -80,12 +80,12 @@ void AtomIndexParsing::Parse(std::vector<int>& indices)
             }
 
 
-            int i = begin_index;
+            int j = begin_index;
 
-            while (i <= end_index)
+            while (j <= end_index)
             {
-                indices.push_back(i - 1);
-                i += skip_;
+                indices.push_back(j - 1);
+                j += skip_;
             }
         }
     }
