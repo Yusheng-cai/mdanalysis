@@ -72,4 +72,8 @@ class SRE : public Calculation
         // solute indices per residue 
         std::vector<int> SoluteIndices_;
         std::vector<int> SolventIndices_;
+
+        // indus indicator
+        std::vector<Real> indus_indicators_;
+        std::vector<Real> nonzero_indus_indicators_;
 };
