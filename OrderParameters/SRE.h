@@ -5,6 +5,7 @@
 #include "tools/CommonTypes.h"
 #include "SimulationState.h"
 #include "CellGrid.h"
+#include "tools/InputParser.h"
 
 #include <vector>
 #include <memory>

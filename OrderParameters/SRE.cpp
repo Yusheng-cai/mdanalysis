@@ -59,22 +59,25 @@ void SRE::initializeSoluteSolventIndices()
     std::iota(SolventIndicesPerResidue.begin(), SolventIndicesPerResidue.end(), 0);
 
     // read in the actual indices 
-    pack_.ReadVectorNumber("soluteIndices", ParameterPack::KeyType::Optional,SoluteIndicesPerResidue);
+    std::vector<std::string> soluteInd_;
+    pack_.ReadVectorString("soluteIndices", ParameterPack::KeyType::Optional,soluteInd_);
     pack_.ReadVectorNumber("solventIndices", ParameterPack::KeyType::Optional, SolventIndicesPerResidue);
+    StringTools::ConvertStringToIndices(soluteInd_, SoluteIndicesPerResidue);
 
     // make it into a whole vector of local indices 
     for (int i=0;i<solvent.size();i++)
     {
         for (int j=0;j<SolventIndicesPerResidue.size();j++)
         {
-            SolventIndices_.push_back(i * solventResSize + j);
+            SolventIndices_.push_back(i * solventResSize + SolventIndicesPerResidue[j]);
         }
     }
+
     for (int i=0;i<solute.size();i++)
     {
         for (int j=0;j<SoluteIndicesPerResidue.size();j++)
         {
-            SoluteIndices_.push_back(i* soluteResSize + j);
+            SoluteIndices_.push_back(i* soluteResSize + SoluteIndicesPerResidue[j]);
         }
     }
 }
