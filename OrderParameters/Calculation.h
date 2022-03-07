@@ -88,6 +88,8 @@ class Calculation
         std::vector<int> InsidePVIndices(std::vector<Real3>& pos, std::vector<int>& outsideIndices);
         bool isInPV(Real3& pos);
 
+        bool isInPV(Real3& pos, Real& htildex);
+
     protected:
         // output registry 
         OutputRegistry output_;

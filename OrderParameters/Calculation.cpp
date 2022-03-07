@@ -217,6 +217,33 @@ bool Calculation::isInPV(Real3& pos)
     return false;
 }
 
+bool Calculation::isInPV(Real3& pos, Real& htildex)
+{
+    htildex = 1.0;
+    for (auto pv : NotInprobevolumes_)
+    {
+        auto out = pv -> calculate(pos);
+
+        if (out.htilde_x_ > 0)
+        {
+            return false;
+        }
+    }
+
+    for (auto pv : probevolumes_)
+    {
+        auto out = pv -> calculate(pos);
+        if (out.htilde_x_ > 0)
+        {
+            htildex = out.htilde_x_;
+            return true;
+        }
+    }
+
+    return false;
+
+}
+
 void Calculation::printOutput()
 {
     for (int i=0;i<vectorOutputs_.size();i++)
