@@ -29,6 +29,13 @@ namespace StringTools
 
     // Checke if a line only consists of white spaces 
     bool CheckIfOnlyWhiteSpace(std::string& str);
+
+    // parse the input string to numbers 
+    // e.g. 1-2000:10
+    void ConvertStringToIndices(const std::vector<std::string>& str, std::vector<int>& Indices);
+
+    // sort a vector of ints
+    void SortAndCheckDuplicates(std::vector<int>& indices);
 }
 
 
