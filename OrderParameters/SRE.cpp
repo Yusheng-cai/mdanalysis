@@ -86,15 +86,18 @@ void SRE::getInsidePVIndices()
 {
     const auto& solvent  = getResidueGroup(SolventName_).getTotalResidue().atoms_;
     InsidePVIndices_.clear();
+    indus_indicators_.clear();
 
     for (int i=0;i<SolventIndices_.size();i++)
     {
         int index = SolventIndices_[i];
         Real3 pos = solvent[index].positions_;
+        Real htildex=1.0;
 
-        if (isInPV(pos))
+        if (isInPV(pos, htildex))
         {
             InsidePVIndices_.push_back(index);
+            indus_indicators_.push_back(htildex);
         }
     }
 }
@@ -106,15 +109,18 @@ void SRE::getNonZeroCharges()
 
     NonZeroSolvent_.clear();
     NonZeroSolute_.clear();
+    nonzero_indus_indicators_.clear();
 
     for (int i=0;i<InsidePVIndices_.size();i++)
     {
         int index = InsidePVIndices_[i];
         Real charge = solvent[index].charge_;
+        Real htildex= indus_indicators_[i];
 
         if (charge != 0)
         {
             NonZeroSolvent_.push_back(index);
+            nonzero_indus_indicators_.push_back(htildex);
         }
     }
     
@@ -204,7 +210,7 @@ void SRE::calculateWithNS()
                     {
                         Real r = std::sqrt(distsq);
 
-                        Real value = factor_ * qiqj * std::erfc(r * alpha_) / r; 
+                        Real value = factor_ * qiqj * std::erfc(r * alpha_) / r * nonzero_indus_indicators_[i];
 
                         sum += value;
                         localsum += value;
