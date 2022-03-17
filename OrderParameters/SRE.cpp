@@ -32,6 +32,7 @@ SRE::SRE(const CalculationInput& input)
     registerPerIterOutputFunction("energy", [this](std::ofstream& ofs) -> void {this -> printEnergyPerIter(ofs);});
     registerPerIterOutputFunction("energyperatom", [this](std::ofstream& ofs) -> void {this -> printEnergyPerAtomPerIter(ofs);});
     registerOutputFileOutputs("energy", [this](void) -> Real {return this -> getEnergy();});
+    registerOutputFileOutputs("repulsive_energy", [this](void) -> Real {return this -> getRepulsiveEnergy();});
 
     cell_ = Cellptr(new CellGrid(simstate_, cutoff_,1));
 
@@ -174,6 +175,7 @@ void SRE::calculateWithNS()
     #pragma omp parallel
     {
         Real sum = 0.0;
+        Real repulsive_sum=0.0;
         #pragma omp for
         for (int i=0;i<NonZeroSolvent_.size();i++)
         {
@@ -193,14 +195,6 @@ void SRE::calculateWithNS()
                     Real qj     = solute[index].charge_;
                     Real qiqj = qi * qj;
 
-                    if (onlyattrative_)
-                    {
-                        if (qiqj > 0)
-                        {
-                            continue;
-                        }
-                    }
-
                     Real3 dist;
                     Real distsq;
 
@@ -212,7 +206,21 @@ void SRE::calculateWithNS()
 
                         Real value = factor_ * qiqj * std::erfc(r * alpha_) / r * nonzero_indus_indicators_[i];
 
-                        sum += value;
+                        // we always write to repulsive sum
+                        if (qiqj > 0)
+                        {
+                            repulsive_sum += value;
+                        }
+
+                        // we write to sum if user specified only attractive and the force is actually attractive
+                        if (onlyattrative_)
+                        {
+                            if (qiqj < 0)
+                            {
+                                sum += value;
+                            }
+                        }
+
                         localsum += value;
                     }
                 }
@@ -224,6 +232,7 @@ void SRE::calculateWithNS()
         #pragma omp critical
         {
             energy_ += sum;
+            repulsive_energy_ += repulsive_sum;
         }
     }
 }

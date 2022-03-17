@@ -34,6 +34,7 @@ class SRE : public Calculation
         void getInsidePVIndices();
 
         Real getEnergy() {return energy_;}
+        Real getRepulsiveEnergy() {return repulsive_energy_;}
 
         void printEnergyPerIter(std::ofstream& ofs);
         void printEnergyPerAtomPerIter(std::ofstream& ofs);
@@ -50,6 +51,7 @@ class SRE : public Calculation
         Real factor_ = 138.935458;
 
         Real energy_=0.0;
+        Real repulsive_energy_=0.0;
 
         Cellptr cell_;
 
