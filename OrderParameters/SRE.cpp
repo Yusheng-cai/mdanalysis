@@ -61,9 +61,11 @@ void SRE::initializeSoluteSolventIndices()
 
     // read in the actual indices 
     std::vector<std::string> soluteInd_;
+    std::vector<std::string> solventInd_;
     pack_.ReadVectorString("soluteIndices", ParameterPack::KeyType::Optional,soluteInd_);
-    pack_.ReadVectorNumber("solventIndices", ParameterPack::KeyType::Optional, SolventIndicesPerResidue);
+    pack_.ReadVectorString("solventIndices", ParameterPack::KeyType::Optional, solventInd_);
     StringTools::ConvertStringToIndices(soluteInd_, SoluteIndicesPerResidue);
+    StringTools::ConvertStringToIndices(solventInd_, SolventIndicesPerResidue);
 
     // make it into a whole vector of local indices 
     for (int i=0;i<solvent.size();i++)
