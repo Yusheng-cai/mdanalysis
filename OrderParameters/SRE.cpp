@@ -172,7 +172,6 @@ void SRE::calculateWithNS()
         celllist_[ind].push_back(index);
     }
 
-
     // iterate over all the atoms in solvent and solute
     #pragma omp parallel
     {
@@ -221,6 +220,10 @@ void SRE::calculateWithNS()
                             {
                                 sum += value;
                             }
+                        }
+                        else
+                        {
+                            sum += value;
                         }
 
                         localsum += value;
@@ -289,6 +292,7 @@ void SRE::calculateWithoutNS()
 void SRE::calculate()
 {
     energy_ = 0.0;
+    repulsive_energy_=0.0;
 
     if (mode_ == "NS")
     {
@@ -301,6 +305,7 @@ void SRE::calculate()
     }
 
     std::cout << "Energy = " << energy_ << "\n";
+    std::cout << "Repulsive energy = " << repulsive_energy_ << "\n";
 }
 
 void SRE::printEnergyPerIter(std::ofstream& ofs)
