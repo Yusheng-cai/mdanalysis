@@ -33,6 +33,7 @@ SRE::SRE(const CalculationInput& input)
     registerPerIterOutputFunction("energyperatom", [this](std::ofstream& ofs) -> void {this -> printEnergyPerAtomPerIter(ofs);});
     registerOutputFileOutputs("energy", [this](void) -> Real {return this -> getEnergy();});
     registerOutputFileOutputs("repulsive_energy", [this](void) -> Real {return this -> getRepulsiveEnergy();});
+    registerOutputFileOutputs("attractive_energy", [this](void) -> Real {return this -> getAttractiveEnergy();});
 
     cell_ = Cellptr(new CellGrid(simstate_, cutoff_,1));
 
@@ -177,6 +178,7 @@ void SRE::calculateWithNS()
     {
         Real sum = 0.0;
         Real repulsive_sum=0.0;
+        Real attractive_sum=0.0;
         #pragma omp for
         for (int i=0;i<NonZeroSolvent_.size();i++)
         {
@@ -213,6 +215,12 @@ void SRE::calculateWithNS()
                             repulsive_sum += value;
                         }
 
+                        if (qiqj < 0)
+                        {
+                            attractive_sum += value;
+
+                        }
+
                         // we write to sum if user specified only attractive and the force is actually attractive
                         if (onlyattrative_)
                         {
@@ -238,6 +246,7 @@ void SRE::calculateWithNS()
         {
             energy_ += sum;
             repulsive_energy_ += repulsive_sum;
+            attractive_energy_+= attractive_sum;
         }
     }
 }
@@ -293,6 +302,7 @@ void SRE::calculate()
 {
     energy_ = 0.0;
     repulsive_energy_=0.0;
+    attractive_energy_=0.0;
 
     if (mode_ == "NS")
     {

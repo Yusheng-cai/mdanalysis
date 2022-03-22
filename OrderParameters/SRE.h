@@ -35,6 +35,7 @@ class SRE : public Calculation
 
         Real getEnergy() {return energy_;}
         Real getRepulsiveEnergy() {return repulsive_energy_;}
+        Real getAttractiveEnergy() {return attractive_energy_;}
 
         void printEnergyPerIter(std::ofstream& ofs);
         void printEnergyPerAtomPerIter(std::ofstream& ofs);
@@ -52,6 +53,7 @@ class SRE : public Calculation
 
         Real energy_=0.0;
         Real repulsive_energy_=0.0;
+        Real attractive_energy_=0.0;
 
         Cellptr cell_;
 
