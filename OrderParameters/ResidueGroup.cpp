@@ -36,9 +36,11 @@ ResidueGroup::ResidueGroup(const ResidueInput& input)
         {
             std::string residueName = Residues_[index].atoms_[i].residueName_;
             std::string atomname = Residues_[index].atoms_[i].atomName_;
-            Residues_[index].atoms_[i].type_ = top_.getAtomTypeFromAtomNameResname(residueName, atomname);
-            Residues_[index].atoms_[i].mass_ = top_.getMassFromAtomTypeResname(residueName, Residues_[index].atoms_[i].type_);
-            Residues_[index].atoms_[i].charge_ = top_.getChargeFromAtomNameResname(residueName, Residues_[index].atoms_[i].atomName_);
+            int idx  = Residues_[index].atoms_[i].atomNumber_ - 1;
+
+            Residues_[index].atoms_[i].type_ = top_.getAtomTypeFromIndex(idx);
+            Residues_[index].atoms_[i].mass_ = top_.getMassFromIndex(idx);
+            Residues_[index].atoms_[i].charge_ = top_.getChargeFromIndex(idx); 
 
             Molecule::atom a = Residues_[index].atoms_[i];
             TotalResidues_.atoms_.push_back(a);
