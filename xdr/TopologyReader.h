@@ -37,9 +37,19 @@ class TopologyReader
         // make map from resname and atom name to atom type
         void MakeResnameAtomNameToTypeMap();
 
+        // make map from residue name to atom type
+        void MakeResidueToAtomTypeMap();
+
+        // make the vector from indices to atomtypes
+        void MakeIndicesToAtomType();
+
         Real getMassFromAtomTypeResname(const std::string& resname, const std::string& atomType);
         Real getChargeFromAtomNameResname(const std::string& resname, const std::string& atomName);
         std::string getAtomTypeFromAtomNameResname(const std::string& resname, const std::string& atomtype);
+
+        Real getMassFromIndex(int index);
+        Real getChargeFromIndex(int index);
+        std::string getAtomTypeFromIndex(int index);
 
         enum TopIdx
         {
@@ -64,6 +74,10 @@ class TopologyReader
     private:
         std::string topName_;
 
+        std::vector<std::string> resnames_;
+
+        std::vector<AtomType> atomtypeIndices_;
+
         // Each line in [ atoms ] directive must have 8 entries
         int linenum_ = 8;
 
@@ -74,4 +88,8 @@ class TopologyReader
         std::map<std::vector<std::string>, Real> ResNameAtomNameToChargeMap_;
 
         std::map<std::vector<std::string>, std::string> ResNameAtomNameToTypeMap_;
+
+        std::map<std::string, int> MapResnameToNumber_;
+
+        std::map<std::string, std::vector<AtomType>> MapResidueToAtomType_;
 };

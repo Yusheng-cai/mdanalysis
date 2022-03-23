@@ -43,6 +43,7 @@ void TopologyReader::Parse(std::string& name)
 
     std::stringstream ss;
     std::vector<int> startIndices_;
+    int moleculeIndices;
     int start = 0;
 
     for (int i=0;i<contents.size();i++)
@@ -69,8 +70,54 @@ void TopologyReader::Parse(std::string& name)
             {
                 startIndices_.push_back(i);
             }
+
+            if (words[1] == "molecules")
+            {
+                moleculeIndices = i;
+            }
         }
     }
+
+    // read the molecules
+    for (int j = moleculeIndices+1;j<contents.size();j++)
+    {
+        int index = contents[j].find_first_not_of(" ");
+
+        if (contents[j][index] == '[')
+        {
+            break;
+        }
+        else
+        {
+            ss.clear();
+            ss.str(contents[j]);
+            std::string word;
+            std::vector<std::string> words;
+
+            while (ss >> word)
+            {
+                if (word == ";")
+                {
+                    break;
+                }
+                words.push_back(word);
+            }
+
+            ASSERT((words.size() == 2), "For molecule directives, we must only have 2 entries, [molecuname, number], while we have " << word.size());
+
+            auto it = MapResnameToNumber_.find(words[0]);
+
+            ASSERT((it == MapResnameToNumber_.end()), "The molecule name " << words[0] << " appeared twice.");
+
+            int num = StringTools::StringToType<int>(words[1]);
+
+            MapResnameToNumber_.insert(std::make_pair(words[0], num));
+
+            resnames_.push_back(words[0]);
+        }
+    }
+
+    // read the starting indices
     for (int i =0;i<startIndices_.size();i++)
     {
         int start = startIndices_[i];
@@ -114,9 +161,75 @@ void TopologyReader::Parse(std::string& name)
         }        
     }
 
+    // weird previous stuff
     MakeResnameAtomNameToTypeMap();
     MakeResnameAtomTypeToMassMap();
     MakeResnameAtomNameToChargeMap();
+
+    // map index to corresponding atom type information
+    MakeResidueToAtomTypeMap();
+    MakeIndicesToAtomType();
+}
+
+void TopologyReader::MakeIndicesToAtomType()
+{
+    for (int i=0;i<resnames_.size();i++)
+    {
+        std::string name = resnames_[i];
+
+        auto it = MapResnameToNumber_.find(name);
+
+        ASSERT((it != MapResnameToNumber_.end()), "The resname " << name << " is not found.");
+        int num = it -> second;
+
+        auto atit = MapResidueToAtomType_.find(name);
+        ASSERT((atit != MapResidueToAtomType_.end()), "The resname " << name << " is not found.");
+
+        auto atomtypevec = atit -> second;
+
+        for (int j=0;j<num;j++)
+        {
+            atomtypeIndices_.insert(atomtypeIndices_.end(), atomtypevec.begin(), atomtypevec.end());
+        }
+    }
+}
+
+TopologyReader::Real TopologyReader::getChargeFromIndex(int index)
+{
+    ASSERT((index < atomtypeIndices_.size()), "Index " << index << " out of range.");
+    return atomtypeIndices_[index].charge_;
+}
+
+TopologyReader::Real TopologyReader::getMassFromIndex(int index)
+{
+    ASSERT((index < atomtypeIndices_.size()), "Index " << index << " out of range.");
+    return atomtypeIndices_[index].mass_;
+}
+
+std::string TopologyReader::getAtomTypeFromIndex(int index)
+{
+    ASSERT((index < atomtypeIndices_.size()), "Index " << index << " out of range.");
+    return atomtypeIndices_[index].type_;
+}
+
+void TopologyReader::MakeResidueToAtomTypeMap()
+{
+    for (int i=0;i<atomtypes_.size();i++)
+    {
+        std::string resname = atomtypes_[i].resname_;
+
+        auto it = MapResidueToAtomType_.find(resname);
+
+        if (it != MapResidueToAtomType_.end())
+        {
+            it -> second.push_back(atomtypes_[i]);
+        }
+        else
+        {
+            std::vector<AtomType> temp_ = {atomtypes_[i]};
+            MapResidueToAtomType_.insert(std::make_pair(resname, temp_));
+        }
+    }
 }
 
 void TopologyReader::MakeResnameAtomNameToTypeMap()
