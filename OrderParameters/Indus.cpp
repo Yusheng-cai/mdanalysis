@@ -13,6 +13,7 @@ Indus::Indus(const OrderParametersInput& input)
 
     registerOutput("n", [this](void)->Real {return this->getN();});
     registerOutput("ntilde", [this](void)->Real {return this->getNtilde();});
+    registerOutput("Distance", [this](void) -> Real {return this ->getDynamicDistance();});
 
     addAtomGroup(atomGroupName_);
 }
@@ -28,6 +29,16 @@ void Indus::calculate()
     clearDerivativesOutputs(); 
 
     auto& derivativesSet = accessDerivatives(atomGroupName_);
+
+    if (pv.isDynamic())
+    {
+        dynamicDistance_ = pv.getDynamicDistance();
+    }
+    else
+    {
+        dynamicDistance_ = 0.0;
+    }
+
 
     #pragma omp parallel
     {
@@ -112,7 +123,4 @@ void Indus::update()
     indusIndices_.clear();
     IndusIndicesBuffer_.clearBuffer();
 
-    // update the probeVolume as needed 
-    auto& ProbeV = simstate_.accessProbeVolume(pvName_);
-    ProbeV.update();
 }

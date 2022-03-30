@@ -17,6 +17,7 @@ class Indus:public OrderParameters
         // getters
         Real getN() const {return N_;}
         Real getNtilde() const {return Ntilde_;}
+        Real getDynamicDistance() const {return dynamicDistance_;}
         const std::vector<int>& getIndusIndices() const{return indusIndices_;};
 
         // accessors
@@ -32,4 +33,7 @@ class Indus:public OrderParameters
         std::vector<int> indusIndices_;
 
         std::vector<Real3> derivatives_;
+
+        // dynamic distance of the indus 
+        Real dynamicDistance_=0.0;
 };
