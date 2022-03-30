@@ -334,6 +334,12 @@ void Driver::update()
         res.update(total_atom_positions_);
     }
 
+    // update the simulation box
+    auto& box = simstate_.getSimulationBox();
+    simstate_.setSimulationBox(Xdr_->getSimulationBox());
+    simstate_.setTime(Xdr_->getTime());
+    simstate_.setStep(Xdr_->getStep());
+
     // update the probe volume
     for (int i=0;i<ProbeVolumeNames_.size();i++)
     {
@@ -341,12 +347,6 @@ void Driver::update()
 
         pv.update();
     }
-
-    // update the simulation box
-    auto& box = simstate_.getSimulationBox();
-    simstate_.setSimulationBox(Xdr_->getSimulationBox());
-    simstate_.setTime(Xdr_->getTime());
-    simstate_.setStep(Xdr_->getStep());
 
     // update the Order Parameters
     for (int i=0;i<OP_.size();i++)
