@@ -48,7 +48,7 @@ class ProbeVolume
         virtual ProbeVolumeOutput calculate(const Real3& x) const = 0;
         virtual void setGeometry(){};
 
-        bool isDynamic(){return isDynamicA_ || isDynamicR_;}
+        bool isDynamic() const {return isDynamicA_ || isDynamicR_;}
 
         // Obtain the simulation state reference
         const SimulationState& getSimulationState() const{return simstate_;}
@@ -65,6 +65,11 @@ class ProbeVolume
         // getters
         Real getSigma() const {return sigma_;}
         Real getAlphaC() const {return ac_;}
+        Real getDynamicDistance() const 
+        {
+            ASSERT(isDynamic(), "The probevolume is not dynamic and hence there is not getDynamicDistance()."); 
+            return dynamic_distance_;
+        }
 
         // setters
         void setSigma(Real sigma) {sigma_ = sigma;}
@@ -86,6 +91,7 @@ class ProbeVolume
         // dynamic residue group
         std::string dynamicResGroup_;
         std::string dynamicAtomName_;
+        Real dynamic_distance_;
 
         // The pointers to the residue groups
         std::vector<ResidueGroup*> ResidueGroups_;

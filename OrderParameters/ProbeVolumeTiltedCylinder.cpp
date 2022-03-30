@@ -59,6 +59,8 @@ void ProbeVolumeTiltedCylinder::setGeometry()
 
         distance_ = std::sqrt(distance_);
 
+        dynamic_distance_ = distance_;
+
         LinAlg3x3::normalize(Zvector_);
 
         // make the rotation matrix 
