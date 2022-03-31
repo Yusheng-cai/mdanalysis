@@ -39,6 +39,15 @@ class QtensorCalc : public Calculation
         void printaverageQ(std::string name);
 
         Real getBiaxiality() const {return biaxiality_;}
+        Real getP2() const {return p2_;}
+        Real getQxx() const {return Qtensor_[0][0];}
+        Real getQxy() const {return Qtensor_[0][1];}
+        Real getQxz() const {return Qtensor_[0][2];}
+        Real getQyy() const {return Qtensor_[1][1];}
+        Real getQyz() const {return Qtensor_[1][2];}
+        Real getv1x() const {return eigenvector_[0][0];}
+        Real getv1y() const {return eigenvector_[1][0];}
+        Real getv1z() const {return eigenvector_[2][0];}
     
     private:
         Matrix Qtensor_;
@@ -58,6 +67,7 @@ class QtensorCalc : public Calculation
         Real3 v1_;
         Real3 v2_;
         Real biaxiality_;
+        Real p2_;
 
         // P(costheta) wrt to each of the director
 

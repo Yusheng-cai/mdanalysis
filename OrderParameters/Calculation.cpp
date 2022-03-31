@@ -195,6 +195,8 @@ std::vector<Real3>& COM)
 
 bool Calculation::isInPV(Real3& pos)
 {
+    // if it's in the probe volumes that it's not supposed to be in 
+    // then we should return false  --> if that makes any sense
     for (auto pv : NotInprobevolumes_)
     {
         auto out = pv -> calculate(pos);

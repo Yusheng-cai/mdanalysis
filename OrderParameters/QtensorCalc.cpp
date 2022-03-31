@@ -36,8 +36,17 @@ QtensorCalc::QtensorCalc(const CalculationInput& input)
     registerPerIterOutputFunction("qtensor", [this](std::ofstream& ofs) -> void {this -> printQtensorPerIter(ofs);});
     registerPerIterOutputFunction("cos2dir", [this](std::ofstream& ofs) -> void {this -> printcos2PerIter(ofs);});
 
-    // register output
-    registerOutputFileOutputs("biaxiality", [this](void) -> Real {this -> getBiaxiality();});
+    // register outputfile output
+    registerOutputFileOutputs("biaxiality", [this](void) -> Real {return this -> getBiaxiality();});
+    registerOutputFileOutputs("p2", [this](void) -> Real{return this -> getP2();});
+    registerOutputFileOutputs("Qxx", [this](void) -> Real{return this -> getQxx();});
+    registerOutputFileOutputs("Qxy", [this](void) -> Real {return this -> getQxy();});
+    registerOutputFileOutputs("Qxz", [this](void) -> Real {return this -> getQxz();});
+    registerOutputFileOutputs("Qyy", [this](void) -> Real {return this -> getQyy();});
+    registerOutputFileOutputs("Qyz", [this](void) -> Real {return this -> getQyz();});
+    registerOutputFileOutputs("v1x", [this](void) -> Real {return this -> getv1x();});
+    registerOutputFileOutputs("v1y", [this](void) -> Real {return this -> getv1y();});
+    registerOutputFileOutputs("v1z", [this](void) -> Real {return this -> getv1z();});
 
     // initialize the probe volumes
     initializeProbeVolumes();
@@ -134,10 +143,13 @@ void QtensorCalc::calculate()
     // Add the current Qtensor to Qtensortot
     Qtensor::matrix_accum_inplace(QtensorTot_, Qtensor_);
 
+    // order from largest to smallest
     auto result = Qtensor::orderedeig_Qtensor(Qtensor_);
 
     eigenvector_=  result.first;
     eigenval_   = result.second;
+
+    p2_ = eigenval_[0];
 
     biaxiality_ = eigenval_[1] * 2.0 + eigenval_[0];
 }
