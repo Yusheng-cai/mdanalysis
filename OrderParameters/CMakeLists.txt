@@ -51,6 +51,7 @@ target_sources(mdaOrderParameters PRIVATE
     "DistributionGivenDimer.cpp"
     "SRE.cpp"
     "CellGrid.cpp"
+    "SRE_dimer.cpp"
 )
 
 set(mdaOrderParameters_HEADER
@@ -103,6 +104,7 @@ set(mdaOrderParameters_HEADER
     "DistributionGivenDimer.h"
     "SRE.h"
     "CellGrid.h"
+    "SRE_dimer.h"
 )
 
 
