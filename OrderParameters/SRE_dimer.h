@@ -13,6 +13,7 @@
 #include <array>
 #include <memory>
 #include <string>
+#include <chrono>
 
 class SRE_dimer : public Calculation
 {
@@ -51,6 +52,9 @@ class SRE_dimer : public Calculation
         // count for each of the bins
         std::vector<Real> count_;
         std::vector<Real3> director_;
+
+        // whether we are calculating SRE with only CN-CN bond
+        bool onlyCN_=false;
 
         // constants for SRE
         Real factor_=138.9354;

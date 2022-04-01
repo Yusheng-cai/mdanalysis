@@ -37,6 +37,9 @@ SRE_dimer::SRE_dimer(const CalculationInput& input)
     pack_.ReadNumber("sigma", ParameterPack::KeyType::Optional, sigma_);
     beta_ = 1.0/sigma_;
 
+    // read if only CN 
+    pack_.Readbool("onlyCN", ParameterPack::KeyType::Optional, onlyCN_);
+
     // register outputs
     registerOutputFunction("EnergyHistogram", [this](std::string name) -> void {this -> printHistograms(name);});
 }
@@ -119,9 +122,12 @@ void SRE_dimer::finishCalculate()
 {
     for (int i=0;i<binnum_;i++)
     {
-        histogram_attr_[i] = histogram_attr_[i] / count_[i];
-        histogram_repu_[i] = histogram_repu_[i] / count_[i];
-        histogram_tota_[i] = histogram_tota_[i] / count_[i];
+        if (count_[i] != 0)
+        {
+            histogram_attr_[i] = histogram_attr_[i] / count_[i];
+            histogram_repu_[i] = histogram_repu_[i] / count_[i];
+            histogram_tota_[i] = histogram_tota_[i] / count_[i];
+        }
     }
 }
 
@@ -129,15 +135,17 @@ void SRE_dimer::printHistograms(std::string name)
 {
     std::ofstream ofs;
     ofs.open(name);
+    int numFrames = simstate_.getTotalFrames();
 
-    ofs << "# BinPos Attr Repul total\n";
+    ofs << "# BinPos Attr Repul total count\n";
 
     for (int i=0;i<binnum_;i++)
     {
         ofs << bin_ -> getCenterLocationOfBin(i) << " ";
         ofs << histogram_attr_[i] << " ";
         ofs << histogram_repu_[i] << " ";
-        ofs << histogram_tota_[i] << "\n";
+        ofs << histogram_tota_[i] << " ";
+        ofs << count_[i]/numFrames << "\n";
     }
 
     ofs.close();
@@ -152,26 +160,60 @@ void SRE_dimer::calculateSRE(int i, int j, Real& attr, Real& repul, Real& total)
     attr = 0.0;
     repul = 0.0;
 
-    for (int i=0;i<res1.size();i++)
+    if (onlyCN_)    
     {
-        for (int j=0;j<res2.size();j++)
+        Int2 indices = {{head_index_, tail_index_}};
+
+        for (int i=0;i<2;i++)
         {
-            Real distsq;
-            Real3 distance;
-            simstate_.getSimulationBox().calculateDistance(res1[i].positions_, res2[j].positions_, distance, distsq);
-
-            Real qiqj = res1[i].charge_ * res2[j].charge_;
-            Real dist = std::sqrt(distsq);
-            Real erfval = std::erfc(dist * beta_);
-
-            if (qiqj < 0)
+            for (int j=0;j<2;j++)
             {
-                attr += factor_ * qiqj * erfval / dist; 
+                Real distsq;
+                Real3 distance;
+
+                int index1 = indices[i];
+                int index2 = indices[j];
+                simstate_.getSimulationBox().calculateDistance(res1[index1].positions_, res2[index2].positions_, distance, distsq);
+
+                Real qiqj = res1[index1].charge_ * res2[index2].charge_;
+                Real dist = std::sqrt(distsq);
+                Real erfval = std::erfc(dist * beta_);
+
+                if (qiqj < 0)
+                {
+                    attr += factor_ * qiqj * erfval / dist; 
+                }
+
+                if (qiqj > 0)
+                {
+                    repul += factor_ * qiqj * erfval /dist;
+                }
             }
-
-            if (qiqj > 0)
+        }
+    }
+    else
+    {
+        for (int i=0;i<res1.size();i++)
+        {
+            for (int j=0;j<res2.size();j++)
             {
-                repul += factor_ * qiqj * erfval /dist;
+                Real distsq;
+                Real3 distance;
+                simstate_.getSimulationBox().calculateDistance(res1[i].positions_, res2[j].positions_, distance, distsq);
+
+                Real qiqj = res1[i].charge_ * res2[j].charge_;
+                Real dist = std::sqrt(distsq);
+                Real erfval = std::erfc(dist * beta_);
+
+                if (qiqj < 0)
+                {
+                    attr += factor_ * qiqj * erfval / dist; 
+                }
+
+                if (qiqj > 0)
+                {
+                    repul += factor_ * qiqj * erfval /dist;
+                }
             }
         }
     }
