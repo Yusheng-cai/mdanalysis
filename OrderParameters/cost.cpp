@@ -131,7 +131,15 @@ void Cost::calculate()
     }
 
     Costheta_ = avgCostheta_;
-    avgCostheta_ /= InsideIndices.size();
+
+    if (InsideIndices.size() == 0)
+    {
+        avgCostheta_ = 0.0;
+    }
+    else
+    {
+        avgCostheta_ /= InsideIndices.size();
+    }
 
     numCOM_ = InsideIndices.size();
 }
