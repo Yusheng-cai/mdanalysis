@@ -4,7 +4,6 @@
 #include "xdr/MoleculeStructs.h"
 #include "tools/CommonTypes.h"
 #include "Bin.h"
-#include "Qtensor.h"
 #include "SimulationState.h"
 #include "LinAlgTools.h"
 
@@ -17,16 +16,15 @@
 // Class that calculates and average Qtensor as a function of z over time
 // This can give P2 as a function of z(z can be any dimension)
 // Or director as a function of z
-
-class QtensorZ : public Calculation
+class SlabQtensor : public Calculation
 {
     public:
         using Range = CommonTypes::Real2;
         using Binptr= std::unique_ptr<Bin>;
         using Matrix= CommonTypes::Matrix;
 
-        QtensorZ(const CalculationInput& input);
-        virtual ~QtensorZ(){};
+        SlabQtensor(const CalculationInput& input);
+        virtual ~SlabQtensor(){};
 
         virtual void calculate() override;
         virtual void finishCalculate() override;
@@ -34,15 +32,6 @@ class QtensorZ : public Calculation
 
         void printP2z(std::string name);
         void printP2zbeta(std::string name);
-
-        void printPerIterP2z(std::ofstream& ofs);
-        void printPerIterev(std::ofstream& ofs);
-        void printPerIterNum(std::ofstream& ofs);
-        void printPerIterQtensor(std::ofstream& ofs);
-
-        void printPerIterP2zBeta(std::ofstream& ofs);
-        void printPerItereveczBeta(std::ofstream& ofs);
-
         void printevBeta(std::string name);
 
         std::vector<Real>& getP2() {return P2_;}
@@ -52,8 +41,6 @@ class QtensorZ : public Calculation
 
         // The center of mass of each of the residues
         std::vector<Real3> COM_;
-
-        // Get the Qtensor for each of the bins
 
         // The string that indicates the direction
         std::string direction_ = "z";
@@ -72,18 +59,15 @@ class QtensorZ : public Calculation
         // record total number of residue per bin throughout simulation
         std::vector<Real> NumResPerBin_;
 
-        std::vector<Matrix> BinnedMatrix_;
+        // Qtensor as a function of z 
+        std::vector<Matrix> QtensorZ_;
 
-        // The head and tail index within the 5CB molecule
+        // The head and tail index in the 5CB molecule
         int headIndex_=1;
         int tailIndex_=2;
 
         std::vector<Real> P2_;
         std::vector<Real> P2avg_;
-
-        // Which atoms do you want to perform COM calculations over
-        std::vector<int> COMIndex_;
-        bool COMIndex_provided_=false;
 
         // ignore the P2 if the average N is less than this number
         Real ignoreP2LessThan_ = 0.0;
@@ -93,20 +77,13 @@ class QtensorZ : public Calculation
         // nx^2, ny^2, nz^2 for the eigenvectors
         std::vector<Real3> eigvec_;
 
-        // Per Iteration items
-        std::vector<Matrix> BinnedMatrixIter_;
-        std::vector<Real> NumResPerBinIter_;
-        std::vector<Real> P2PerIter_;
-        std::vector<Real3> evPerIter_;
-
-        // zero Matrix
-        Matrix zeroMatrix_ = {};
-
         // map from residue index to the corresponding bin index 
         std::vector<int> ResIndexToBinIndex_;
 
+        // number of bins if we are binning it from min to max 
         int numbins_;
         bool usingMinMaxBins_=false;
+        std::vector<Real> BinLocation_;
 
         // we only bin the COM above this count
         Real above_=-100000;
