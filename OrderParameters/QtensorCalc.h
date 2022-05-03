@@ -1,7 +1,6 @@
 #pragma once
 #include "Calculation.h"
 #include "Bin.h"
-#include "Qtensor.h"
 #include "LinAlgTools.h"
 #include "SimulationState.h"
 
