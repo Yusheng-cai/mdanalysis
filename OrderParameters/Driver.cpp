@@ -22,7 +22,6 @@ Driver::Driver(std::string filename, CommandLineArguments& cmd)
     auto Top_Pack = pack_.findParamPack("topology", ParameterPack::KeyType::Optional);
     auto res_pack = pack_.findParamPacks("residuegroup", ParameterPack::KeyType::Optional);
 
-
     // Read the xdr file inputted, this must be provided
     initializeXdr(xdr_pack);
 
@@ -316,15 +315,9 @@ void Driver::update()
 
     for (int i=0;i<VectorAgNames_.size();i++)
     {
-        //auto start = std::chrono::high_resolution_clock::now();
         auto& ag = simstate_.getAtomGroup(VectorAgNames_[i]);
 
         ag.update(total_atom_positions_);
-
-        // auto stop = std::chrono::high_resolution_clock::now();
-
-        // auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-        //std::cout << "Time it took for ag update is " << duration.count() << " microseconds" << std::endl;
     }
 
     for (int i=0;i<VectorResNames_.size();i++)
@@ -369,12 +362,7 @@ void Driver::calculate()
     for (int i = 0;i<OP_.size();i++)
     {
         auto& op = OP_[i];
-        //auto start = std::chrono::high_resolution_clock::now();
         op ->calculate();
-        //auto stop = std::chrono::high_resolution_clock::now();
-
-        //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-        //std::cout << "Time it took for OP calculation is " << duration.count() << " microseconds" << std::endl;
     }
 
     // perform calculations
