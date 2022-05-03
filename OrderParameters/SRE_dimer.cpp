@@ -18,7 +18,6 @@ SRE_dimer::SRE_dimer(const CalculationInput& input)
     histogram_tota_.resize(binnum_,0.0);
     count_.resize(binnum_,0.0);
 
-
     // read residue 
     pack_.ReadString("residue", ParameterPack::KeyType::Required, residueName_);
     initializeResidueGroup(residueName_);
