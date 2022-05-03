@@ -9,10 +9,10 @@
 #include <vector>
 #include <string>
 
-class findNearStructure : public Calculation
+class ProbeVolumeIndices : public Calculation
 {
     public:
-        findNearStructure(const CalculationInput& input);
+        ProbeVolumeIndices(const CalculationInput& input);
 
         virtual void calculate() override;
         virtual void finishCalculate() override {};

@@ -1,11 +1,11 @@
-#include "findNearStructure.h"
+#include "ProbeVolumeIndices.h"
 
 namespace CalculationRegistry
 {
-    registry_<findNearStructure> registerFnearStructure("findnearstructure");
+    registry_<ProbeVolumeIndices> registerPVIndices("ProbeVolumeIndices");
 }
 
-findNearStructure::findNearStructure(const CalculationInput& input)
+ProbeVolumeIndices::ProbeVolumeIndices(const CalculationInput& input)
 :Calculation(input)
 {
     pack_.ReadString("mode", ParameterPack::KeyType::Optional, mode_);
@@ -40,7 +40,7 @@ findNearStructure::findNearStructure(const CalculationInput& input)
     registerPerIterOutputFunction("atomindices", [this](std::ofstream& ofs) -> void {this -> printAtomIndicesPerIter(ofs);});
 }
 
-void findNearStructure::calculateRes()
+void ProbeVolumeIndices::calculateRes()
 {
     AtomIndices_.clear();
 
@@ -93,7 +93,7 @@ void findNearStructure::calculateRes()
     }
 }
 
-void findNearStructure::calculateAtom()
+void ProbeVolumeIndices::calculateAtom()
 {
     AtomIndices_.clear();
 
@@ -129,7 +129,7 @@ void findNearStructure::calculateAtom()
     }
 }
 
-void findNearStructure::calculateAtomRes()
+void ProbeVolumeIndices::calculateAtomRes()
 {
     AtomIndices_.clear();
 
@@ -197,7 +197,7 @@ void findNearStructure::calculateAtomRes()
     }
 }
 
-void findNearStructure::printAtomIndicesPerIter(std::ofstream& ofs)
+void ProbeVolumeIndices::printAtomIndicesPerIter(std::ofstream& ofs)
 {
     ofs << simstate_.getStep() << " ";
     for (int i=0;i<AtomIndices_.size();i++)
@@ -207,7 +207,7 @@ void findNearStructure::printAtomIndicesPerIter(std::ofstream& ofs)
     ofs << "\n";
 }
 
-void findNearStructure::calculate()
+void ProbeVolumeIndices::calculate()
 {
     if (mode_ == "atom")
     {
