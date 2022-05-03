@@ -14,19 +14,35 @@
 #include <iostream>
 #include <iomanip>
 
-class Pcostz : public Calculation
+/*
+    This class calculate the distribution function P(z,cos(beta))=<d(z-z_i) * d(cos(\beta) - u_i * z_i)>
+
+    definition:    
+    z is the height of the LC molecule in the slab
+    cos(beta) is the angle that the LC forms with respect to some user defined direction.
+*/
+class SlabOrientation : public Calculation
 {
     public:
         using Binptr = std::unique_ptr<Bin>;
         using Range2 = std::array<Real,2>;
 
-        Pcostz(const CalculationInput& input);
+        SlabOrientation(const CalculationInput& input);
+
+        /*
+            @Function that registers outputs
+        */
+        void RegisterOutputs();
+
+        /*
+            Function that reads the inputs 
+        */
+        void ReadInputs();
 
         virtual void calculate() override;
         virtual void finishCalculate() override;
 
         void printHistogram(std::string name);
-        void printHistogramPerIter(std::ofstream& ofs);
 
         void binUsingMinMax();
 
@@ -46,7 +62,6 @@ class Pcostz : public Calculation
         std::string residueGroupName_;
 
         std::vector<std::vector<Real>> histogram2d_;
-        std::vector<std::vector<Real>> histogramIter_;
 
         int headIndex_;
         int tailIndex_;
@@ -60,15 +75,10 @@ class Pcostz : public Calculation
         std::array<Real,3> arr_ = {{0,0,1}};
 
         // output stream
-        int precision_ = 3;
+        int precision_ = 5;
 
         // number of residues per bin
         std::vector<Real> numResiduePerBin_;
-
-        // number of residues per bin per iteration
-        std::vector<Real> numResiduePerBinIter_;
-
-        int ignoreBelow_ = 0;
 
         // we are binning z directions using min/max of the COM
         int Znumbins_;
