@@ -3,7 +3,6 @@
 ProbeVolumeCylinder::ProbeVolumeCylinder(ProbeVolumeInput& input)
 :ProbeVolume(input)
 {
-    //ASSERT((! isDynamic()), "The cylinder probe volume does not yet support dynamic atom group.");
 }
 
 void ProbeVolumeCylinder::setGeometry(Real rmin, Real rmax, Real zmax, Real ac, Real sigma)
