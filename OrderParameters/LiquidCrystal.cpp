@@ -1,6 +1,6 @@
-#include "liquid_crystal.h"
+#include "LiquidCrystal.h"
 
-liquid_crystal::liquid_crystal(const OrderParametersInput& input)
+LiquidCrystal::LiquidCrystal(const OrderParametersInput& input)
 :OrderParameters(input)
 {
     input.pack_.ReadString("tailgroup", ParameterPack::KeyType::Required, tailgroupname_);
@@ -18,7 +18,7 @@ liquid_crystal::liquid_crystal(const OrderParametersInput& input)
     ASSERT((tailgroupsize_ == headgroupsize_), "The number of atoms passed in for headgroup is less than that of tail group."); 
 }
 
-void liquid_crystal::getUij()
+void LiquidCrystal::getUij()
 {
     uij_.clear();
     norms_.clear();
@@ -51,7 +51,7 @@ void liquid_crystal::getUij()
 
             // normalize the local director
             norm = std::sqrt(sq_dist);
-            localdirector = Qtensor::vec_mult(1.0/norm, localdirector);
+            localdirector = LinAlg3x3::vec_mult(1.0/norm, localdirector);
 
             uij_[i] = localdirector;
             norms_[i] = norm;
@@ -59,7 +59,7 @@ void liquid_crystal::getUij()
     }
 }
 
-void liquid_crystal::calcQtensor()
+void LiquidCrystal::calcQtensor()
 {
     Qtensor_.fill({});
 
@@ -80,20 +80,20 @@ void liquid_crystal::calcQtensor()
             auto localdirector = uij_[i];
 
             // calculate the atomic Qtensor
-            Matrix Qtensor_atomic = Qtensor::vec_dyadic(localdirector, localdirector);
+            Matrix Qtensor_atomic = LinAlg3x3::vec_dyadic(localdirector, localdirector);
             
-            Qtensor::matrix_mult_inplace(Qtensor_atomic, 3);
-            Qtensor_atomic = Qtensor::matrix_sub(Qtensor_atomic, Qtensor::matrix_Identity());
+            LinAlg3x3::matrix_mult_inplace(Qtensor_atomic, 3);
+            Qtensor_atomic = LinAlg3x3::matrix_sub(Qtensor_atomic, LinAlg3x3::matrix_Identity());
 
             // accumulate the local Qtensor
-            Qtensor::matrix_accum_inplace(Qtensor_local, Qtensor_atomic);
+            LinAlg3x3::matrix_accum_inplace(Qtensor_local, Qtensor_atomic);
         }
 
         #pragma omp critical
         {
-            Qtensor::matrix_accum_inplace(Qtensor_, Qtensor_local);
+            LinAlg3x3::matrix_accum_inplace(Qtensor_, Qtensor_local);
         }
     }
 
-    Qtensor::matrix_mult_inplace(Qtensor_, 1.0/(2.0*tailgroupsize_));
+    LinAlg3x3::matrix_mult_inplace(Qtensor_, 1.0/(2.0*tailgroupsize_));
 }

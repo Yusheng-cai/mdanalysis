@@ -1,22 +1,23 @@
 #pragma once
+
 #include "OrderParameters.h"
 #include "tools/Assert.h"
-#include "Qtensor.h"
 #include "tools/CommonTypes.h"
+#include "LinAlgTools.h"
 #include "parallel/OpenMP_buffer.h"
 
 #include <string>
 #include <vector>
 
-class liquid_crystal: public OrderParameters
+class LiquidCrystal: public OrderParameters
 {
     public:
         using Matrix = CommonTypes::Matrix;
         using Real   = CommonTypes::Real;
         using Real3  = CommonTypes::Real3;
 
-        liquid_crystal(const OrderParametersInput& input);
-        virtual ~liquid_crystal(){};
+        LiquidCrystal(const OrderParametersInput& input);
+        virtual ~LiquidCrystal(){};
 
         void getUij();
         void calcQtensor();
