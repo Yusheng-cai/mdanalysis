@@ -6,11 +6,11 @@ namespace OrderParametersRegistry
 }
 
 P2cos::P2cos(const OrderParametersInput& input)
-:liquid_crystal(input)
+:LiquidCrystal(input)
 {
     input.pack_.ReadArrayNumber<Real,3>("director", ParameterPack::KeyType::Required, n_);
 
-    n_ = Qtensor::normalize_director(n_);
+    LinAlg3x3::normalize(n_);
 
     registerOutput("p2",[this](void)-> Real {return this->getP2cos();});
 }
@@ -28,7 +28,7 @@ void P2cos::calculate()
         {
             Real3 AtomDirector = uij_[i];
 
-            Real dot_product = Qtensor::vec_dot(AtomDirector, n_);
+            Real dot_product = LinAlg3x3::vec_dot(AtomDirector, n_);
 
             P2cos_local_ += 1.5*std::pow(dot_product,2.0) - 0.5;
         }
@@ -84,7 +84,7 @@ std::pair<P2cos::Real3,P2cos::Real3> P2cos::dP2cosdr(Real N, Real norm, Real3& d
 {
     std::pair<Real3,Real3> output;
 
-    Real dot_product = Qtensor::vec_dot(director, n);
+    Real dot_product = LinAlg3x3::vec_dot(director, n);
     Real factor = 3.0/(N*norm)*dot_product;
     Real3 derivative;
 
@@ -93,9 +93,9 @@ std::pair<P2cos::Real3,P2cos::Real3> P2cos::dP2cosdr(Real N, Real norm, Real3& d
         derivative[i] = n[i] - director[i]*dot_product;
     }
 
-    derivative = Qtensor::vec_mult(factor, derivative);
+    derivative = LinAlg3x3::vec_mult(factor, derivative);
 
-    Real3 secondD = Qtensor::vec_mult(-1.0, derivative);
+    Real3 secondD = LinAlg3x3::vec_mult(-1.0, derivative);
 
     output.first = derivative;
     output.second = secondD;

@@ -65,16 +65,16 @@ void P2tilde::calculate()
                 Real sq_dist;
                 simbox_.calculateDistance(headpos_, tailpos_, local_director, sq_dist);
 
-                local_director = Qtensor::vec_mult(local_director, 1.0/std::sqrt(sq_dist));
+                local_director = LinAlg3x3::vec_mult(local_director, 1.0/std::sqrt(sq_dist));
 
-                Matrix Qtensor_atomic = Qtensor::vec_dyadic(local_director, local_director);
+                Matrix Qtensor_atomic = LinAlg3x3::vec_dyadic(local_director, local_director);
 
-                Qtensor::matrix_mult_inplace(Qtensor_atomic, 3);
+                LinAlg3x3::matrix_mult_inplace(Qtensor_atomic, 3);
 
-                Qtensor_atomic = Qtensor::matrix_sub(Qtensor_atomic, Qtensor::matrix_Identity());
-                Qtensor::matrix_mult_inplace(Qtensor_atomic, output.htilde_x_);
+                Qtensor_atomic = LinAlg3x3::matrix_sub(Qtensor_atomic, LinAlg3x3::matrix_Identity());
+                LinAlg3x3::matrix_mult_inplace(Qtensor_atomic, output.htilde_x_);
 
-                Qtensor::matrix_accum_inplace(Qtensor_local_, Qtensor_atomic);
+                LinAlg3x3::matrix_accum_inplace(Qtensor_local_, Qtensor_atomic);
 
                 localNtilde_ += output.htilde_x_;
                 localN       += output.hx_;
@@ -83,23 +83,23 @@ void P2tilde::calculate()
 
         #pragma omp critical
         {
-            Qtensor::matrix_accum_inplace(Qtensor_, Qtensor_local_);
+            LinAlg3x3::matrix_accum_inplace(Qtensor_, Qtensor_local_);
 
             Ntilde_ += localNtilde_;
             N_      += localN;
         }
     }
 
-    Qtensor::matrix_mult_inplace(Qtensor_, 1.0/(2.0*Ntilde_));
+    LinAlg3x3::matrix_mult_inplace(Qtensor_, 1.0/(2.0*Ntilde_));
 
-    auto result = Qtensor::orderedeig_Qtensor(Qtensor_);
+    auto result = LinAlg3x3::OrderEigenSolver(Qtensor_);
 
-    p2tilde_ = result.second[0]; 
-    eig1_    = result.second[1];
-    eig2_    = result.second[2];
+    p2tilde_ = result.first[0]; 
+    eig1_    = result.first[1];
+    eig2_    = result.first[2];
     biaxiality_ = eig1_ * 2.0 + p2tilde_;
 
-    v1_ = result.first[0];
+    v1_ = result.second[0];
 }
 
 void P2tilde::update()

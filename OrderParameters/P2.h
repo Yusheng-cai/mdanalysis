@@ -2,15 +2,14 @@
 
 #include "OrderParameters.h"
 #include "tools/Assert.h"
-#include "Qtensor.h"
 #include "tools/CommonTypes.h"
 #include "parallel/OpenMP_buffer.h"
-#include "liquid_crystal.h"
+#include "LiquidCrystal.h"
 
 #include <string>
 #include <vector>
 
-class P2: public liquid_crystal
+class P2: public LiquidCrystal
 {
     public:
         using Matrix = CommonTypes::Matrix;

@@ -1,8 +1,8 @@
 #pragma once
 #include "Calculation.h"
 #include "Bin.h"
-#include "Qtensor.h"
 #include "SimulationState.h"
+#include "LinAlgTools.h"
 
 #include <string>
 #include <numeric>
@@ -81,7 +81,7 @@ class SlabOrientation : public Calculation
         std::vector<Real> numResiduePerBin_;
 
         // we are binning z directions using min/max of the COM
-        int Znumbins_;
+        int numbins_;
         Real above_;
         bool usingMinMax_=false;
 };

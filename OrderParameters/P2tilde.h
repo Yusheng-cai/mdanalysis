@@ -1,6 +1,6 @@
 #pragma once
 #include "OrderParameters.h"
-#include "Qtensor.h"
+#include "LinAlgTools.h"
 #include "tools/CommonTypes.h"
 
 #include <vector>

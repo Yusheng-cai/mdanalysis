@@ -6,7 +6,7 @@ namespace OrderParametersRegistry
 }
 
 P2::P2(const OrderParametersInput& input)
-:liquid_crystal(input)
+:LiquidCrystal(input)
 {
     registerOutput("p2",[this](void)-> Real {return this->getP2();});
     registerOutput("p20", [this](void) -> Real {return this->getP20();});
@@ -29,14 +29,14 @@ void P2::calculate()
     calcQtensor();
 
     // find the p2 variable as well as the eigenvalue
-    auto orderedEigPair = Qtensor::orderedeig_Qtensor(Qtensor_);
+    auto orderedEigPair = LinAlg3x3::OrderEigenSolver(Qtensor_);
 
-    P2_OP_ = -2.0*orderedEigPair.second[1];
+    P2_OP_ = orderedEigPair.first[0];
     for (int i=0;i<3;i++)
     {
-        v0_[i]    = orderedEigPair.first[i][0];
-        v1_[i]    = orderedEigPair.first[i][1];
-        v2_[i]    = orderedEigPair.first[i][2];
+        v0_[i]    = orderedEigPair.second[i][0];
+        v1_[i]    = orderedEigPair.second[i][1];
+        v2_[i]    = orderedEigPair.second[i][2];
     }
 
     // calculate p2 in each of the directions of the eigenvectors 
@@ -45,9 +45,9 @@ void P2::calculate()
     p2_2_ = 0.0;
     for (int i=0;i<uij_.size();i++)
     {
-        p2_0_ += 3*std::pow(Qtensor::vec_dot(uij_[i], v0_),2.0) - 1;
-        p2_1_ += 3*std::pow(Qtensor::vec_dot(uij_[i], v1_),2.0) - 1;
-        p2_2_ += 3*std::pow(Qtensor::vec_dot(uij_[i], v2_),2.0) - 1;
+        p2_0_ += 3*std::pow(LinAlg3x3::DotProduct(uij_[i], v0_),2.0) - 1;
+        p2_1_ += 3*std::pow(LinAlg3x3::DotProduct(uij_[i], v1_),2.0) - 1;
+        p2_2_ += 3*std::pow(LinAlg3x3::DotProduct(uij_[i], v2_),2.0) - 1;
     }
 
     auto& headatomgroup_ = getAtomGroup(headgroupname_);
@@ -105,7 +105,7 @@ std::pair<P2::Real3,P2::Real3> P2::dP2dr(Real N, Real norm, Real3& eigvec, Real3
     std::pair<Real3,Real3> pair_;
 
     // (v1 \dot u)
-    Real dotproduct = Qtensor::vec_dot(eigvec, director);
+    Real dotproduct = LinAlg3x3::DotProduct(eigvec, director);
     Real factor = - 6.0/(N*norm);
 
     Real3 output;
@@ -116,8 +116,8 @@ std::pair<P2::Real3,P2::Real3> P2::dP2dr(Real N, Real norm, Real3& eigvec, Real3
         output[i] += eigvec[i] - director[i]*dotproduct;
     }
 
-    output = Qtensor::vec_mult(factor, output);
-    Real3 output2 = Qtensor::vec_mult(-1.0, output);
+    output = LinAlg3x3::vec_mult(factor, output);
+    Real3 output2 = LinAlg3x3::vec_mult(-1.0, output);
 
     pair_.first = output;
     pair_.second = output2;

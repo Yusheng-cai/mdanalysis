@@ -15,11 +15,11 @@ SlabOrientation::SlabOrientation(const CalculationInput& input)
     if(zbinPack != nullptr)
     {
         zBin_    = Binptr(new Bin(*zbinPack));
-        Znumbins_= zBin_->getNumbins();
+        numbins_= zBin_->getNumbins();
     }
     else
     {
-        pack_.ReadNumber("Znumbins", ParameterPack::KeyType::Required, Znumbins_);
+        pack_.ReadNumber("numbins", ParameterPack::KeyType::Required, numbins_);
         pack_.ReadNumber("above", ParameterPack::KeyType::Required, above_);
         zBin_    = Binptr(new Bin());
         usingMinMax_ = true;
@@ -36,7 +36,7 @@ SlabOrientation::SlabOrientation(const CalculationInput& input)
     auto& res = getResidueGroup(residueGroupName_);
 
     // size histogram 2d      
-    histogram2d_.resize(Znumbins_, std::vector<Real>(costBin_->getNumbins(),0.0));
+    histogram2d_.resize(numbins_, std::vector<Real>(costBin_->getNumbins(),0.0));
 
     // resize the molecular director size
     uij_.resize(res.size());
@@ -84,9 +84,8 @@ void SlabOrientation::calculate()
         Real3 headPos = res[i].atoms_[headIndex_].positions_;
         Real3 tailPos = res[i].atoms_[tailIndex_].positions_;
         simstate_.getSimulationBox().calculateDistance(headPos, tailPos, distance, dist_sq);
-
-        Real3 normalized_dir = Qtensor::normalize_director(distance);
-        uij_[i] = normalized_dir;
+        LinAlg3x3::normalize(distance);
+        uij_[i] = distance;
     }
 
     // bin using min max of the molecules if needed 
@@ -99,7 +98,7 @@ void SlabOrientation::calculate()
     for (int i=0;i<res.size();i++)
     {
         Real dist = COM_[i][directionIndex_];
-        Real cost = Qtensor::vec_dot(uij_[i], arr_);
+        Real cost = LinAlg3x3::DotProduct(uij_[i], arr_);
         if (zBin_->isInRange(dist) && costBin_->isInRange(cost))
         {  
             int zbinNum = zBin_->findBin(dist);
@@ -135,7 +134,7 @@ void SlabOrientation::binUsingMinMax()
 
     std::cout << "Max = " << max << " Min = " << min << std::endl;
 
-    zBin_ -> update(range, Znumbins_);
+    zBin_ -> update(range, numbins_);
 }
 
 void SlabOrientation::finishCalculate()

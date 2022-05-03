@@ -95,24 +95,24 @@ void grcost::calculate()
 
             Matrix singleQ = LinAlg3x3::LocalQtensor(uij_[index]);
 
-            Qtensor::matrix_accum_inplace(localQ, singleQ);
+            LinAlg3x3::matrix_accum_inplace(localQ, singleQ);
         }
 
         #pragma omp critical
         {
-            Qtensor::matrix_accum_inplace(Qtensor_, localQ);
+            LinAlg3x3::matrix_accum_inplace(Qtensor_, localQ);
         }
     }
 
-    Qtensor::matrix_mult_inplace(Qtensor_, 1.0/(2.0*N));
-    auto result = Qtensor::orderedeig_Qtensor(Qtensor_);
+    LinAlg3x3::matrix_mult_inplace(Qtensor_, 1.0/(2.0*N));
+    auto result = LinAlg3x3::OrderEigenSolver(Qtensor_);
 
     // get the director out of the result
     if (! arrayRead_)
     {
         for (int i=0;i<3;i++)
         {
-            director_[i] = result.first[i][0];
+            director_[i] = result.second[i][0];
         }
     }
     else

@@ -4,7 +4,6 @@
 #include "tools/Assert.h"
 #include "tools/CommonTypes.h"
 #include "LinAlgTools.h"
-#include "Qtensor.h"
 #include "parallel/OpenMP.h"
 #include "SimulationState.h"
 

@@ -1,16 +1,15 @@
 #pragma once
 #include "OrderParameters.h"
 #include "tools/Assert.h"
-#include "Qtensor.h"
 #include "tools/CommonTypes.h"
 #include "parallel/OpenMP_buffer.h"
-#include "liquid_crystal.h"
+#include "LiquidCrystal.h"
 #include <cmath>
 
 #include <string>
 #include <vector>
 
-class P2cos: public liquid_crystal
+class P2cos: public LiquidCrystal
 {
     public:
         using Matrix = CommonTypes::Matrix;

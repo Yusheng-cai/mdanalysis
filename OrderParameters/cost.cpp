@@ -82,14 +82,14 @@ void Cost::calculate()
         Real3 com = CalculationTools::getCOM(res[i], simstate_, COMIndices_);
         COM_[i] = com;
 
-        Real3 distance_;
+        Real3 distance;
         Real dist_sq;
-        Real3 headPos_ = res[i].atoms_[headIndex_].positions_;
-        Real3 tailPos_ = res[i].atoms_[tailIndex_].positions_;
-        simstate_.getSimulationBox().calculateDistance(headPos_, tailPos_, distance_, dist_sq);
+        Real3 headPos = res[i].atoms_[headIndex_].positions_;
+        Real3 tailPos = res[i].atoms_[tailIndex_].positions_;
+        simstate_.getSimulationBox().calculateDistance(headPos, tailPos, distance, dist_sq);
 
-        Real3 normalized_dir = Qtensor::normalize_director(distance_);
-        uij_[i] = normalized_dir;
+        LinAlg3x3::normalize(distance);
+        uij_[i] = distance;
     }
 
     // check which COM are inside the probevolume
@@ -112,7 +112,7 @@ void Cost::calculate()
     for (int i=0;i<InsideIndices.size();i++)
     {
         int k = InsideIndices[i];
-        Real cost = Qtensor::vec_dot(uij_[k], arr_);
+        Real cost = LinAlg3x3::vec_dot(uij_[k], arr_);
         Real cost2 = cost * cost;
 
         // average the cos squared theta 

@@ -5,7 +5,6 @@
 #include "tools/CommonTypes.h"
 #include "SimulationState.h"
 #include "LinAlgTools.h"
-#include "Qtensor.h"
 #include "Bin.h"
 #include "parallel/OpenMP.h"
 

@@ -98,20 +98,20 @@ void LocalOrder::calculate()
         for (int i=0;i<uij_.size();i++)
         {
             Matrix QtensorSingle_ = LinAlg3x3::LocalQtensor(uij_[i]);
-            Qtensor::matrix_accum_inplace(QtensorLocal_, QtensorSingle_);
+            LinAlg3x3::matrix_accum_inplace(QtensorLocal_, QtensorSingle_);
         }
 
         #pragma omp critical 
         {
-            Qtensor::matrix_accum_inplace(GlobalQtensor_, QtensorLocal_);
+            LinAlg3x3::matrix_accum_inplace(GlobalQtensor_, QtensorLocal_);
         }
     }
     Real N = uij_.size();
-    Qtensor::matrix_mult_inplace(GlobalQtensor_, 1/(2.0*N));
+    LinAlg3x3::matrix_mult_inplace(GlobalQtensor_, 1/(2.0*N));
 
-    auto result = Qtensor::orderedeig_Qtensor(GlobalQtensor_);
-    globaleigenvalue_ = result.second;
-    globaleigenvector_ = result.first;
+    auto result = LinAlg3x3::OrderEigenSolver(GlobalQtensor_);
+    globaleigenvalue_ = result.first;
+    globaleigenvector_ = result.second;
     for (int i=0;i<3;i++)
     {
         v0_[i] = globaleigenvector_[i][0];
@@ -125,7 +125,7 @@ void LocalOrder::calculate()
         QtensorLocal.fill({});
 
         Matrix Q = LinAlg3x3::LocalQtensor(uij_[i]);
-        Qtensor::matrix_accum_inplace(QtensorLocal, Q);
+        LinAlg3x3::matrix_accum_inplace(QtensorLocal, Q);
 
         // iterate over the neighbors 
         for (int j=0;j<neighborIndices_[i].size();j++)
@@ -134,24 +134,24 @@ void LocalOrder::calculate()
 
             Matrix Q  = LinAlg3x3::LocalQtensor(uij_[index]);
 
-            Qtensor::matrix_accum_inplace(QtensorLocal, Q);
+            LinAlg3x3::matrix_accum_inplace(QtensorLocal, Q);
         }
 
-        Qtensor::matrix_mult_inplace(QtensorLocal, 0.5/(neighborIndices_[i].size() + 1));
+        LinAlg3x3::matrix_mult_inplace(QtensorLocal, 0.5/(neighborIndices_[i].size() + 1));
 
         // find the eigenvalue and eigenvector 
-        auto res = Qtensor::orderedeig_Qtensor(QtensorLocal);
-        localP2_[i] = res.second[0];
-        localBiaxiality_[i] = res.second[1] * 2.0 + res.second[0]; 
+        auto res = LinAlg3x3::OrderEigenSolver(QtensorLocal);
+        localP2_[i] = res.first[0];
+        localBiaxiality_[i] = res.first[1] * 2.0 + res.first[0]; 
 
         // get the local director dotted with the corresponding user provided direction
-        Real3 vec_;
+        Real3 vec;
         for (int j=0;j<3;j++)
         {
-            vec_[j] = res.first[j][0];
+            vec[j] = res.second[j][0];
         }
 
-        Real dotProduct = LinAlg3x3::DotProduct(vec_, v0_);
+        Real dotProduct = LinAlg3x3::DotProduct(vec, v0_);
 
         localdirector_[i] = dotProduct;
     }
