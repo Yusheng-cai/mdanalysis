@@ -26,6 +26,8 @@ OrientationalDistribution::OrientationalDistribution(const CalculationInput& inp
     // initialize the bins 
     CosThetaBin_ = Binptr(new Bin(CosThetaRange_, NumBins_));
     CosThetaSquaredBin_ = Binptr(new Bin(CosThetaSquaredRange_, NumBins_));
+    PCosTheta_.resize(NumBins_,0.0);
+    PCosThetaSquared_.resize(NumBins_,0.0);
 
     // register the output functions 
     registerOutputs();

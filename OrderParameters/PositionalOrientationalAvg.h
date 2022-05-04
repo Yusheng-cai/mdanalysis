@@ -27,7 +27,7 @@ class PositionalOrientationalAvg : public  Calculation
         PositionalOrientationalAvg(const CalculationInput& input);
 
         void RegisterOutputs();
-        void RegisterCalculationFunctions();
+        void RegisterCalculationFunctions(std::string name, avg_func func);
 
         virtual void calculate();
         virtual void update(){};
@@ -35,6 +35,10 @@ class PositionalOrientationalAvg : public  Calculation
 
         // calculation functions 
         Real PairUsr(const Molecule::residue& res1, const Molecule::residue& res2);
+
+        // printing outputs
+        void printAverage(std::string name);
+        void printHistogram(std::string name);
 
     private:
         // The indices inside a residue to calculate Usr  
@@ -63,4 +67,10 @@ class PositionalOrientationalAvg : public  Calculation
         // The kind of averaging that user wants to perform
         std::string Avg_type_;
         std::map<std::string, avg_func> MapNameToFunc_;
+
+        // factors for Usr
+        Real Usr_factor_ = 138.935458; 
+        Real Usr_cuttoff_= 1.2;
+        Real Usr_epsilon_= 0.384;
+        Real Usr_alpha_;
 };
