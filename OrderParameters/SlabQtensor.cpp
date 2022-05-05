@@ -163,11 +163,10 @@ void SlabQtensor::calculate()
     COM_.resize(res.size());
 
     // obtain the center of mass of each of the residues
+    #pragma omp parallel for 
     for (int i=0;i<res.size();i++)
     {
-        Real3 COMperAtom_;
-        COMperAtom_ = CalculationTools::getCOM(res[i], simstate_, COMIndices_);
-        COM_[i] = COMperAtom_;
+        COM_[i] = CalculationTools::getCOM(res[i], simstate_, COMIndices_);
     }
 
     // update the bins using COM min and max 

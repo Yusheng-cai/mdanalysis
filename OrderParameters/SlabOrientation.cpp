@@ -74,10 +74,10 @@ void SlabOrientation::calculate()
     auto& res = getResidueGroup(residueGroupName_).getResidues();
 
     // find all the COM of the residues in the system
+    #pragma omp parallel for 
     for (int i=0;i<res.size();i++)
     {
-        Real3 com = CalculationTools::getCOM(res[i], simstate_, COMIndices_);
-        COM_[i] = com;
+        COM_[i] = CalculationTools::getCOM(res[i], simstate_, COMIndices_);
 
         Real3 distance;
         Real dist_sq;
