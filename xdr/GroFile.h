@@ -22,7 +22,6 @@ class GroFile
         void Open(std::string Name);
         void ParseFile();
         void ReadLines();
-        void CorrectMinAtomNumber(int minNum);
         void CorrectMinResidueNumber(std::set<int>& ResidueSet);
         void constructResidues();
 

@@ -7,6 +7,7 @@ void GroFile::ReadLines()
     ASSERT((ifs_.is_open()), "The file with name " << filename_ << " is not opened.");
 
     std::string sentence;
+
     // The first line is comment
     std::getline(ifs_, sentence);
 
@@ -89,20 +90,13 @@ void GroFile::ParseFile()
         a.residueName_ = residueName;
         a.residueNumber_ = residueNumber;
         a.atomName_ = atomName;
-        a.atomNumber_ = atomNumber;
+        a.atomNumber_ = i+1;
 
         atomsinfo_.push_back(std::move(a));
         ResidueSet.insert(residueNumber);
         AtomTypes_.insert(atomName);
         ResidueNames_.insert(residueName);
-
-        if (atomNumber < minAtomNumber_)
-        {
-            minAtomNumber_ = atomNumber;
-        }
     }
-
-    CorrectMinAtomNumber(minAtomNumber_);
 
     numResidues_ = ResidueSet.size();
     numUniqueResidues_ = ResidueNames_.size();
@@ -112,20 +106,6 @@ void GroFile::ParseFile()
     constructResidues();
 }
 
-void GroFile::CorrectMinAtomNumber(int minNum)
-{
-    // correct for atom Number, we make it such that it always starts with 1 
-    if (minNum != 1)
-    {
-        int diff = 1 - minNum;
-
-        for (int i=0;i<atomsinfo_.size();i++)
-        {
-            auto& atom = atomsinfo_[i];
-            atom.atomNumber_ += diff;
-        }
-    }
-}
 
 void GroFile::CorrectMinResidueNumber(std::set<int>& ResidueSet)
 {

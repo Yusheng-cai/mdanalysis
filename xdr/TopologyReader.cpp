@@ -5,15 +5,18 @@ void TopologyReader::Parse(std::string& name)
     atomtypes_.clear();
     
     // First read everything in the file
-    std::ifstream ifs_;
+    std::ifstream ifs;
 
-    ifs_.open(name);
-    ASSERT((ifs_.is_open()), "The name " << name << " is not opened.");
+    // open the file and make sure it is opened
+    ifs.open(name);
+    ASSERT((ifs.is_open()), "The name " << name << " is not opened.");
 
+    // start parsing the file 
     std::vector<std::string> contents;
     std::string sentence;
 
-    while (std::getline(ifs_,sentence))
+    // start parsing the sentences 
+    while (std::getline(ifs,sentence))
     {
         // skip the empty lines
         if (! StringTools::CheckIfOnlyWhiteSpace(sentence))
@@ -33,16 +36,18 @@ void TopologyReader::Parse(std::string& name)
                 }
             }
 
-            if (words[0] != ";" && words[0] != "#include")
+            // no # symbol in the first letter of the sentence 
+            bool NotComment = words[0].find("#") == std::string::npos;
+            if (words[0] != ";" && NotComment)
             {
                 contents.push_back(sentence);
             }
         }
     }
 
-
+    // contents is the content of the file --> all the lines inside the file 
     std::stringstream ss;
-    std::vector<int> startIndices_;
+    std::vector<int> StartIndices;
     int moleculeIndices;
     int start = 0;
 
@@ -68,7 +73,7 @@ void TopologyReader::Parse(std::string& name)
             // if the word is atoms, then we start parsing
             if (words[1] == "atoms")
             {
-                startIndices_.push_back(i);
+                StartIndices.push_back(i);
             }
 
             if (words[1] == "molecules")
@@ -118,9 +123,9 @@ void TopologyReader::Parse(std::string& name)
     }
 
     // read the starting indices
-    for (int i =0;i<startIndices_.size();i++)
+    for (int i =0;i<StartIndices.size();i++)
     {
-        int start = startIndices_[i];
+        int start = StartIndices[i];
         for (int j=start+1;j<contents.size();j++)
         {
             int index = contents[j].find_first_not_of(" ");
