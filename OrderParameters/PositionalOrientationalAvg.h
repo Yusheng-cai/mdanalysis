@@ -38,7 +38,6 @@ class PositionalOrientationalAvg : public  Calculation
 
         // printing outputs
         void printAverage(std::string name);
-        void printHistogram(std::string name);
 
     private:
         // The indices inside a residue to calculate Usr  
