@@ -53,9 +53,6 @@ void GroFile::ParseFile()
     atomsinfo_.clear();
     std::set<int> ResidueSet;
 
-    // minimum atom number
-    long long minAtomNumber_ = 10000000;
-
     for (int i=0; i< lines_.size() ;i++)
     {
         std::string sentence = lines_[i];
@@ -92,7 +89,7 @@ void GroFile::ParseFile()
         a.atomName_ = atomName;
         a.atomNumber_ = i+1;
 
-        atomsinfo_.push_back(std::move(a));
+        atomsinfo_.push_back(a);
         ResidueSet.insert(residueNumber);
         AtomTypes_.insert(atomName);
         ResidueNames_.insert(residueName);
