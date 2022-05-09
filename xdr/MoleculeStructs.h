@@ -28,4 +28,16 @@ namespace Molecule
         std::vector<atom> atoms_;
         std::vector<Real> mass_;
     };
+
+    struct AtomType
+    {
+        using Real = CommonTypes::Real;
+
+        std::string type_;
+        std::string resname_;
+        std::string atomName_;
+        int atomNumber_;
+        Real charge_;
+        Real mass_;
+    };
 }
