@@ -42,13 +42,14 @@ SlabOrientation::SlabOrientation(const CalculationInput& input)
     uij_.resize(res.size());
 
     // resize the number of residues to size of residue
-    numResiduePerBin_.resize(res.size());
-    std::fill(numResiduePerBin_.begin(), numResiduePerBin_.end(),0);
+    numResiduePerBin_.resize(numbins_,0.0);
+    ResidueLocationPerBin_.resize(numbins_,0.0);
 }
 
 void SlabOrientation::RegisterOutputs()
 {
     registerOutputFunction("PCosthetaZ", [this](std::string name)->void {this -> printHistogram(name);});
+    registerOutputFunction("ResiduePerBin", [this](std::string name) -> void {this -> printNumResidue(name);});
 }
 
 void SlabOrientation::ReadInputs()
@@ -135,6 +136,11 @@ void SlabOrientation::binUsingMinMax()
     std::cout << "Max = " << max << " Min = " << min << std::endl;
 
     zBin_ -> update(range, numbins_);
+
+    for (int i=0;i<numbins_;i++)
+    {
+        ResidueLocationPerBin_[i] += zBin_->getCenterLocationOfBin(i);
+    }
 }
 
 void SlabOrientation::finishCalculate()
@@ -145,6 +151,7 @@ void SlabOrientation::finishCalculate()
     for (int i=0;i<numResiduePerBin_.size();i++)
     {
         numResiduePerBin_[i] /= Numframes;
+        ResidueLocationPerBin_[i] /= Numframes;
     }
 
     // normalize the entire histogram such as \sum \sum P(z, cos(\beta)) = 1
@@ -188,6 +195,20 @@ void SlabOrientation::printHistogram(std::string name)
         {
             ofs << i << "\t" << j << "\t" << histogram2d_[i][j] << "\n";
         }
+    }
+    ofs.close();
+}
+
+void SlabOrientation::printNumResidue(std::string name)
+{
+    std::ofstream ofs;
+    ofs.open(name);
+
+    ofs << std::fixed << std::setprecision(precision_);
+
+    for (int i=0;i<numResiduePerBin_.size();i++)
+    {
+        ofs << ResidueLocationPerBin_[i] << " " << numResiduePerBin_[i] << "\n";
     }
     ofs.close();
 }

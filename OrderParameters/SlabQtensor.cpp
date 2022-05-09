@@ -147,6 +147,7 @@ void SlabQtensor::binUsingMinMax()
     {
         BinLocation_[i] += bin_ -> getCenterLocationOfBin(i);
     }
+    std::cout << "Min = " << min << ", Max = " << max << "\n";
 }
 
 void SlabQtensor::calculate()

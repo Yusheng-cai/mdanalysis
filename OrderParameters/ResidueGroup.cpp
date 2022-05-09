@@ -31,7 +31,6 @@ ResidueGroup::ResidueGroup(const ResidueInput& input)
     {
         Residues_[index] = GroResidues_[*it];
 
-
         for (int i=0;i<Residues_[index].atoms_.size();i++)
         {
             std::string residueName = Residues_[index].atoms_[i].residueName_;

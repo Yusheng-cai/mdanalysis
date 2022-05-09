@@ -43,6 +43,7 @@ class SlabOrientation : public Calculation
         virtual void finishCalculate() override;
 
         void printHistogram(std::string name);
+        void printNumResidue(std::string name);
 
         void binUsingMinMax();
 
@@ -79,6 +80,7 @@ class SlabOrientation : public Calculation
 
         // number of residues per bin
         std::vector<Real> numResiduePerBin_;
+        std::vector<Real> ResidueLocationPerBin_;
 
         // we are binning z directions using min/max of the COM
         int numbins_;
