@@ -2,8 +2,6 @@
 
 void TopologyReader::Parse(std::string& name)
 {
-    atomtypes_.clear();
-    
     // First read everything in the file
     std::ifstream ifs;
 
@@ -80,22 +78,27 @@ void TopologyReader::Parse(std::string& name)
             {
                 moleculeIndices = i;
             }
+
+            if (words[1] == "atomtypes")
+            {
+                AtomtypeIndices_.push_back(i);
+            }
         }
     }
 
     // read the molecules
-    for (int j = moleculeIndices+1;j<contents.size();j++)
+    for (int i = moleculeIndices+1;i<contents.size();i++)
     {
-        int index = contents[j].find_first_not_of(" ");
+        int index = contents[i].find_first_not_of(" ");
 
-        if (contents[j][index] == '[')
+        if (contents[i][index] == '[')
         {
             break;
         }
         else
         {
             ss.clear();
-            ss.str(contents[j]);
+            ss.str(contents[i]);
             std::string word;
             std::vector<std::string> words;
 
@@ -119,6 +122,75 @@ void TopologyReader::Parse(std::string& name)
             // record the resnames 
             std::vector<std::string> Residues(num, words[0]);
             resnames_.insert(resnames_.end(), Residues.begin(), Residues.end());
+        }
+    }
+
+    // read the atomtypes
+    for (int i=0;i<AtomtypeIndices_.size();i++)
+    {
+        int start = AtomtypeIndices_[i];
+
+        for (int j=start+1;j<contents.size();j++)
+        {
+            int index = contents[j].find_first_not_of(" ");
+            if (contents[j][index] == '[')
+            {
+                break;
+            }
+            else
+            {
+                ss.clear();
+                ss.str(contents[j]);
+
+                std::string word;
+                std::vector<std::string> words;
+
+                while (ss >> word)
+                {
+                    // sometimes we have comments at the end of line
+                    // e.g. blah blah ; comment 
+                    if (word == ";")
+                    {
+                        break;
+                    }
+                    words.push_back(word);
+                }
+
+                Molecule::AtomType a;
+                if (words.size() == 8)
+                {
+                    a.type_     = words[0];
+                    a.charge_   = StringTools::StringToType<Real>(words[4]);
+                    a.mass_     = StringTools::StringToType<Real>(words[3]);
+                    a.sigma_    = StringTools::StringToType<Real>(words[6]);
+                    a.epsilon_  = StringTools::StringToType<Real>(words[7]);
+                }
+                else if (words.size() == 7)
+                {
+                    a.type_     = words[0];
+                    a.mass_     = StringTools::StringToType<Real>(words[2]);
+                    a.charge_   = StringTools::StringToType<Real>(words[3]);
+                    a.sigma_    = StringTools::StringToType<Real>(words[5]);
+                    a.epsilon_  = StringTools::StringToType<Real>(words[6]);
+                }
+                else if (words.size() == 6)
+                {
+                    a.type_     = words[0];
+                    a.mass_     = StringTools::StringToType<Real>(words[1]);
+                    a.charge_   = StringTools::StringToType<Real>(words[2]);
+                    a.sigma_    = StringTools::StringToType<Real>(words[4]);
+                    a.epsilon_  = StringTools::StringToType<Real>(words[5]);
+                }
+                else
+                {
+                    ASSERT((true == false), "Something went wrong in the atomtypes reading.");
+                }
+
+                auto it = MapTypenameToAtomType_.find(a.type_);
+                ASSERT((it == MapTypenameToAtomType_.end()), "The typename " << a.type_ << " is repeated more than once.");
+                MapTypenameToAtomType_.insert(std::make_pair(a.type_, a));
+            }
+
         }
     }
 
@@ -152,23 +224,31 @@ void TopologyReader::Parse(std::string& name)
                     words.push_back(word);
                 }
 
-                ASSERT((words.size() == linenum_), "The size of the line in [ atoms ] directive is " << words.size() << " while it should be " << linenum_);
+                std::string resname = words[TopIdx::resname];
+                auto it = MapResnameToTypename_.find(resname);
+                if (it != MapResnameToTypename_.end())
+                {
+                    it -> second.push_back(words[TopIdx::atomtype]);
+                }
+                else
+                {
+                    std::vector<std::string> tname = {words[TopIdx::atomtype]};
+                    MapResnameToTypename_.insert(std::make_pair(resname, tname));
+                }
 
-                Molecule::AtomType a;
-                a.atomName_ = words[TopIdx::atomName];
-                a.charge_   = StringTools::StringToType<Real>(words[TopIdx::charge]);
-                a.mass_     = StringTools::StringToType<Real>(words[TopIdx::mass]);
-                a.resname_  = words[TopIdx::resname];
-                a.type_     = words[TopIdx::atomtype];
-                a.atomNumber_ = StringTools::StringToType<int>(words[TopIdx::atomnumber]);
-
-                atomtypes_.push_back(a);
+                auto itatom = MapResnameToAtomname_.find(resname);
+                if (itatom != MapResnameToAtomname_.end())
+                {
+                    itatom -> second.push_back(words[TopIdx::atomName]);
+                }
+                else
+                {
+                    std::vector<std::string> aname = {words[TopIdx::atomName]};
+                    MapResnameToAtomname_.insert(std::make_pair(resname, aname));
+                }
             }
         }        
     }
-
-    // map index to corresponding atom type information
-    MapResnameToAtomType();
     MapIndicesToAtom();
 }
 
@@ -179,22 +259,28 @@ void TopologyReader::MapIndicesToAtom()
     {
         std::string name = resnames_[i];
 
-        auto it = MapResnameToAtomType_.find(name);
-        ASSERT((it != MapResnameToAtomType_.end()), "The resname " << name << " is not found.");
-        auto atomtypevec = it -> second;
+        auto it = MapResnameToTypename_.find(name);
+        ASSERT((it != MapResnameToTypename_.end()), "The resname " << name << " is not found.");
+        auto atomtypename = it -> second;
+
+        auto atomname = MapResnameToAtomname_.find(name)->second;
 
         std::vector<Molecule::atom> AtomVec;
         Molecule::residue res;
-        for (int j=0;j<atomtypevec.size();j++)
+        for (int j=0;j<atomname.size();j++)
         {
+            auto it = MapTypenameToAtomType_.find(atomtypename[j]);
+            ASSERT((it != MapTypenameToAtomType_.end()), "The type name " << atomtypename[j] << " in resname " << name << " is not found.");
+            auto atype = it->second;
+
             Molecule::atom a;
-            a.atomName_ = atomtypevec[j].atomName_;
+            a.atomName_ = atomname[j];
             a.atomNumber_ = numatoms;  
             numatoms++;
-            a.charge_   = atomtypevec[j].charge_;
-            a.mass_     = atomtypevec[j].mass_;
+            a.charge_   = atype.charge_;
+            a.mass_     = atype.mass_;
             a.resnum_ = i+1;
-            a.resname_ = atomtypevec[j].resname_;
+            a.resname_ = name;
 
             AtomVec.push_back(a);
         }
@@ -202,46 +288,5 @@ void TopologyReader::MapIndicesToAtom()
         res.atoms_ = AtomVec;
         atoms_.insert(atoms_.end(), AtomVec.begin(), AtomVec.end());
         residues_.push_back(res);
-    }
-}
-
-void TopologyReader::MapResnameToAtomType()
-{
-    for (int i=0;i<atomtypes_.size();i++)
-    {
-        std::string resname = atomtypes_[i].resname_;
-
-        auto it = MapResnameToAtomType_.find(resname);
-
-        if (it != MapResnameToAtomType_.end())
-        {
-            it -> second.push_back(atomtypes_[i]);
-        }
-        else
-        {
-            std::vector<Molecule::AtomType> temp = {atomtypes_[i]};
-            MapResnameToAtomType_.insert(std::make_pair(resname, temp));
-        }
-    }
-
-    // sort the atomtypes in the map by their atomnumber 
-    for (auto it = MapResnameToAtomType_.begin(); it != MapResnameToAtomType_.end(); it ++)
-    {
-        auto types = it -> second;
-        std::sort(types.begin(), types.end(), [](const Molecule::AtomType& a, const Molecule::AtomType& b)\
-        {return a.atomNumber_> b.atomNumber_;});
-        it -> second = types;
-    }
-}
-
-void TopologyReader::print()
-{
-    std::cout << "atomName\tcharge\tmass\tresname\ttype" << std::endl;
-
-    for(int i=0;i<atomtypes_.size();i++)
-    {
-        auto& a = atomtypes_[i];
-
-        std::cout << a.atomName_ << "\t" << a.charge_ << "\t" << a.mass_ << "\t" << a.resname_ << "\t" << a.type_ << std::endl;
     }
 }

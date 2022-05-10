@@ -26,16 +26,12 @@ class TopologyReader
         // atomid atomtype resnr residuename atomname cgnr charge mass
         void Parse(std::string& name);
 
-        // print the content
-        void print();
-
         // make map from residue name to atom type
         void MapResnameToAtomType();
 
         // make the vector from indices to atomtypes
         void MapIndicesToAtom();
 
-        std::vector<Molecule::AtomType>& getAtomTypes() {return atomtypeIndices_;}
         Molecule::atom& getAtomByIndex(int i) {return atoms_[i];}
         Molecule::residue& getResidueByIndex(int i) {return residues_[i];}
 
@@ -53,14 +49,13 @@ class TopologyReader
 
         std::vector<std::string> resnames_;
 
-        std::vector<Molecule::AtomType> atomtypeIndices_;
+        std::vector<int> AtomtypeIndices_;
 
-        // Each line in [ atoms ] directive must have 8 entries
-        int linenum_ = 8;
-
-        std::vector<Molecule::AtomType> atomtypes_;
+        std::map<std::string, Molecule::AtomType> MapTypenameToAtomType_;
         std::map<std::string, int> MapResnameToNumberResidues_;
-        std::map<std::string, std::vector<Molecule::AtomType>> MapResnameToAtomType_;
+        std::map<std::string, std::vector<std::string>> MapResnameToTypename_;
+        std::map<std::string, std::vector<std::string>> MapResnameToAtomname_;
+
         std::vector<Molecule::atom> atoms_;
         std::vector<Molecule::residue> residues_;
 };
