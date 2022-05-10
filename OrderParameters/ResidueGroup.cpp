@@ -13,60 +13,39 @@ ResidueGroup::ResidueGroup(const ResidueInput& input)
     // This is ensured to be sorted by AtomGroupStrategy
     strat_->Parse(AtomGroupGlobalIndices_);
 
-    // get all the residues from Gro file
-    const auto& GroResidues_ = grofile_.getResidues();
-
     // get all the indices of the residues from parsing strategy
     const auto& residueIndices = strat_->getResidueIndices();
-    size_ = residueIndices.size();
-
-    Residues_.resize(residueIndices.size());
-    AtomsPerResidue_.resize(residueIndices.size());
-    int index=0;
-
     atomSize_ = 0;
+    Residues_.clear();
 
     // a set is always sorted in C++
     for (auto it = residueIndices.begin();it != residueIndices.end();it++)
     {
-        Residues_[index] = GroResidues_[*it];
-
-        for (int i=0;i<Residues_[index].atoms_.size();i++)
-        {
-            std::string residueName = Residues_[index].atoms_[i].residueName_;
-            std::string atomname = Residues_[index].atoms_[i].atomName_;
-            int idx  = Residues_[index].atoms_[i].atomNumber_ - 1;
-
-            Residues_[index].atoms_[i].type_ = top_.getAtomTypeFromIndex(idx);
-            Residues_[index].atoms_[i].mass_ = top_.getMassFromIndex(idx);
-            Residues_[index].atoms_[i].charge_ = top_.getChargeFromIndex(idx); 
-
-            Molecule::atom a = Residues_[index].atoms_[i];
-            TotalResidues_.atoms_.push_back(a);
-        }
-
-        atomSize_ += Residues_[index].atoms_.size();
-
-        index++;
+        int resindex = *it;
+        auto& r = top_.getResidueByIndex(resindex);
+        Residues_.push_back(r);
+        int numatoms = r.atoms_.size();
+        AtomsPerResidue_.push_back(numatoms);
+        atomSize_ += numatoms;
     }
 }
 
-void ResidueGroup::update(const VectorReal3& total_atoms_)
+void ResidueGroup::update(const VectorReal3& total_atoms)
 {
     for (int i=0;i<Residues_.size();i++)
     { 
         for (int j=0;j<Residues_[i].atoms_.size();j++)
         {
-            int atNum = Residues_[i].atoms_[j].atomNumber_ - 1;
             // be careful, atomNumber is 1 based
-            Residues_[i].atoms_[j].positions_ = total_atoms_[atNum];
+            int atNum = Residues_[i].atoms_[j].atomNumber_ - 1;
+            Residues_[i].atoms_[j].positions_ = total_atoms[atNum];
         }
     }
 
     for (int i=0;i<TotalResidues_.atoms_.size();i++)
     {
-        int atNum = TotalResidues_.atoms_[i].atomNumber_ - 1;
         // be careful, atomNumber is 1 based
-        TotalResidues_.atoms_[i].positions_ = total_atoms_[atNum];
+        int atNum = TotalResidues_.atoms_[i].atomNumber_ - 1;
+        TotalResidues_.atoms_[i].positions_ = total_atoms[atNum];
     }
 }

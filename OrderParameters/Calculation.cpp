@@ -376,10 +376,8 @@ std::vector<int>& indices_)
     auto& pos1 = residueGroup.atoms_[index0].positions_;
 
     // Total mass of the atoms of interest
-    Real chargeTot = 0;
     Real3 COM_pos = {{0,0,0}};
     
-
     // iterate over the indices of interest
     for (int j=0;j<indices_.size();j++)
     {
