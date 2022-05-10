@@ -12,8 +12,6 @@
 #include <array>
 #include <string>
 
-class AtomGroup;
-
 struct AtomGroupInput
 {
     ParameterPack& pack_;

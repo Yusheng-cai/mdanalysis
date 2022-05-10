@@ -29,11 +29,8 @@ target_sources(mdaOrderParameters PRIVATE
     "Calculation.cpp"
     "DataFileParser.cpp"
     "SlabQtensor.cpp"
-    "Timeseries.cpp"
     "RDFresidue.cpp"
     "SlabOrientation.cpp"
-    "cost.cpp"
-    "BetaFactorWriter.cpp"
     "ProbeVolumeSimBox.cpp"
     "Dipole.cpp"
     "LinAlgTools.cpp"
@@ -47,9 +44,9 @@ target_sources(mdaOrderParameters PRIVATE
     "DistributionGivenDimer.cpp"
     "SRE.cpp"
     "CellGrid.cpp"
-    "SRE_dimer.cpp"
     "OrientationalDistribution.cpp"
     "PositionalOrientationalAvg.cpp"
+    "SlabAtomicProperty.cpp"
 )
 
 set(mdaOrderParameters_HEADER
@@ -80,11 +77,8 @@ set(mdaOrderParameters_HEADER
     "Calculation.h"
     "DataFileParser.h"
     "SlabQtensor.h"
-    "Timeseries.h"
     "RDFresidue.h"
     "SlabOrientation.h"
-    "cost.h"
-    "BetaFactorWriter.h"
     "ProbeVolumeSimBox.h"
     "Dipole.h"
     "LinAlgTools.h"
@@ -97,10 +91,10 @@ set(mdaOrderParameters_HEADER
     "DistributionGivenDimer.h"
     "SRE.h"
     "CellGrid.h"
-    "SRE_dimer.h"
     "OrientationalDistribution.h"
     "ProbeVolumeIndices.h"
     "PositionalOrientationalAvg.h"
+    "SlabAtomicProperty.h"
 )
 
 
