@@ -89,4 +89,7 @@ class ResidueGroup
 
         // number of total atoms in the system
         int atomSize_;
+
+        // parameterpack 
+        ParameterPack& pack_;
 };
