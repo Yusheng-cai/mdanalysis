@@ -31,7 +31,15 @@ OrientationalDistribution::OrientationalDistribution(const CalculationInput& inp
 
     // register the output functions 
     registerOutputs();
+    registerOutputfile();
 }
+
+void OrientationalDistribution::registerOutputfile()
+{
+    registerOutputFileOutputs("costheta", [this](void)-> Real {return this -> getAvgCostheta();});
+    registerOutputFileOutputs("costhetasquared", [this](void)-> Real {return this -> getAvgCosthetasquared();});
+}
+
 
 void OrientationalDistribution::registerOutputs()
 {
@@ -82,6 +90,8 @@ void OrientationalDistribution::calculate()
     COM_.resize(res.size());
     uij_.clear();
     uij_.resize(res.size());
+    AvgCostheta_ = 0.0;
+    AvgCosthetasquared_= 0.0;
 
     for (int i=0;i<res.size();i++)
     {
@@ -106,11 +116,18 @@ void OrientationalDistribution::calculate()
     {
         int k = AtomIndices[i];
         Real cost = LinAlg3x3::DotProduct(uij_[k], arr_);
+        Real costsq = cost * cost;
+
+        AvgCostheta_ += cost;
+        AvgCosthetasquared_ += costsq;
 
         int CosThetaBinNum = CosThetaBin_->findBin(cost);
-        int CosThetaSquaredBinNum = CosThetaSquaredBin_->findBin(cost*cost);
+        int CosThetaSquaredBinNum = CosThetaSquaredBin_->findBin(costsq);
 
         PCosTheta_[CosThetaBinNum] += 1;
         PCosThetaSquared_[CosThetaSquaredBinNum] += 1;
     }
+
+    AvgCosthetasquared_ = AvgCosthetasquared_ * 1.0/AtomIndices.size();
+    AvgCostheta_ = AvgCostheta_ * 1.0/AtomIndices.size();
 }

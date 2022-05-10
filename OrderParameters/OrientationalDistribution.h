@@ -24,6 +24,7 @@ class OrientationalDistribution : public Calculation
         OrientationalDistribution(const CalculationInput& input);
 
         void registerOutputs();
+        void registerOutputfile();
 
         virtual ~OrientationalDistribution(){};
         virtual void calculate();
@@ -32,6 +33,9 @@ class OrientationalDistribution : public Calculation
 
         // printing functions
         void PrintDistribution(std::string name);
+
+        Real getAvgCostheta() {return AvgCostheta_;}
+        Real getAvgCosthetasquared() {return AvgCosthetasquared_;}
 
     private:
         std::vector<Real> PCosTheta_;
@@ -46,6 +50,9 @@ class OrientationalDistribution : public Calculation
 
         // number of bins
         int NumBins_;
+
+        Real AvgCostheta_=0.0;
+        Real AvgCosthetasquared_=0.0;
 
         // bins 
         Binptr CosThetaBin_;
