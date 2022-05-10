@@ -111,15 +111,14 @@ void TopologyReader::Parse(std::string& name)
 
             ASSERT((words.size() == 2), "For molecule directives, we must only have 2 entries, [molecuname, number], while we have " << word.size());
 
-            auto it = MapResnameToNumber_.find(words[0]);
-
-            ASSERT((it == MapResnameToNumber_.end()), "The molecule name " << words[0] << " appeared twice.");
-
+            // map resname to the number of residues
+            auto it = MapResnameToNumberResidues_.find(words[0]);
             int num = StringTools::StringToType<int>(words[1]);
+            MapResnameToNumberResidues_.insert(std::make_pair(words[0], num));
 
-            MapResnameToNumber_.insert(std::make_pair(words[0], num));
-
-            resnames_.push_back(words[0]);
+            // record the resnames 
+            std::vector<std::string> Residues(num, words[0]);
+            resnames_.insert(resnames_.end(), Residues.begin(), Residues.end());
         }
     }
 
@@ -169,72 +168,64 @@ void TopologyReader::Parse(std::string& name)
     }
 
     // map index to corresponding atom type information
-    MakeResidueToAtomTypeMap();
-    MakeIndicesToAtomType();
+    MapResnameToAtomType();
+    MapIndicesToAtom();
 }
 
-void TopologyReader::MakeIndicesToAtomType()
+void TopologyReader::MapIndicesToAtom()
 {
+    int numatoms = 1;
     for (int i=0;i<resnames_.size();i++)
     {
         std::string name = resnames_[i];
 
-        auto it = MapResnameToNumber_.find(name);
+        auto it = MapResnameToAtomType_.find(name);
+        ASSERT((it != MapResnameToAtomType_.end()), "The resname " << name << " is not found.");
+        auto atomtypevec = it -> second;
 
-        ASSERT((it != MapResnameToNumber_.end()), "The resname " << name << " is not found.");
-        int num = it -> second;
-
-        auto atit = MapResidueToAtomType_.find(name);
-        ASSERT((atit != MapResidueToAtomType_.end()), "The resname " << name << " is not found.");
-
-        auto atomtypevec = atit -> second;
-
-        for (int j=0;j<num;j++)
+        std::vector<Molecule::atom> AtomVec;
+        Molecule::residue res;
+        for (int j=0;j<atomtypevec.size();j++)
         {
-            atomtypeIndices_.insert(atomtypeIndices_.end(), atomtypevec.begin(), atomtypevec.end());
+            Molecule::atom a;
+            a.atomName_ = atomtypevec[j].atomName_;
+            a.atomNumber_ = numatoms;  
+            numatoms++;
+            a.charge_   = atomtypevec[j].charge_;
+            a.mass_     = atomtypevec[j].mass_;
+            a.resnum_ = i+1;
+            a.resname_ = atomtypevec[j].resname_;
+
+            AtomVec.push_back(a);
         }
+
+        res.atoms_ = AtomVec;
+        atoms_.insert(atoms_.end(), AtomVec.begin(), AtomVec.end());
+        residues_.push_back(res);
     }
 }
 
-TopologyReader::Real TopologyReader::getChargeFromIndex(int index)
-{
-    ASSERT((index < atomtypeIndices_.size()), "Index " << index << " out of range.");
-    return atomtypeIndices_[index].charge_;
-}
-
-TopologyReader::Real TopologyReader::getMassFromIndex(int index)
-{
-    ASSERT((index < atomtypeIndices_.size()), "Index " << index << " out of range.");
-    return atomtypeIndices_[index].mass_;
-}
-
-std::string TopologyReader::getAtomTypeFromIndex(int index)
-{
-    ASSERT((index < atomtypeIndices_.size()), "Index " << index << " out of range.");
-    return atomtypeIndices_[index].type_;
-}
-
-void TopologyReader::MakeResidueToAtomTypeMap()
+void TopologyReader::MapResnameToAtomType()
 {
     for (int i=0;i<atomtypes_.size();i++)
     {
         std::string resname = atomtypes_[i].resname_;
 
-        auto it = MapResidueToAtomType_.find(resname);
+        auto it = MapResnameToAtomType_.find(resname);
 
-        if (it != MapResidueToAtomType_.end())
+        if (it != MapResnameToAtomType_.end())
         {
             it -> second.push_back(atomtypes_[i]);
         }
         else
         {
             std::vector<Molecule::AtomType> temp = {atomtypes_[i]};
-            MapResidueToAtomType_.insert(std::make_pair(resname, temp));
+            MapResnameToAtomType_.insert(std::make_pair(resname, temp));
         }
     }
 
     // sort the atomtypes in the map by their atomnumber 
-    for (auto it = MapResidueToAtomType_.begin(); it != MapResidueToAtomType_.end(); it ++)
+    for (auto it = MapResnameToAtomType_.begin(); it != MapResnameToAtomType_.end(); it ++)
     {
         auto types = it -> second;
         std::sort(types.begin(), types.end(), [](const Molecule::AtomType& a, const Molecule::AtomType& b)\

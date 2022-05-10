@@ -30,14 +30,14 @@ class TopologyReader
         void print();
 
         // make map from residue name to atom type
-        void MakeResidueToAtomTypeMap();
+        void MapResnameToAtomType();
 
         // make the vector from indices to atomtypes
-        void MakeIndicesToAtomType();
+        void MapIndicesToAtom();
 
-        Real getMassFromIndex(int index);
-        Real getChargeFromIndex(int index);
-        std::string getAtomTypeFromIndex(int index);
+        std::vector<Molecule::AtomType>& getAtomTypes() {return atomtypeIndices_;}
+        Molecule::atom& getAtomByIndex(int i) {return atoms_[i];}
+        Molecule::residue& getResidueByIndex(int i) {return residues_[i];}
 
         enum TopIdx
         {
@@ -59,8 +59,8 @@ class TopologyReader
         int linenum_ = 8;
 
         std::vector<Molecule::AtomType> atomtypes_;
-
-        std::map<std::string, int> MapResnameToNumber_;
-
-        std::map<std::string, std::vector<Molecule::AtomType>> MapResidueToAtomType_;
+        std::map<std::string, int> MapResnameToNumberResidues_;
+        std::map<std::string, std::vector<Molecule::AtomType>> MapResnameToAtomType_;
+        std::vector<Molecule::atom> atoms_;
+        std::vector<Molecule::residue> residues_;
 };
