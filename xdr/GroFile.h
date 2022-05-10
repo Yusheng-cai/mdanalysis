@@ -26,8 +26,8 @@ class GroFile
         void constructResidues();
 
         // getters
-        int getResidueNumber(int i)const {return atomsinfo_[i].residueNumber_;}
-        std::string getResidueName(int i) const{return atomsinfo_[i].residueName_;}
+        int getResidueNumber(int i)const {return atomsinfo_[i].resnum_;}
+        std::string getResidueName(int i) const{return atomsinfo_[i].resname_;}
         std::string getAtomName(int i)const {return atomsinfo_[i].atomName_;}
         int getAtomNumber(int i)const{return atomsinfo_[i].atomNumber_;}
         int getNumAtoms() const {return num_atoms_;}

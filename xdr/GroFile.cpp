@@ -84,8 +84,8 @@ void GroFile::ParseFile()
 
         // instantiate the Atom object and append it to atomsinfo 
         Molecule::atom a;
-        a.residueName_ = residueName;
-        a.residueNumber_ = residueNumber;
+        a.resname_ = residueName;
+        a.resnum_ = residueNumber;
         a.atomName_ = atomName;
         a.atomNumber_ = i+1;
 
@@ -118,7 +118,7 @@ void GroFile::CorrectMinResidueNumber(std::set<int>& ResidueSet)
             for (int i=0;i<atomsinfo_.size();i++)
             {
                 auto& atom = atomsinfo_[i];
-                atom.residueNumber_ += diff;
+                atom.resnum_ += diff;
             }
         }
     }
@@ -134,7 +134,7 @@ void GroFile::constructResidues()
         auto A = atomsinfo_[i];
 
         // residue number is 1 based
-        int resNum = A.residueNumber_ - 1;
+        int resNum = A.resnum_ - 1;
 
         ResidueGroup_[resNum].atoms_.push_back(A);
     }
