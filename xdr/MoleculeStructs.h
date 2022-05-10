@@ -8,8 +8,8 @@ namespace Molecule
         using Real3 = CommonTypes::Real3;
         using Real  = CommonTypes::Real;
 
-        int residueNumber_;
-        std::string residueName_;
+        int resnum_;
+        std::string resname_;
         std::string atomName_;
 
         int atomNumber_;
@@ -26,7 +26,6 @@ namespace Molecule
         using Real  = CommonTypes::Real;
 
         std::vector<atom> atoms_;
-        std::vector<Real> mass_;
     };
 
     struct AtomType
