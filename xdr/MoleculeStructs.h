@@ -33,10 +33,9 @@ namespace Molecule
         using Real = CommonTypes::Real;
 
         std::string type_;
-        std::string resname_;
-        std::string atomName_;
-        int atomNumber_;
         Real charge_;
         Real mass_;
+        Real sigma_;
+        Real epsilon_;
     };
 }
