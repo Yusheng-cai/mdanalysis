@@ -33,6 +33,7 @@ class OrientationalDistribution : public Calculation
 
         // printing functions
         void PrintDistribution(std::string name);
+        void PrintCosthetasquared_betafactors(std::ofstream& ofs);
 
         Real getAvgCostheta() {return AvgCostheta_;}
         Real getAvgCosthetasquared() {return AvgCosthetasquared_;}
@@ -65,4 +66,7 @@ class OrientationalDistribution : public Calculation
 
         // array that we want to calculate cos theta on
         Real3 arr_={{0,0,1}};
+
+        // these are the costhetasquared of each of the atom for the residues in question
+        std::vector<Real> costhetasquared_betafactor_;
 };
