@@ -3,6 +3,7 @@
 #include "tools/CommonTypes.h"
 #include "tools/InputParser.h"
 #include "xdr/MoleculeStructs.h"
+#include "tools/FileSystem.h"
 
 #include <vector>
 #include <array>
@@ -11,9 +12,7 @@
 #include <map>
 #include <sstream>
 #include <fstream>
-
-// This is the topology reader
-// Now we only really process the [ atoms ] directives which has all the information about the masses of the atoms
+#include <algorithm>
 
 class TopologyReader
 { 
@@ -25,6 +24,9 @@ class TopologyReader
         // Parse the atoms directive with the following assumptions
         // atomid atomtype resnr residuename atomname cgnr charge mass
         void Parse(std::string& name);
+
+        // read the file
+        void ReadFile(std::string& name, std::vector<std::string>& contents);
 
         // make map from residue name to atom type
         void MapResnameToAtomType();
@@ -58,4 +60,7 @@ class TopologyReader
 
         std::vector<Molecule::atom> atoms_;
         std::vector<Molecule::residue> residues_;
+
+        // the abs path
+        std::string absolute_path_;
 };

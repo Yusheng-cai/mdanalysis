@@ -1,7 +1,9 @@
 #include "TopologyReader.h"
 
-void TopologyReader::Parse(std::string& name)
+void TopologyReader::ReadFile(std::string& name, std::vector<std::string>& contents)
 {
+    contents.clear();
+
     // First read everything in the file
     std::ifstream ifs;
 
@@ -10,7 +12,6 @@ void TopologyReader::Parse(std::string& name)
     ASSERT((ifs.is_open()), "The name " << name << " is not opened.");
 
     // start parsing the file 
-    std::vector<std::string> contents;
     std::string sentence;
 
     // start parsing the sentences 
@@ -34,14 +35,41 @@ void TopologyReader::Parse(std::string& name)
                 }
             }
 
-            // no # symbol in the first letter of the sentence 
-            bool NotComment = words[0].find("#") == std::string::npos;
-            if (words[0] != ";" && NotComment)
+            // if we have a include file, then we read that file
+            if (words[0] == "#include")
             {
-                contents.push_back(sentence);
+                // remove double quotes from the name
+                words[1].erase(std::remove(words[1].begin(), words[1].end(), '\"'), words[1].end());
+
+                // read the file
+                std::vector<std::string> content_include;
+                std::string path = FileSystem::joinPath(absolute_path_, words[1]);
+                ReadFile(path, content_include);
+
+                contents.insert(contents.end(), content_include.begin(), content_include.end());
+            }
+            else
+            {
+                // no # symbol in the first letter of the sentence 
+                bool NotComment = words[0].find("#") == std::string::npos;
+                if (words[0] != ";" && NotComment)
+                {
+                    contents.push_back(sentence);
+                }
             }
         }
     }
+}
+
+void TopologyReader::Parse(std::string& name)
+{
+    // extract the absolute path
+    std::size_t botdirPos = name.find_last_of("/");
+    absolute_path_ = name.substr(0, botdirPos);
+
+    // read the file
+    std::vector<std::string> contents;
+    ReadFile(name, contents);
 
     // contents is the content of the file --> all the lines inside the file 
     std::stringstream ss;
