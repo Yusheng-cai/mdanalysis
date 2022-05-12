@@ -37,7 +37,6 @@ void LiquidCrystal::getUij()
 
     #pragma omp parallel
     {
-        Matrix Qtensor_local = {};
         #pragma omp for
         for (int i=0;i<tailatoms_.size();i++)
         {
@@ -63,10 +62,7 @@ void LiquidCrystal::calcQtensor()
 {
     Qtensor_.fill({});
 
-    auto& headAG = getAtomGroup(headgroupname_);
     auto& tailAG = getAtomGroup(tailgroupname_);
-
-    auto& headatoms_ = headAG.getAtoms();
     auto& tailatoms_ = tailAG.getAtoms();
 
     #pragma omp parallel

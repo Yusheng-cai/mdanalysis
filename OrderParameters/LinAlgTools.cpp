@@ -128,7 +128,6 @@ LinAlg3x3::Matrix LinAlg3x3::RotationMatrix(const Real3& v1, const Real3& v2)
 LinAlg3x3::Matrix LinAlg3x3::GetRotationMatrix(const Real3& v1, const Real3& v2)
 {
     Real3 crossProduct = LinAlg3x3::CrossProduct(v1, v2);
-    Real norm = LinAlg3x3::norm(crossProduct);
     Real cosine = LinAlg3x3::DotProduct(v1, v2);
 
     Matrix ret;

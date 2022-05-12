@@ -89,7 +89,6 @@ void SlabQtensor::printevBeta(std::string name)
     std::ofstream ofs;
     ofs.open(name);
 
-    int numframes = simstate_.getTotalFrames();
     auto& res = getResidueGroup(residueName_).getResidues();
     int totalatoms = getResidueGroup(residueName_).getAtomSize();
 
