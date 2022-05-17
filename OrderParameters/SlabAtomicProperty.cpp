@@ -13,9 +13,22 @@ SlabAtomicProperty::SlabAtomicProperty(const CalculationInput& input)
     pack_.ReadNumber("direction", ParameterPack::KeyType::Optional, direction_);
 
     auto binPack = pack_.findParamPack("bin", ParameterPack::KeyType::Required);
-    bin_ = Binptr(new Bin(*binPack));
-    numbins_ = bin_->getNumbins();
-    dz_ = bin_->getStep();
+    if(binPack != nullptr)
+    {
+        bin_    = Binptr(new Bin(*binPack));
+        numbins_= bin_->getNumbins();
+        dz_     = bin_->getStep();
+    }
+    else
+    {
+        pack_.ReadNumber("numbins", ParameterPack::KeyType::Required, numbins_);
+        pack_.ReadNumber("above", ParameterPack::KeyType::Required, above_);
+        bin_    = Binptr(new Bin());
+        usingMinMax_ = true;
+        dz_     = 0.0;
+    }
+
+    ResidueLocationPerBin_.resize(numbins_,0.0);
     AtomicProperty_.resize(numbins_, 0.0);
 
     // add the residue group
@@ -46,6 +59,11 @@ void SlabAtomicProperty::calculate()
         COM_[i] = calcCOM(res[i]);
     }
 
+    if (usingMinMax_)
+    {
+        binUsingMinMax();
+    }
+
     auto it = MapNameToCalculationFunc_.find(property_);
     ASSERT((it != MapNameToCalculationFunc_.end()), "The property with name " << property_ << " is not found.");
     std::vector<Real> tempProperty = it -> second(COM_);
@@ -64,7 +82,7 @@ void SlabAtomicProperty::printProperty(std::string name)
     ofs << "# Bin  Property\n";
     for (int i=0;i<numbins_;i++)
     {
-        ofs << i+1 << " " << AtomicProperty_[i] << "\n";
+        ofs << ResidueLocationPerBin_[i] << " " << AtomicProperty_[i] << "\n";
     }
 
     ofs.close();
@@ -77,6 +95,54 @@ void SlabAtomicProperty::finishCalculate()
     for (int i=0;i<numbins_;i++)
     {
         AtomicProperty_[i] = AtomicProperty_[i] / numframes;
+    }
+
+    if (usingMinMax_)
+    {
+        for (int i=0;i<numbins_;i++)
+        {
+            ResidueLocationPerBin_[i] = ResidueLocationPerBin_[i] / numframes;
+        }
+    }
+    else
+    {
+        for (int i=0;i<numbins_;i++)
+        {
+            ResidueLocationPerBin_[i] = bin_->getCenterLocationOfBin(i);
+        }
+    }
+}
+
+void SlabAtomicProperty::binUsingMinMax()
+{
+    Real slight_shift=1e-3;
+    std::vector<Real> ZdirectionNum;
+
+    for (int i=0;i<COM_.size();i++)
+    {
+        Real val = COM_[i][direction_];
+
+        if (val > above_)
+        {
+            ZdirectionNum.push_back(val);
+        }
+    }
+
+    auto maxit = std::max_element(ZdirectionNum.begin(), ZdirectionNum.end());
+    auto minit = std::min_element(ZdirectionNum.begin(), ZdirectionNum.end());
+
+    Real max = *maxit + slight_shift;
+    Real min = *minit - slight_shift;
+    Range2 range = {{min, max}};
+
+    std::cout << "Max = " << max << " Min = " << min << std::endl;
+
+    bin_ -> update(range, numbins_);
+    dz_ = bin_->getStep();
+
+    for (int i=0;i<numbins_;i++)
+    {
+        ResidueLocationPerBin_[i] += bin_->getCenterLocationOfBin(i);
     }
 }
 
