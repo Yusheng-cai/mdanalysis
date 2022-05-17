@@ -35,10 +35,6 @@ void ProbeVolumeSphere::update()
 
         // update the center
         center_ = COM;
-
-        #ifdef MY_DEBUG
-        std::cout << "COM updated = " << center_[0] << " " << center_[1] << " " << center_[2] << std::endl;
-        #endif 
     }
 }
 

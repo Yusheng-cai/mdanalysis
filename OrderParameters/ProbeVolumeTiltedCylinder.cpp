@@ -53,7 +53,6 @@ void ProbeVolumeTiltedCylinder::setGeometry()
         base_ = Atoms[0].position;
         top_  = Atoms[1].position;
 
-
         // calculate the pbc corrected distance between top and base 
         getSimulationBox().calculateDistance(top_, base_, Zvector_, distance_);
 
@@ -74,22 +73,22 @@ void ProbeVolumeTiltedCylinder::setGeometry()
 
 ProbeVolumeOutput ProbeVolumeTiltedCylinder::calculate(const Real3& x) const
 {
-    Real3 dist_;
-    Real d_;
-    Real3 shift_ = getSimulationBox().calculateShift(x, base_);
-    Real3 xpbc_;
+    Real3 dist;
+    Real d;
+    Real3 shift = getSimulationBox().calculateShift(x, base_);
+    Real3 xpbc;
 
     for (int i=0;i<3;i++)
     {
-        xpbc_[i] = x[i] + shift_[i];
+        xpbc[i] = x[i] + shift[i];
     }
 
     for (int i=0;i<3;i++)
     {
-        dist_[i] = xpbc_[i] - base_[i];
+        dist[i] = xpbc[i] - base_[i];
     }
 
-    Real3 rotatedVec = LinAlg3x3::MatrixDotVector(rotationMat_, dist_); 
+    Real3 rotatedVec = LinAlg3x3::MatrixDotVector(rotationMat_, dist); 
 
     auto output = cylinder_ -> calculate(rotatedVec);
 

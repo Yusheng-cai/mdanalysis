@@ -6,7 +6,6 @@
 #include "xdr/GroFile.h"
 #include "AtomGroupParsingStrategy.h"
 
-
 #include <vector>
 #include <memory>
 #include <array>

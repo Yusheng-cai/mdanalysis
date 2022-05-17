@@ -13,7 +13,7 @@
 class MSD : public Calculation 
 {
     public:
-        using index2 = std::array<int,2>;
+        using INT2 = std::array<int,2>;
         MSD(const CalculationInput& input);
 
         virtual void calculate() override;
