@@ -266,12 +266,15 @@ void SlabQtensor::finishCalculate()
     // find the eigenvector and eigenvalue of the Qtensor
     for (int i=0;i<numbins_;i++)
     {
-        auto ans = LinAlg3x3::OrderEigenSolver(QtensorZ_[i]);
-        P2avg_[i] = ans.first[0];
-
-        for (int j=0;j<3;j++)
+        if (NumResPerBin_[i] != 0)
         {
-            eigvec_[i][j] = ans.second[j][0];
+            auto ans = LinAlg3x3::OrderEigenSolver(QtensorZ_[i]);
+            P2avg_[i] = ans.first[0];
+
+            for (int j=0;j<3;j++)
+            {
+                eigvec_[i][j] = ans.second[j][0];
+            }
         }
     }
 }
