@@ -12,7 +12,7 @@ SlabAtomicProperty::SlabAtomicProperty(const CalculationInput& input)
     pack_.ReadString("property", ParameterPack::KeyType::Required, property_);
     pack_.ReadNumber("direction", ParameterPack::KeyType::Optional, direction_);
 
-    auto binPack = pack_.findParamPack("bin", ParameterPack::KeyType::Required);
+    auto binPack = pack_.findParamPack("bin", ParameterPack::KeyType::Optional);
     if(binPack != nullptr)
     {
         bin_    = Binptr(new Bin(*binPack));
