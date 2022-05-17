@@ -8,18 +8,21 @@ namespace CalculationRegistry
 gcost::gcost(const CalculationInput& input)
 : Calculation(input)
 {
+    // initialize the probe volumes
     initializeProbeVolumes();
     initializeNotInProbeVolumes();
 
+    // intialize the bins 
     auto binPack = input.pack_.findParamPack("bin", ParameterPack::KeyType::Required);
     bin_ = binptr(new Bin(*binPack));
     numbins_ = bin_ ->getNumbins();
 
-    input.pack_.ReadNumber("headindex1", ParameterPack::KeyType::Optional,headindex1_);
-    input.pack_.ReadNumber("tailindex1", ParameterPack::KeyType::Optional, tailindex1_);
-    input.pack_.ReadNumber("headindex2", ParameterPack::KeyType::Optional, headindex2_);
-    input.pack_.ReadNumber("tailindex2", ParameterPack::KeyType::Optional, tailindex2_);
-    input.pack_.Readbool("selfinteraction", ParameterPack::KeyType::Optional, selfinteraction_);
+    // read inputs
+    pack_.ReadNumber("headindex1", ParameterPack::KeyType::Optional,headindex1_);
+    pack_.ReadNumber("tailindex1", ParameterPack::KeyType::Optional, tailindex1_);
+    pack_.ReadNumber("headindex2", ParameterPack::KeyType::Optional, headindex2_);
+    pack_.ReadNumber("tailindex2", ParameterPack::KeyType::Optional, tailindex2_);
+    pack_.Readbool("selfinteraction", ParameterPack::KeyType::Optional, selfinteraction_);
     headindex1_--;
     tailindex1_--;
     headindex2_--;
@@ -47,6 +50,7 @@ gcost::gcost(const CalculationInput& input)
     // read in the index for calculation
     input.pack_.ReadNumber("index", ParameterPack::KeyType::Optional, index_);
 
+    // register the calculation function --> either g1 or g2 
     registerCalcFunc(1, [this](Real3& ui, Real3& uj) -> Real {return this -> calcg1(ui,uj);});
     registerCalcFunc(2, [this](Real3& ui, Real3& uj) -> Real {return this -> calcg2(ui,uj);});
 
@@ -254,19 +258,16 @@ void gcost::calculate()
                     val = std::sqrt(val);
 
                     // 0 distance doesn't make sense --> probably means self interaction
-                    if (val != 0)
+                    if (bin_ -> isInRange(val))
                     {
-                        if (bin_ -> isInRange(val))
-                        {
-                            int binnum = bin_ -> findBin(val);
-                            histogramdotproductLocal[binnum] += dotproduct;
-                            histogramLocal[binnum] += 1;
+                        int binnum = bin_ -> findBin(val);
+                        histogramdotproductLocal[binnum] += dotproduct;
+                        histogramLocal[binnum] += 1;
 
-                            if (tbin_ -> isInRange(dotproduct))
-                            {
-                                int tbinnum = tbin_ -> findBin(dotproduct);
-                                hist2dLocal[binnum][tbinnum] += 1;
-                            }
+                        if (tbin_ -> isInRange(dotproduct))
+                        {
+                            int tbinnum = tbin_ -> findBin(dotproduct);
+                            hist2dLocal[binnum][tbinnum] += 1;
                         }
                     }
                 }
@@ -358,7 +359,10 @@ void gcost::finishCalculate()
     // Total cosine theta divided by total histogram
     for (int i=0;i<histogramDotProduct_.size();i++)
     {
-        histogramDotProduct_[i] /= histogram_[i];
+        if (histogram_[i] != 0)
+        {
+            histogramDotProduct_[i] /= histogram_[i];
+        }
     }
 
     // take care of histogram2d --> we can normalize over columns (costheta) , no need to time average 
