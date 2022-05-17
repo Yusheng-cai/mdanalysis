@@ -20,6 +20,7 @@ class OrientationalDistribution : public Calculation
     public:
         using Binptr  = std::unique_ptr<Bin>;
         using Range   = std::array<Real,2>;
+        using Matrix  = CommonTypes::Matrix;
 
         OrientationalDistribution(const CalculationInput& input);
 
@@ -28,7 +29,7 @@ class OrientationalDistribution : public Calculation
 
         virtual ~OrientationalDistribution(){};
         virtual void calculate();
-        virtual void update() {};
+        virtual void update();
         virtual void finishCalculate() override;
 
         // printing functions
@@ -66,7 +67,10 @@ class OrientationalDistribution : public Calculation
 
         // array that we want to calculate cos theta on
         Real3 arr_={{0,0,1}};
+        bool useDirector_=true;
 
         // these are the costhetasquared of each of the atom for the residues in question
         std::vector<Real> costhetasquared_betafactor_;
+
+        std::vector<int> AtomIndices_;
 };

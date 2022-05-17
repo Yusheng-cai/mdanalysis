@@ -13,6 +13,7 @@ OrientationalDistribution::OrientationalDistribution(const CalculationInput& inp
     pack_.ReadNumber("tailindex", ParameterPack::KeyType::Required,TailIndex_);
     pack_.ReadNumber("numbins", ParameterPack::KeyType::Required, NumBins_);
     pack_.ReadArrayNumber("array", ParameterPack::KeyType::Optional, arr_);
+    pack_.Readbool("usedirector", ParameterPack::KeyType::Optional, useDirector_);
     HeadIndex_--;
     TailIndex_--;
 
@@ -84,7 +85,7 @@ void OrientationalDistribution::PrintDistribution(std::string name)
     ofs.close();
 }
 
-void OrientationalDistribution::calculate()
+void OrientationalDistribution::update()
 {
     auto& res    = getResidueGroup(ResidueGroupName_).getResidues();
     int AtomSize = simstate_.getTotalNumberAtoms();
@@ -92,10 +93,6 @@ void OrientationalDistribution::calculate()
     COM_.resize(res.size());
     uij_.clear();
     uij_.resize(res.size());
-    costhetasquared_betafactor_.clear();
-    costhetasquared_betafactor_.resize(AtomSize,0.0);
-    AvgCostheta_ = 0.0;
-    AvgCosthetasquared_= 0.0;
 
     #pragma omp parallel for 
     for (int i=0;i<res.size();i++)
@@ -114,7 +111,44 @@ void OrientationalDistribution::calculate()
     }
 
     // find atoms within probe volume
-    std::vector<int> AtomIndices = InsidePVIndices(COM_);
+    AtomIndices_ = InsidePVIndices(COM_);
+
+    if (useDirector_)
+    {
+        Matrix Qtensor = {};
+        #pragma omp parallel
+        {
+            Matrix Qlocal = {};
+            for (int i=0;i<AtomIndices_.size();i++)
+            {
+                int index = AtomIndices_[i];
+                Matrix Q  = LinAlg3x3::LocalQtensor(uij_[index]);
+                LinAlg3x3::matrix_accum_inplace(Qlocal, Q);
+            }
+
+            #pragma omp critical
+            {
+                LinAlg3x3::matrix_accum_inplace(Qtensor, Qlocal);
+            }
+        }
+        LinAlg3x3::matrix_mult_inplace(Qtensor, 1.0/(2.0 * (Real)AtomIndices_.size()));
+        auto res = LinAlg3x3::OrderEigenSolver(Qtensor);
+
+        for (int i=0;i<3;i++)
+        {
+            arr_[i] = res.second[i][0];
+        }
+    }
+}
+
+void OrientationalDistribution::calculate()
+{
+    auto& res    = getResidueGroup(ResidueGroupName_).getResidues();
+    int AtomSize = simstate_.getTotalNumberAtoms();
+    costhetasquared_betafactor_.clear();
+    costhetasquared_betafactor_.resize(AtomSize,0.0);
+    AvgCostheta_ = 0.0;
+    AvgCosthetasquared_= 0.0;
 
     // iterate over the atom indices
     #pragma omp parallel
@@ -125,9 +159,9 @@ void OrientationalDistribution::calculate()
         Real localavgcosthetasquared = 0.0;
 
         #pragma omp for
-        for (int i=0;i<AtomIndices.size();i++)
+        for (int i=0;i<AtomIndices_.size();i++)
         {
-            int k = AtomIndices[i];
+            int k = AtomIndices_[i];
             Real cost = LinAlg3x3::DotProduct(uij_[k], arr_);
             Real costsq = cost * cost;
 
@@ -160,8 +194,8 @@ void OrientationalDistribution::calculate()
         }
     }
 
-    AvgCosthetasquared_ = AvgCosthetasquared_ * 1.0/AtomIndices.size();
-    AvgCostheta_ = AvgCostheta_ * 1.0/AtomIndices.size();
+    AvgCosthetasquared_ = AvgCosthetasquared_ * 1.0/AtomIndices_.size();
+    AvgCostheta_ = AvgCostheta_ * 1.0/AtomIndices_.size();
 }
 
 void OrientationalDistribution::PrintCosthetasquared_betafactors(std::ofstream& ofs)
