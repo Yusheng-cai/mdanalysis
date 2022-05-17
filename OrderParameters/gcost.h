@@ -21,6 +21,7 @@ class gcost : public Calculation
         using binptr = std::unique_ptr<Bin>;
         using fcn    = std::function<Real(Real3&, Real3&)>;
         using range  = std::array<Real,2>;
+
         gcost(const CalculationInput& input);
 
         virtual void calculate();
