@@ -9,102 +9,77 @@ Driver::Driver(std::string filename, CommandLineArguments& cmd)
     InputParser ip;
     ip.ParseFile(filename, pack_);
 
-    auto pv_pack = pack_.findParamPacks("probevolume", ParameterPack::KeyType::Optional);
-    auto op_pack = pack_.findParamPacks("orderparameter", ParameterPack::KeyType::Optional);
-    auto c_pack  = pack_.findParamPacks("calculation", ParameterPack::KeyType::Optional);
-
-    // Make sure that there is only one xdr file
-    auto xdr_pack= pack_.findParamPack("xdrfile", ParameterPack::KeyType::Required);
-    auto ag_pack = pack_.findParamPacks("atomgroup", ParameterPack::KeyType::Optional);
-    auto output_pack = pack_.findParamPacks("outputfile", ParameterPack::KeyType::Optional);
-    auto gro_pack= pack_.findParamPack("grofile", ParameterPack::KeyType::Optional);
-    auto Driver_pack = pack_.findParamPack("driver", ParameterPack::KeyType::Optional);
-    auto Top_Pack = pack_.findParamPack("topology", ParameterPack::KeyType::Optional);
-    auto res_pack = pack_.findParamPacks("residuegroup", ParameterPack::KeyType::Optional);
-
     // Read the xdr file inputted, this must be provided
-    initializeXdr(xdr_pack);
+    initializeXdr();
 
     // read the topology and gro file inputted, these are optional
-    initializeGroFile(gro_pack);
-    initializeTop(Top_Pack);
+    initializeGroFile();
+
+    // initialize topology
+    initializeTop();
 
     // initialize the driver, this is optional
-    initializeDriverPack(Driver_pack);
+    initializeDriverPack();
 
-    if (ag_pack.size() != 0)
-    {
-        initializeAtomGroups(ag_pack);
-    }
+    // initialize atom groups
+    initializeAtomGroups();
 
-    if (res_pack.size() != 0)
-    {
-        initializeResidueGroups(res_pack);
-    }
+    // initialize residue group
+    initializeResidueGroups();
 
+    // initialize probe volume
+    initializeProbeVolume();
 
-    if (pv_pack.size() != 0)
-    {
-        initializeProbeVolume(pv_pack);
-    }
+    // initialize calculation
+    initializeCalculation();
 
-    if (c_pack.size() != 0)
-    {
-        initializeCalculation(c_pack);
-    }
-
-    if (op_pack.size() != 0)
-    {
-        initializeOP(op_pack);
-        // only register output values
-    }
+    // initialize the Order Parameters
+    initializeOP();
 
     RegisterOuputValues();
 
+    initializeOutputFiles();
+}
 
-    if (output_pack.size() != 0)
+void Driver::initializeResidueGroups()
+{
+    auto resPack    = pack_.findParamPacks("residuegroup", ParameterPack::KeyType::Optional);
+    VectorResNames_.clear();
+
+    for (int i=0;i<resPack.size();i++)
     {
-        initializeOutputFiles(output_pack);
+        const auto res = resPack[i];
+        std::string resname;
+        res -> ReadString("name", ParameterPack::KeyType::Required,resname);
+        VectorResNames_.push_back(resname);
+
+        ResidueInput input = {const_cast<ParameterPack&>(*res), grofile_, top_};
+
+        ResidueGroup resgroup(input);
+        
+        simstate_.registerResidueGroup(resname, resgroup);
     }
 }
 
-void Driver::initializeResidueGroups(const std::vector<const ParameterPack*>& resPack)
+void Driver::initializeCalculation()
 {
-    if (resPack.size()!=0)
+    auto calcPack  = pack_.findParamPacks("calculation", ParameterPack::KeyType::Optional);
+    Calc_.clear();
+
+    for (int i=0;i<calcPack.size();i++)
     {
-        for (int i=0;i<resPack.size();i++)
-        {
-            const auto res = resPack[i];
-            std::string resname;
-            res -> ReadString("name", ParameterPack::KeyType::Required,resname);
-            VectorResNames_.push_back(resname);
+        std::string type;
+        calcPack[i] -> ReadString("type", ParameterPack::KeyType::Required, type);
+        CalculationInput input = {const_cast<ParameterPack&>(*calcPack[i]),simstate_};
 
-            ResidueInput input = {const_cast<ParameterPack&>(*res), grofile_, top_};
-
-            ResidueGroup resgroup(input);
-            
-            simstate_.registerResidueGroup(resname, resgroup);
-        }
+        Calc_.push_back(calcptr(CalculationRegistry::Factory::instance().create(type, input)));
     }
 }
 
-void Driver::initializeCalculation(const std::vector<const ParameterPack*>& calcPack)
+void Driver::initializeTop()
 {
-    if (calcPack.size() != 0)
-    {
-        for (int i=0;i<calcPack.size();i++)
-        {
-            std::string type;
-            calcPack[i] -> ReadString("type", ParameterPack::KeyType::Required, type);
-            CalculationInput input = {const_cast<ParameterPack&>(*calcPack[i]),simstate_};
+    auto topPack    = pack_.findParamPack("topology", ParameterPack::KeyType::Optional);
 
-            Calc_.push_back(calcptr(CalculationRegistry::Factory::instance().create(type, input)));
-        }
-    }
-}
-
-void Driver::initializeTop(const ParameterPack* topPack)
-{
     if (topPack != nullptr)
     {
         std::string topPath_;
@@ -134,8 +109,10 @@ bool Driver::isValidStep(int step)
     return false;
 }
 
-void Driver::initializeDriverPack(const ParameterPack* driverpack)
+void Driver::initializeDriverPack()
 {
+    auto driverpack = pack_.findParamPack("driver", ParameterPack::KeyType::Optional);
+
     if(driverpack != nullptr)
     {
         driverpack -> ReadNumber("startingframe", ParameterPack::KeyType::Optional, startingFrame_);
@@ -157,8 +134,10 @@ void Driver::initializeDriverPack(const ParameterPack* driverpack)
     simstate_.setTotalFrames(numframes);
 }
 
-void Driver::initializeOutputFiles(const std::vector<const ParameterPack*>& output_pack)
+void Driver::initializeOutputFiles()
 {
+    auto output_pack = pack_.findParamPacks("outputfile", ParameterPack::KeyType::Optional);
+
     for (int i=0;i<output_pack.size();i++)
     {
         auto pack = output_pack[i];
@@ -167,8 +146,10 @@ void Driver::initializeOutputFiles(const std::vector<const ParameterPack*>& outp
     }
 }
 
-void Driver::initializeAtomGroups(const std::vector<const ParameterPack*>& agpack)
+void Driver::initializeAtomGroups()
 {
+    auto agpack     = pack_.findParamPacks("atomgroup", ParameterPack::KeyType::Optional);
+
     for (int i=0;i<agpack.size();i++)
     {
         auto pack = agpack[i];
@@ -220,8 +201,10 @@ const OutputValue& Driver::getOutputValue(std::string name) const
     return outputValueRegistry_.find(name);
 }
 
-void Driver::initializeGroFile(const ParameterPack* gropack)
+void Driver::initializeGroFile()
 {
+    auto gropack    = pack_.findParamPack("grofile", ParameterPack::KeyType::Optional);
+
     if (gropack != nullptr)
     {
         std::string gropath_;
@@ -233,8 +216,10 @@ void Driver::initializeGroFile(const ParameterPack* gropack)
     }
 }
 
-void Driver::initializeXdr(const ParameterPack* xdrpack)
+void Driver::initializeXdr()
 {
+    auto xdrpack    = pack_.findParamPack("xdrfile", ParameterPack::KeyType::Required);
+
     ASSERT((xdrpack != nullptr), "Xdr file such as trr or xtc file is not provided.");
 
     std::string path;
@@ -255,8 +240,10 @@ void Driver::initializeXdr(const ParameterPack* xdrpack)
     total_atom_positions_.reserve(Xdr_->getNumAtoms());
 }
 
-void Driver::initializeProbeVolume(const std::vector<const ParameterPack*>& PVpack)
+void Driver::initializeProbeVolume()
 {
+    auto PVpack = pack_.findParamPacks("probevolume", ParameterPack::KeyType::Optional);
+
     for (int i=0; i< PVpack.size();i++)
     {
         auto pack = PVpack[i];
@@ -275,8 +262,10 @@ void Driver::initializeProbeVolume(const std::vector<const ParameterPack*>& PVpa
     }
 }
 
-void Driver::initializeOP(const std::vector<const ParameterPack*>& OPpack)
+void Driver::initializeOP()
 {
+    auto OPpack = pack_.findParamPacks("orderparameter", ParameterPack::KeyType::Optional);
+
     for (int i=0;i<OPpack.size();i++)
     {
         auto pack = OPpack[i];
@@ -310,9 +299,11 @@ bool Driver::readFrame(int FrameNum)
 
 void Driver::update()
 {
+    // get the total positions
     const auto& total_atom_positions_ = Xdr_->getPositions();
     simstate_.setTotalNumberAtoms(total_atom_positions_.size());
 
+    // update atom groups
     for (int i=0;i<VectorAgNames_.size();i++)
     {
         auto& ag = simstate_.getAtomGroup(VectorAgNames_[i]);
@@ -320,6 +311,7 @@ void Driver::update()
         ag.update(total_atom_positions_);
     }
 
+    // update residue groups
     for (int i=0;i<VectorResNames_.size();i++)
     {
         auto& res = simstate_.getResidueGroup(VectorResNames_[i]);
@@ -344,9 +336,7 @@ void Driver::update()
     // update the Order Parameters
     for (int i=0;i<OP_.size();i++)
     {
-        auto& op = OP_[i];
-
-        op->update();
+        OP_[i] -> update();
     }
 
     // update the calculation

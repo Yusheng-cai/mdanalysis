@@ -38,22 +38,22 @@ class Driver
         ~Driver(){};
 
         // initialize the xdr file
-        void initializeXdr(const ParameterPack*);
+        void initializeXdr();
 
         // initialize the topology file
-        void initializeTop(const ParameterPack*);
+        void initializeTop();
 
         // initialize OrderParameters
-        void initializeOP(const std::vector<const ParameterPack*>&);
+        void initializeOP();
 
         // initialize the calculations
-        void initializeCalculation(const std::vector<const ParameterPack*>&);
-        void initializeProbeVolume(const std::vector<const ParameterPack*>&);
-        void initializeAtomGroups(const std::vector<const ParameterPack*>&);
-        void initializeOutputFiles(const std::vector<const ParameterPack*>&);
-        void initializeGroFile(const ParameterPack*);
-        void initializeDriverPack(const ParameterPack*);
-        void initializeResidueGroups(const std::vector<const ParameterPack*>&);
+        void initializeCalculation();
+        void initializeProbeVolume();
+        void initializeAtomGroups();
+        void initializeOutputFiles();
+        void initializeGroFile();
+        void initializeDriverPack();
+        void initializeResidueGroups();
 
         void RegisterOuputValues();
         const OutputValue& getOutputValue(std::string name) const;
@@ -75,7 +75,6 @@ class Driver
 
     private:
         ParameterPack pack_;
-        std::map<std::string, ProbeVolumePtr> MapName2PV_;
 
         // probe volume names 
         std::vector<std::string> ProbeVolumeNames_;
