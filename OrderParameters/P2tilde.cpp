@@ -6,17 +6,10 @@ namespace OrderParametersRegistry
 }
 
 P2tilde::P2tilde(const OrderParametersInput& input)
-:OrderParameters(input)
+:LiquidCrystal(input)
 {
-    input.pack_.ReadString("probevolume", ParameterPack::KeyType::Required, pvname_);
-    input.pack_.ReadString("headgroup", ParameterPack::KeyType::Required, headgroupname_);
-    input.pack_.ReadString("tailgroup", ParameterPack::KeyType::Required, tailgroupname_);
-    indicatorgroupname_ = headgroupname_;
-    input.pack_.ReadString("indicatorgroup", ParameterPack::KeyType::Optional, indicatorgroupname_);
-
     registerOutput("p2tilde", [this](void)->Real {return this->getP2tilde();});
-    registerOutput("n", [this](void)->Real {return this->getN();});
-    registerOutput("ntilde", [this](void)->Real {return this->getNtilde();});
+
     registerOutput("qxx", [this](void) -> Real {return this->getQxx();});
     registerOutput("qxy", [this](void) -> Real {return this->getQxy();});
     registerOutput("qxz", [this](void) -> Real {return this -> getQxz();});
@@ -29,87 +22,20 @@ P2tilde::P2tilde(const OrderParametersInput& input)
 
 void P2tilde::calculate()
 {
-    Qtensor_.fill({});
+    // calculate director 
+    CalculateDirector(uij_, norms_, indicators_, Ntilde_, N_);
 
-    auto& probeV = simstate_.getProbeVolume(pvname_);
-    auto& headAG = simstate_.getAtomGroup(headgroupname_);
-    auto& tailAG = simstate_.getAtomGroup(tailgroupname_);
-    auto& indAG  = simstate_.getAtomGroup(indicatorgroupname_);
+    // calculate Qtensor 
+    CalculateQtilde(uij_, Qtensor_, indicators_, Ntilde_);
 
-    auto& headatoms_ = headAG.getAtoms();
-    auto& tailatoms_ = tailAG.getAtoms();
-    auto& indatoms   = indAG.getAtoms();
-
-    #pragma omp parallel
-    {
-        auto& buffer_ = IndusIndicesbuffer_.access_buffer_by_id(); 
-        Matrix Qtensor_local_ = {};
-        Real localNtilde_ = 0.0;
-        Real localN = 0;
-
-        #pragma omp for
-        for (int i=0; i<headatoms_.size();i++)
-        {
-            Real3 headpos_ = headatoms_[i].position;
-            Real3 tailpos_ = tailatoms_[i].position; 
-            Real3 indpos   = indatoms[i].position;
-
-            ProbeVolumeOutput output = probeV.calculate(indpos);
-
-            // perform the Qtensor calculation only if htilde_x is larger than 0
-            if (output.htilde_x_ > 0)
-            {
-                buffer_.push_back(headAG.AtomGroupIndices2GlobalIndices(i));
-
-                Real3 local_director;
-                Real sq_dist;
-                simbox_.calculateDistance(headpos_, tailpos_, local_director, sq_dist);
-
-                local_director = LinAlg3x3::vec_mult(local_director, 1.0/std::sqrt(sq_dist));
-
-                Matrix Qtensor_atomic = LinAlg3x3::vec_dyadic(local_director, local_director);
-
-                LinAlg3x3::matrix_mult_inplace(Qtensor_atomic, 3);
-
-                Qtensor_atomic = LinAlg3x3::matrix_sub(Qtensor_atomic, LinAlg3x3::matrix_Identity());
-                LinAlg3x3::matrix_mult_inplace(Qtensor_atomic, output.htilde_x_);
-
-                LinAlg3x3::matrix_accum_inplace(Qtensor_local_, Qtensor_atomic);
-
-                localNtilde_ += output.htilde_x_;
-                localN       += output.hx_;
-            }
-        }
-
-        #pragma omp critical
-        {
-            LinAlg3x3::matrix_accum_inplace(Qtensor_, Qtensor_local_);
-
-            Ntilde_ += localNtilde_;
-            N_      += localN;
-        }
-    }
-
-    LinAlg3x3::matrix_mult_inplace(Qtensor_, 1.0/(2.0*Ntilde_));
-
+    // solve the Qtensor 
     auto result = LinAlg3x3::OrderEigenSolver(Qtensor_);
 
+    // save the results
     p2tilde_ = result.first[0]; 
     eig1_    = result.first[1];
     eig2_    = result.first[2];
     biaxiality_ = eig1_ * 2.0 + p2tilde_;
 
     v1_ = result.second[0];
-}
-
-void P2tilde::update()
-{
-    auto& probeV = simstate_.accessProbeVolume(pvname_);
-    probeV.update();
-
-    Qtensor_.fill({});
-    p2tilde_ = 0.0;
-
-    Ntilde_ = 0.0;
-    N_ = 0.0;
 }

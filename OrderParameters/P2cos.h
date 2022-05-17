@@ -20,7 +20,7 @@ class P2cos: public LiquidCrystal
         virtual ~P2cos(){};
 
         virtual void calculate() override;
-        virtual void update() override;
+        virtual void update() {};
         std::pair<Real3,Real3> dP2cosdr(Real N, Real norm, Real3& director, Real3& n);
 
         Real getP2cos() const {return P2cos_OP_;}

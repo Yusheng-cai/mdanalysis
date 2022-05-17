@@ -17,7 +17,8 @@ P2cos::P2cos(const OrderParametersInput& input)
 
 void P2cos::calculate()
 {
-    getUij();
+    CalculateDirector(uij_, norms_, indicators_, Ntilde_, N_);
+
     P2cos_OP_ = 0.0;
 
     #pragma omp parallel
@@ -30,7 +31,7 @@ void P2cos::calculate()
 
             Real dot_product = LinAlg3x3::vec_dot(AtomDirector, n_);
 
-            P2cos_local_ += 1.5*std::pow(dot_product,2.0) - 0.5;
+            P2cos_local_ += (1.5*std::pow(dot_product,2.0) - 0.5) * indicators_[i];
         }
 
         #pragma omp critical
@@ -39,7 +40,7 @@ void P2cos::calculate()
         }
     }
 
-    P2cos_OP_ = 1.0/tailgroupsize_*P2cos_OP_;
+    P2cos_OP_ = 1.0/Ntilde_*P2cos_OP_;
 
     // clear derivatives
     clearDerivativesOutputs();
@@ -73,11 +74,6 @@ void P2cos::calculate()
 
     head_derivatives.CombineAndClearOMPBuffer();
     tail_derivatives.CombineAndClearOMPBuffer();
-}
-
-void P2cos::update()
-{
-
 }
 
 std::pair<P2cos::Real3,P2cos::Real3> P2cos::dP2cosdr(Real N, Real norm, Real3& director, Real3& n)
