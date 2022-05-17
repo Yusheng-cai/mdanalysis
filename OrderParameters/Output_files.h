@@ -11,7 +11,6 @@
 
 class Driver;
 
-
 class OutputStream
 {
     public:

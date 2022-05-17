@@ -101,7 +101,7 @@ LinAlg3x3::Real3 LinAlg3x3::MatrixDotVector(const Matrix& A, const Real3& v1)
 
 LinAlg3x3::Matrix LinAlg3x3::RotationMatrix(const Real3& v1, const Real3& v2)
 {
-    Matrix rotMat;
+  Matrix rotMat;
 	Real rdotz      = DotProduct(v1, v2);
 	Real3 cross 	= CrossProduct(v1, v2);
 	Real x  = cross[0];
@@ -389,8 +389,9 @@ std::pair<LinAlg3x3::Real3,LinAlg3x3::Matrix> LinAlg3x3::EigenSolver(const Matri
     return ret;
 }
 
-std::pair<LinAlg3x3::Real3, LinAlg3x3::Matrix> LinAlg3x3::OrderEigenSolver(const Matrix& Q){
-    auto res = EigenSolver(Q);
+std::pair<LinAlg3x3::Real3, LinAlg3x3::Matrix> LinAlg3x3::OrderEigenSolver(const Matrix& Q)
+{
+  auto res = EigenSolver(Q);
 	std::vector<size_t> order = LinAlg3x3::argsort(res.first);
 	std::pair<Real3,Matrix> ordered_eig;
 
