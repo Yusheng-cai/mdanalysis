@@ -18,6 +18,8 @@ class grcost : public Calculation
     public:
         using binptr = std::unique_ptr<Bin>;
         using Matrix = CommonTypes::Matrix;
+
+        // constructor 
         grcost(const CalculationInput& input);
 
         virtual void calculate() override;

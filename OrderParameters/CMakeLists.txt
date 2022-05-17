@@ -19,7 +19,6 @@ target_sources(mdaOrderParameters PRIVATE
     "Driver.cpp"
     "Output_files.cpp"
     "LiquidCrystal.cpp"
-    "P2.cpp"
     "P2tilde.cpp"
     "P2cos.cpp"
     "AtomGroupParsingStrategy.cpp"
@@ -47,6 +46,8 @@ target_sources(mdaOrderParameters PRIVATE
     "OrientationalDistribution.cpp"
     "PositionalOrientationalAvg.cpp"
     "SlabAtomicProperty.cpp"
+    "EndToEndDistance.cpp"
+    "DeuteriumOP.cpp"
 )
 
 set(mdaOrderParameters_HEADER
@@ -67,7 +68,6 @@ set(mdaOrderParameters_HEADER
     "Driver.h"
     "Output_files.h"
     "LiquidCrystal.h"
-    "P2.h"
     "P2tilde.h"
     "P2cos.h"
     "AtomGroupParsingStrategy.h"
@@ -95,6 +95,8 @@ set(mdaOrderParameters_HEADER
     "ProbeVolumeIndices.h"
     "PositionalOrientationalAvg.h"
     "SlabAtomicProperty.h"
+    "EndToEndDistance.h"
+    "DeuteriumOP.h"
 )
 
 
