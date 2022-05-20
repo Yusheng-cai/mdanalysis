@@ -24,6 +24,8 @@ OrientationalDistribution::OrientationalDistribution(const CalculationInput& inp
     initializeProbeVolumes();
     initializeNotInProbeVolumes();
 
+    ASSERT((probevolumes_.size() > 0 || NotInprobevolumes_.size() > 0), "Probe volume list must be provided");
+
     // initialize the bins 
     CosThetaBin_ = Binptr(new Bin(CosThetaRange_, NumBins_));
     CosThetaSquaredBin_ = Binptr(new Bin(CosThetaSquaredRange_, NumBins_));
@@ -63,11 +65,11 @@ void OrientationalDistribution::finishCalculate()
         CosSquaredThetaTot += PCosThetaSquared_[i];
     }
 
-    for (int i=0;i<NumBins_;i++)
-    {
-        PCosTheta_[i] = PCosTheta_[i] / CosThetaTot;
-        PCosThetaSquared_[i] = PCosThetaSquared_[i] / CosSquaredThetaTot;
-    }
+    // for (int i=0;i<NumBins_;i++)
+    // {
+    //     PCosTheta_[i] = PCosTheta_[i] / CosThetaTot;
+    //     PCosThetaSquared_[i] = PCosThetaSquared_[i] / CosSquaredThetaTot;
+    // }
 }
 
 void OrientationalDistribution::PrintDistribution(std::string name)

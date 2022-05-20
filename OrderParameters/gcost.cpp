@@ -12,6 +12,9 @@ gcost::gcost(const CalculationInput& input)
     initializeProbeVolumes();
     initializeNotInProbeVolumes();
 
+    // check for probe volume initialization
+    ASSERT((probevolumes_.size() > 0 || NotInprobevolumes_.size() > 0), "No probe volume passed in");
+
     // intialize the bins 
     auto binPack = input.pack_.findParamPack("bin", ParameterPack::KeyType::Required);
     bin_ = binptr(new Bin(*binPack));
@@ -48,11 +51,11 @@ gcost::gcost(const CalculationInput& input)
     tbin_ = binptr(new Bin(trange_, numtbins_));
 
     // read in the index for calculation
-    input.pack_.ReadNumber("index", ParameterPack::KeyType::Optional, index_);
+    input.pack_.ReadString("name", ParameterPack::KeyType::Optional, CalcFuncName_);
 
     // register the calculation function --> either g1 or g2 
-    registerCalcFunc(1, [this](Real3& ui, Real3& uj) -> Real {return this -> calcg1(ui,uj);});
-    registerCalcFunc(2, [this](Real3& ui, Real3& uj) -> Real {return this -> calcg2(ui,uj);});
+    registerCalcFunc("g1", [this](Real3& ui, Real3& uj) -> Real {return this -> Calculateg1(ui,uj);});
+    registerCalcFunc("g2", [this](Real3& ui, Real3& uj) -> Real {return this -> Calculateg2(ui,uj);});
 
     // initialize histogram 2d which contains (R, t)
     histogramDotProduct_.resize(numbins_,0.0);
@@ -133,35 +136,35 @@ void gcost::printrdfhist2d(std::string name)
     ofs.close();
 }
 
-gcost::Real gcost::calcFactor(Real3& ui, Real3& uj)
+gcost::Real gcost::CalculateFactor(Real3& ui, Real3& uj)
 {
-    auto it = MapIndexToFcn_.find(index_);
+    auto it = MapNameToCalcFunc_.find(CalcFuncName_);
 
-    ASSERT((it != MapIndexToFcn_.end()), "The index " << index_ << " is not registered.");
+    ASSERT((it != MapNameToCalcFunc_.end()), "The name " << CalcFuncName_ << " is not registered.");
 
     Real val = it->second.operator()(ui,uj);
 
     return val;
 }
 
-gcost::Real gcost::calcg1(Real3& ui, Real3& uj)
+gcost::Real gcost::Calculateg1(Real3& ui, Real3& uj)
 {
     return LinAlg3x3::DotProduct(ui,uj);
 }
 
-gcost::Real gcost::calcg2(Real3& ui, Real3& uj)
+gcost::Real gcost::Calculateg2(Real3& ui, Real3& uj)
 {
     Real dotProduct = LinAlg3x3::DotProduct(ui, uj);
     return 1.5 * dotProduct * dotProduct  - 0.5;
 }
 
-void gcost::registerCalcFunc(int index, fcn function)
+void gcost::registerCalcFunc(std::string name, fcn function)
 {
-    auto it = MapIndexToFcn_.find(index);
+    auto it = MapNameToCalcFunc_.find(name);
 
-    ASSERT((it == MapIndexToFcn_.end()), "The index " << index << " is already registered.");
+    ASSERT((it == MapNameToCalcFunc_.end()), "The function name " << name << " is already registered.");
 
-    MapIndexToFcn_.insert(std::make_pair(index, function));
+    MapNameToCalcFunc_.insert(std::make_pair(name, function));
 }
 
 void gcost::calculate()
@@ -253,7 +256,7 @@ void gcost::calculate()
 
                     Real3 u1 = uij1_[i];
                     Real3 u2 = uij2_[j];
-                    Real dotproduct = calcFactor(u1, u2);
+                    Real dotproduct = CalculateFactor(u1, u2);
 
                     val = std::sqrt(val);
 

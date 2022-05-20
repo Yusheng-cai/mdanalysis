@@ -48,6 +48,7 @@ target_sources(mdaOrderParameters PRIVATE
     "SlabAtomicProperty.cpp"
     "EndToEndDistance.cpp"
     "DeuteriumOP.cpp"
+    "SlabG1r.cpp"
 )
 
 set(mdaOrderParameters_HEADER
@@ -97,6 +98,7 @@ set(mdaOrderParameters_HEADER
     "SlabAtomicProperty.h"
     "EndToEndDistance.h"
     "DeuteriumOP.h"
+    "SlabG1r.h"
 )
 
 

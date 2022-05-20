@@ -30,7 +30,10 @@ class DeuteriumOP : public Calculation
         std::string residue_;
         std::vector<int> CarbonIndices_;
         int numCarbons_;
+
         std::vector<Real> avgSCD_;
+        std::vector<Real> avgSCC_;
+        std::vector<Real> avgSZZ_;
 
         Real3 SurfaceNormal_={{0,0,1}};
 };

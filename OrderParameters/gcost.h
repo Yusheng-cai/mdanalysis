@@ -32,10 +32,10 @@ class gcost : public Calculation
         void printrdfhist2d(std::string name);
         void printnumneighbors(std::string name);
 
-        Real calcFactor(Real3& ui, Real3& uj);
-        Real calcg1(Real3& ui, Real3& uj);
-        Real calcg2(Real3& ui, Real3& uj);
-        void registerCalcFunc(int i, fcn function);
+        Real CalculateFactor(Real3& ui, Real3& uj);
+        Real Calculateg1(Real3& ui, Real3& uj);
+        Real Calculateg2(Real3& ui, Real3& uj);
+        void registerCalcFunc(std::string name, fcn function);
 
         void initializeDistanceCOM();
 
@@ -85,9 +85,10 @@ class gcost : public Calculation
         std::vector<std::vector<Real>> histogramDotProduct2d_;
         std::vector<std::vector<Real>> histogramDotProduct2drdf_;
 
-        std::map<int, fcn> MapIndexToFcn_;
+        // calculation functions
+        std::map<std::string, fcn> MapNameToCalcFunc_;
+        std::string CalcFuncName_="g1";
 
-        int index_=1;
         int numtbins_=20;
 
         Range trange_ = {{-1,1}};
