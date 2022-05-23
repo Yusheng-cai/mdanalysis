@@ -19,8 +19,6 @@ class ProbeVolumeIndices : public Calculation
 
         void calculateAtom();
         void calculateRes();
-        // This function assumes that a residue is inside the PV if any of its atoms is inside the PV 
-        void calculateAtomRes();
 
         void printAtomIndicesPerIter(std::ofstream& ofs);
 
