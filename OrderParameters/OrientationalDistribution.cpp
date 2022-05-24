@@ -14,8 +14,16 @@ OrientationalDistribution::OrientationalDistribution(const CalculationInput& inp
     pack_.ReadNumber("numbins", ParameterPack::KeyType::Required, NumBins_);
     pack_.ReadArrayNumber("array", ParameterPack::KeyType::Optional, arr_);
     pack_.Readbool("usedirector", ParameterPack::KeyType::Optional, useDirector_);
+    pack_.ReadNumber("xbins", ParameterPack::KeyType::Optional, numxbin_);
+    pack_.ReadNumber("ybins", ParameterPack::KeyType::Optional, numybin_);
     HeadIndex_--;
     TailIndex_--;
+
+    // resize the xy histogram
+    PcostDistributionXY_.resize(numxbin_, std::vector<Real>(numybin_,0.0));
+    HisotgramXY_.resize(numxbin_, std::vector<Real>(numybin_,0.0));
+    xbin_ = Binptr(new Bin());
+    ybin_ = Binptr(new Bin());
 
     // initialize Residue
     initializeResidueGroup(ResidueGroupName_);
@@ -48,6 +56,8 @@ void OrientationalDistribution::registerOutputs()
 {
     registerOutputFunction("Distribution", [this](std::string name) -> void {this -> PrintDistribution(name);});
     registerPerIterOutputFunction("costhetasquared_betafactor", [this](std::ofstream& ofs) -> void {this -> PrintCosthetasquared_betafactors(ofs);});
+    registerPerIterOutputFunction("ResidueAngles", [this](std::ofstream& ofs)-> void {this -> printResidueAngles(ofs);});
+    registerOutputFunction("DistributionXY", [this](std::string name) -> void {this->PrintDistributionXY(name);});
 }
 
 void OrientationalDistribution::finishCalculate()
@@ -65,11 +75,16 @@ void OrientationalDistribution::finishCalculate()
         CosSquaredThetaTot += PCosThetaSquared_[i];
     }
 
-    // for (int i=0;i<NumBins_;i++)
-    // {
-    //     PCosTheta_[i] = PCosTheta_[i] / CosThetaTot;
-    //     PCosThetaSquared_[i] = PCosThetaSquared_[i] / CosSquaredThetaTot;
-    // }
+    for (int i=0;i<numxbin_;i++)
+    {
+        for (int j=0;j<numybin_;j++)
+        {
+            if (HisotgramXY_[i][j] != 0)
+            {
+                PcostDistributionXY_[i][j] = PcostDistributionXY_[i][j] / HisotgramXY_[i][j];
+            }
+        }
+    }
 }
 
 void OrientationalDistribution::PrintDistribution(std::string name)
@@ -95,6 +110,7 @@ void OrientationalDistribution::update()
     COM_.resize(res.size());
     uij_.clear();
     uij_.resize(res.size());
+    Real3 BoxSides = simstate_.getSimulationBox().getSides();
 
     #pragma omp parallel for 
     for (int i=0;i<res.size();i++)
@@ -141,6 +157,10 @@ void OrientationalDistribution::update()
             arr_[i] = res.second[i][0];
         }
     }
+
+    // update the x and y bins
+    xbin_->update({{0,BoxSides[0]}}, numxbin_);
+    ybin_->update({{0,BoxSides[1]}}, numybin_);
 }
 
 void OrientationalDistribution::calculate()
@@ -149,6 +169,7 @@ void OrientationalDistribution::calculate()
     int AtomSize = simstate_.getTotalNumberAtoms();
     costhetasquared_betafactor_.clear();
     costhetasquared_betafactor_.resize(AtomSize,0.0);
+    MapIndexToAngle_.clear();
     AvgCostheta_ = 0.0;
     AvgCosthetasquared_= 0.0;
 
@@ -160,12 +181,22 @@ void OrientationalDistribution::calculate()
         Real localavgcostheta = 0.0;
         Real localavgcosthetasquared = 0.0;
 
+        // local map from residue index to its cos(theta) value with array
+        std::map<int, Real> localMap;
+
+        // local xy histogram
+        std::vector<std::vector<Real>> localHistogram(numxbin_, std::vector<Real>(numybin_,0.0));
+        std::vector<std::vector<Real>> localcosthetaxy(numxbin_, std::vector<Real>(numybin_,0.0));
+
         #pragma omp for
         for (int i=0;i<AtomIndices_.size();i++)
         {
             int k = AtomIndices_[i];
             Real cost = LinAlg3x3::DotProduct(uij_[k], arr_);
             Real costsq = cost * cost;
+
+            // map index to the cos theta of the angle 
+            localMap.insert(std::make_pair(k, cost));
 
             localavgcostheta += cost;
             localavgcosthetasquared += costsq;
@@ -181,6 +212,12 @@ void OrientationalDistribution::calculate()
                 int index = res[k].atoms_[j].atomNumber_-1;
                 costhetasquared_betafactor_[index] = costsq;
             }
+
+            // find the x and y index 
+            int xindex = xbin_->findBin(COM_[k][0]);
+            int yindex = ybin_->findBin(COM_[k][1]);
+            localHistogram[xindex][yindex] += 1;
+            localcosthetaxy[xindex][yindex]+= cost;
         }
 
         #pragma omp critical
@@ -193,6 +230,17 @@ void OrientationalDistribution::calculate()
 
             AvgCosthetasquared_ = AvgCosthetasquared_ + localavgcosthetasquared;
             AvgCostheta_ = AvgCostheta_ + localavgcostheta;
+
+            MapIndexToAngle_.insert(localMap.begin(), localMap.end());
+
+            for (int i=0;i<numxbin_;i++)
+            {
+                for (int j=0;j<numybin_;j++)
+                {
+                    HisotgramXY_[i][j] += localHistogram[i][j];
+                    PcostDistributionXY_[i][j] += localcosthetaxy[i][j];
+                }
+            }
         }
     }
 
@@ -211,4 +259,33 @@ void OrientationalDistribution::PrintCosthetasquared_betafactors(std::ofstream& 
         ofs << costhetasquared_betafactor_[i] << " ";
     }
     ofs << "\n";
+}
+
+void OrientationalDistribution::printResidueAngles(std::ofstream& ofs)
+{
+    int framenum = simstate_.getFrameNumber();
+
+    ofs << "# Frame " << framenum << "\n"; 
+
+    for (auto it = MapIndexToAngle_.begin(); it != MapIndexToAngle_.end(); it ++)
+    {
+        ofs << it -> first << " " << it -> second << "\n";
+    }
+}
+
+void OrientationalDistribution::PrintDistributionXY(std::string name)
+{
+    std::ofstream ofs;
+    ofs.open(name);
+
+    for (int i=0;i<numxbin_;i++)
+    {
+        for (int j=0;j<numybin_;j++)
+        {
+            ofs << PcostDistributionXY_[i][j] << " ";
+        }
+        ofs << "\n";
+    }
+
+    ofs.close();
 }
