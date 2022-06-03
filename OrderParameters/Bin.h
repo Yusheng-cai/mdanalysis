@@ -13,6 +13,15 @@ class Bin
         using Real  = CommonTypes::Real;
         using Range = CommonTypes::Real2;
 
+        /*
+        Constructor for the Bin object 
+        There are 3 types of constructors
+
+        1. It can take in a ParameterPack object, which means basically a block in the input file
+        2. It can directly take in the range [min, max] and the number of bins between the min and max
+        3. Empty constructor
+
+        */
         Bin(const ParameterPack& pack);
         Bin(Range range, int numbins);
         Bin(){};
