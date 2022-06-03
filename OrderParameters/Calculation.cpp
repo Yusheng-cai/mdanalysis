@@ -107,36 +107,6 @@ void Calculation::addResidueGroup(std::string name)
     MapResidueGroupNameToIndex_.insert(std::make_pair(name, index));
 }
 
-void Calculation::addGroup(std::string name)
-{
-    // check the residueGroup reference from simulation state 
-    const auto& residueMap = simstate_.getResidueMap();
-    const auto& AGMap = simstate_.getAtomGroupMap();
-
-    auto itres = residueMap.find(name);
-    auto itAG  = AGMap.find(name);
-
-    if (itres!=residueMap.end() && itAG==AGMap.end())
-    {
-        addResidueGroup(name);
-    }
-
-    if (itres==residueMap.end() && itAG!=AGMap.end())
-    {
-        addAtomgroup(name);
-    }
-
-    if (itres!=residueMap.end() && itAG!=AGMap.end())
-    {
-        std::cout << "WARNING, name " << name << " is both the name of an atomgroup and residuegroup, the atomgroup will be registered." << "\n";
-    }
-
-    if (itres==residueMap.end() && itAG==AGMap.end())
-    {
-        ASSERT((false), "name " << name << " is not either an atomgroup or residuegroup.");
-    }
-}
-
 const ResidueGroup& Calculation::getResidueGroup(std::string name) const 
 {
     auto it  = MapResidueGroupNameToIndex_.find(name);

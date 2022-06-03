@@ -48,19 +48,19 @@ class Calculation
         virtual void finishCalculate() = 0;
         virtual void printOutput();
         virtual void printOutputOnStep();
-        virtual void calculateBetaFactors() {};
 
+        /*
+        Function that adds and obtains the atomgroup pointers from the vector
+        */
         void addAtomgroup(std::string name);
-        void addResidueGroup(std::string name);
-        // add group dynamically based on what it can find in simulation state
-        // this could either be atomgroup or residuegroup
-        void addGroup(std::string name);
-
-
-        std::string getName() {return name_;}
-
-        int getNumResidueGroups() const { return ResidueGroups_.size();}
         int getNumAtomGroups() const {return AtomGroups_.size();}
+
+        /*
+        Function that adds residue group pointer to the local vector 
+        */
+        void addResidueGroup(std::string name);
+        const ResidueGroup& getResidueGroup(std::string name) const;
+        int getNumResidueGroups() const { return ResidueGroups_.size();}
 
         Real3 calcCOM(const Molecule::residue& residues);
 
@@ -79,16 +79,21 @@ class Calculation
         void initializeResidueGroup(const std::string& residueName, std::string COMName, std::vector<int>& COMIndices, \
         std::vector<Real3>& COM);
 
-        const ResidueGroup& getResidueGroup(std::string name) const;
 
         void initializeProbeVolumes();
         void initializeNotInProbeVolumes();
 
         std::vector<int> InsidePVIndices(std::vector<Real3>& pos);
         std::vector<int> InsidePVIndices(std::vector<Real3>& pos, std::vector<int>& outsideIndices);
-        bool isInPV(Real3& pos);
 
+
+        bool isInPV(Real3& pos);
         bool isInPV(Real3& pos, Real& htildex);
+
+        /*
+        Function that gets the name of this particular calculation object 
+        */
+        std::string getName() {return name_;}
 
     protected:
         // output registry 
