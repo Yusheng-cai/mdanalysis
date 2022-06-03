@@ -19,8 +19,6 @@ SRE::SRE(const CalculationInput& input)
     alpha_ = 1.0 / epsilon_;
     // read in the mode (Brute/NS)
     pack_.ReadString("mode", ParameterPack::KeyType::Optional, mode_);
-
-    pack_.Readbool("onlyattractive", ParameterPack::KeyType::Optional, onlyattrative_);
     ASSERT((mode_ == "NS" || mode_ == "Brute"), "The mode can only be Brute or NS.");
 
     cutoffsq_ = cutoff_ * cutoff_;
@@ -221,19 +219,7 @@ void SRE::calculateWithNS()
 
                         }
 
-                        // we write to sum if user specified only attractive and the force is actually attractive
-                        if (onlyattrative_)
-                        {
-                            if (qiqj < 0)
-                            {
-                                sum += value;
-                            }
-                        }
-                        else
-                        {
-                            sum += value;
-                        }
-
+                        sum += value;
                         localsum += value;
                     }
                 }
