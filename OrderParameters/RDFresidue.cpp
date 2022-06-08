@@ -95,7 +95,7 @@ void RDFresidue::calculate()
             }
         }
 
-        #pragma critical 
+        #pragma omp critical 
         for (int i=0;i<NumCountsPerBin.size();i++)
         {
             NumCountsPerBin[i] += NumCountPerBinLocal[i];
