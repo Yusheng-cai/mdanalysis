@@ -222,7 +222,7 @@ void TopologyReader::Parse(std::string& name)
         }
     }
 
-    // read the starting indices
+    // read the [ atoms ] directives --> see if there's any differences in charge and mass
     for (int i =0;i<StartIndices.size();i++)
     {
         int start = StartIndices[i];
@@ -252,11 +252,38 @@ void TopologyReader::Parse(std::string& name)
                     words.push_back(word);
                 }
 
+                // in [ atoms ] directive, sometimes we also have information about the atom types
+                // we check if the current mass or charge in atom type is zero
                 std::string resname = words[TopIdx::resname];
+                std::string tname= words[TopIdx::atomtype];
+
+                // if words size >= 7, that means we have charge info
+                if (words.size() >= 7)
+                {
+                    Real charge = StringTools::StringToType<Real>(words[TopIdx::charge]);
+
+                    if (MapTypenameToAtomType_.find(tname)->second.charge_ == 0)
+                    {
+                        MapTypenameToAtomType_.find(tname)->second.charge_ = charge;
+                    }
+                }
+
+                // if words size >= 8, then we have mass info
+                if (words.size() >= 8)
+                {
+                    Real mass = StringTools::StringToType<Real>(words[TopIdx::mass]);
+
+                    if (MapTypenameToAtomType_.find(tname)->second.mass_ == 0)
+                    {
+                        MapTypenameToAtomType_.find(tname)->second.mass_ = mass;
+                    }
+                }
+
+                // make a map of residue name to type names 
                 auto it = MapResnameToTypename_.find(resname);
                 if (it != MapResnameToTypename_.end())
                 {
-                    it -> second.push_back(words[TopIdx::atomtype]);
+                    it -> second.push_back(tname);
                 }
                 else
                 {

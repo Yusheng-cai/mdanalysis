@@ -96,11 +96,7 @@ void StringTools::SortAndCheckDuplicates(std::vector<int>& indices)
 {
     // sort the indices vector
     std::sort(indices.begin(), indices.end());
-
-    for (int i=0;i<indices.size()-1;i++)
-    {
-        ASSERT((indices[i] != indices[i+1]), "There is duplicate indices in the atom list provided.");
-    }
+    ASSERT((std::adjacent_find(indices.begin(), indices.end()) == indices.end()), "There is duplicate indices in the atom list provided."); 
 }
 
                             ////// Parameter packs ///////// 
