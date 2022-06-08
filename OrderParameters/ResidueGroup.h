@@ -46,8 +46,6 @@ class ResidueGroup
             return Residues_[i];
         }
 
-
-
     private:
         std::vector<int> AtomGroupGlobalIndices_;
 

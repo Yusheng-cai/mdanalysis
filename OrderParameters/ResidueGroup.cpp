@@ -17,6 +17,7 @@ ResidueGroup::ResidueGroup(const ResidueInput& input)
     const auto& residueIndices = strat_->getResidueIndices();
     atomSize_ = 0;
     Residues_.clear();
+    TotalResidues_.atoms_.clear();
 
     // a set is always sorted in C++
     for (auto it = residueIndices.begin();it != residueIndices.end();it++)
@@ -27,6 +28,11 @@ ResidueGroup::ResidueGroup(const ResidueInput& input)
         int numatoms = r.atoms_.size();
         AtomsPerResidue_.push_back(numatoms);
         atomSize_ += numatoms;
+
+        for (int i=0;i<r.atoms_.size();i++)
+        {
+            TotalResidues_.atoms_.push_back(r.atoms_[i]);
+        }
     }
 }
 
