@@ -35,7 +35,7 @@ SlabAtomicProperty::SlabAtomicProperty(const CalculationInput& input)
     initializeResidueGroup(residueName_);
     
     // register the calculation functions 
-    registerCalcFunc("density", [this](std::vector<Real3>& COM) -> std::vector<Real> {return this -> CalculateDensity(COM);});
+    registerCalcFunc("density", [this](void) -> std::vector<Real> {return this -> CalculateDensity();});
     registerOutputFunction("property", [this](std::string name) -> void {this -> printProperty(name);});
 }
 
@@ -48,25 +48,10 @@ void SlabAtomicProperty::registerCalcFunc(std::string name, calcfunc func)
 
 void SlabAtomicProperty::calculate()
 {
-    auto& res = getResidueGroup(residueName_).getResidues();
-    int numres= res.size();
-    COM_.clear();
-    COM_.resize(numres);
-
-    #pragma omp parallel for
-    for (int i=0;i<numres;i++)
-    {
-        COM_[i] = calcCOM(res[i]);
-    }
-
-    if (usingMinMax_)
-    {
-        binUsingMinMax();
-    }
 
     auto it = MapNameToCalculationFunc_.find(property_);
     ASSERT((it != MapNameToCalculationFunc_.end()), "The property with name " << property_ << " is not found.");
-    std::vector<Real> tempProperty = it -> second(COM_);
+    std::vector<Real> tempProperty = it -> second();
 
     for (int i=0;i<numbins_;i++)
     {
@@ -113,14 +98,14 @@ void SlabAtomicProperty::finishCalculate()
     }
 }
 
-void SlabAtomicProperty::binUsingMinMax()
+void SlabAtomicProperty::binUsingMinMax(const std::vector<Real3>& positions)
 {
     Real slight_shift=1e-3;
     std::vector<Real> ZdirectionNum;
 
-    for (int i=0;i<COM_.size();i++)
+    for (int i=0;i<positions.size();i++)
     {
-        Real val = COM_[i][direction_];
+        Real val = positions[i][direction_];
 
         if (val > above_)
         {
@@ -146,8 +131,10 @@ void SlabAtomicProperty::binUsingMinMax()
     }
 }
 
-std::vector<SlabAtomicProperty::Real> SlabAtomicProperty::CalculateDensity(std::vector<Real3>& COM)
+std::vector<SlabAtomicProperty::Real> SlabAtomicProperty::CalculateDensity()
 {
+    auto& Res = getResidueGroup(residueName_).getResidues();
+
     std::vector<Real> Density(numbins_, 0.0);
     auto box = simstate_.getSimulationBox().getBox();
     Real area = 1.0;
@@ -159,16 +146,30 @@ std::vector<SlabAtomicProperty::Real> SlabAtomicProperty::CalculateDensity(std::
         }
     }
 
+    std::vector<Real3> positions;
+    for (int i=0;i<Res.size();i++)
+    {
+        for (int j=0;j<Res[i].atoms_.size();j++)
+        {
+            positions.push_back(Res[i].atoms_[j].positions_);
+        }
+    }
+
+    if (usingMinMax_)
+    {
+        binUsingMinMax(positions);
+    }
+
     #pragma omp parallel
     {
         std::vector<Real> localDensity(numbins_, 0.0);
 
         #pragma omp for
-        for (int i=0;i<COM_.size();i++)
+        for (int i=0;i<positions.size();i++)
         {
-            if (bin_->isInRange(COM_[i][direction_]))
+            if (bin_->isInRange(positions[i][direction_]))
             {
-                int binIndex = bin_->findBin(COM_[i][direction_]);
+                int binIndex = bin_->findBin(positions[i][direction_]);
                 localDensity[binIndex] += 1;
             }
         }

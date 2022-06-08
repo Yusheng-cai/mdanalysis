@@ -15,20 +15,20 @@ class SlabAtomicProperty : public Calculation
 {
     public:
         using Binptr = std::unique_ptr<Bin>;
-        using calcfunc = std::function<std::vector<Real>(std::vector<Real3>&)>;
+        using calcfunc = std::function<std::vector<Real>()>;
         using Range2 = CommonTypes::Real2;
 
         SlabAtomicProperty(const CalculationInput& input);
 
         virtual void calculate() override;
         virtual void finishCalculate() override;
-        std::vector<Real> CalculateDensity(std::vector<Real3>& COM);
+        std::vector<Real> CalculateDensity();
 
         void registerCalcFunc(std::string name, calcfunc func);
 
         void printProperty(std::string name);
 
-        void binUsingMinMax();
+        void binUsingMinMax(const std::vector<Real3>& positions);
     
     private:
         std::string residueName_;
