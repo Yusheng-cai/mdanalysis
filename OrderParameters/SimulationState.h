@@ -28,10 +28,14 @@ class SimulationState
         void setTotalFrames(int totalFrames){totalframes_ = totalFrames;}
         void setTotalNumberAtoms(int totalAtoms){totalNumberAtoms_=totalAtoms;}
         void setFrameNumber(int FrameNum) {FrameNumber_ = FrameNum;}
+        void setTotalAtomPos(const std::vector<Real3>& totalAtomPos) 
+        {totalAtomPos_.clear();
+         totalAtomPos_.insert(totalAtomPos_.end(), totalAtomPos.begin(), totalAtomPos.end());}
 
         // getters
         SimulationBox& getSimulationBox(){return box_;}
         const SimulationBox& getSimulationBox() const{return box_;}
+        const std::vector<Real3>& getTotalAtomPos() const {return totalAtomPos_;}
         int getTotalFrames() const {return totalframes_;}
         Real getTime() const{return time_;}
         int getStep() const {return step_;}
@@ -86,4 +90,6 @@ class SimulationState
         int totalNumberAtoms_;
 
         int FrameNumber_;
+
+        std::vector<Real3> totalAtomPos_;
 };

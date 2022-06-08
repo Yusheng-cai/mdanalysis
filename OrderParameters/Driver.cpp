@@ -324,6 +324,7 @@ void Driver::update()
     simstate_.setSimulationBox(Xdr_->getSimulationBox());
     simstate_.setTime(Xdr_->getTime());
     simstate_.setStep(Xdr_->getStep());
+    simstate_.setTotalAtomPos(total_atom_positions_);
 
     // update the probe volume
     for (int i=0;i<ProbeVolumeNames_.size();i++)
