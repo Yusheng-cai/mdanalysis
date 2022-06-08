@@ -12,7 +12,6 @@ SlabQtensor::SlabQtensor(const CalculationInput& input)
     pack_.ReadString("direction", ParameterPack::KeyType::Optional, direction_);
     pack_.ReadNumber("headindex", ParameterPack::KeyType::Optional, headIndex_);
     pack_.ReadNumber("tailindex", ParameterPack::KeyType::Optional, tailIndex_);
-    pack_.ReadNumber("ignorelessthan", ParameterPack::KeyType::Optional, ignoreP2LessThan_);
 
     registerOutputFunction("p2z", [this](std::string name) -> void{this -> printP2z(name);});
     registerOutputFunction("evbeta", [this](std::string name) -> void {this -> printevBeta(name);});
@@ -210,7 +209,6 @@ void SlabQtensor::calculate()
     // sum up the matrices from per iter to the total one
     for (int i=0;i<QtensorZ_Iter.size();i++)
     {
-        LinAlg3x3::matrix_mult_inplace(QtensorZ_Iter[i], 1.0/(2.0 * ResiduePerBin_Iter[i]));
         LinAlg3x3::matrix_accum_inplace(QtensorZ_[i], QtensorZ_Iter[i]);
     }
 }
@@ -226,7 +224,16 @@ void SlabQtensor::printP2z(std::string name)
 
     for (int i=0;i<numbins_;i++)
     {
-        ofs << BinLocation_[i] << "\t" << P2avg_[i] << "\t" << NumResPerBin_[i];
+        Real binlocation;
+        if (usingMinMaxBins_)
+        {
+            binlocation = BinLocation_[i];
+        }
+        else
+        {
+            binlocation = bin_->getCenterLocationOfBin(i);
+        }
+        ofs << binlocation << "\t" << P2avg_[i] << "\t" << NumResPerBin_[i];
         ofs << "\t" << QtensorZ_[i][0][0] << "\t" << QtensorZ_[i][0][1] << "\t" << QtensorZ_[i][0][2]; 
         ofs << "\t" << QtensorZ_[i][1][1] << "\t" << QtensorZ_[i][1][2];
         ofs << "\t" << QtensorZ_[i][2][2];
@@ -238,7 +245,6 @@ void SlabQtensor::printP2z(std::string name)
 void SlabQtensor::finishCalculate()
 {
     int totalFrames = simstate_.getTotalFrames();
-    std::cout << "Total frame = " << totalFrames << std::endl;
 
     P2avg_.resize(numbins_);
     eigvec_.resize(numbins_);
@@ -246,21 +252,19 @@ void SlabQtensor::finishCalculate()
     // average the Qtensor over time
     for (int i=0;i<numbins_;i++)
     {
-        if (NumResPerBin_[i] < ignoreP2LessThan_)
+        if (NumResPerBin_[i] != 0)
         {
-            LinAlg3x3::matrix_mult_inplace(QtensorZ_[i], 0.0);
+            LinAlg3x3::matrix_mult_inplace(QtensorZ_[i], 1.0/(2.0*NumResPerBin_[i]));
         }
 
-        LinAlg3x3::matrix_mult_inplace(QtensorZ_[i], 1.0/totalFrames);
+        // obtain normalized number residues per bin
         NumResPerBin_[i] /= totalFrames;
 
-        if (NumResPerBin_[i] < ignoreP2LessThan_)
-        {
-            NumResPerBin_[i] = 0;
-        }
-
         // average over the bin location
-        BinLocation_[i] = BinLocation_[i] / totalFrames;
+        if (usingMinMaxBins_)
+        {
+            BinLocation_[i] = BinLocation_[i] / totalFrames;
+        }
     }
 
     // find the eigenvector and eigenvalue of the Qtensor

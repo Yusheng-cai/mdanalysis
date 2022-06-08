@@ -69,9 +69,6 @@ class SlabQtensor : public Calculation
         std::vector<Real> P2_;
         std::vector<Real> P2avg_;
 
-        // ignore the P2 if the average N is less than this number
-        Real ignoreP2LessThan_ = 0.0;
-
         int precision_ = 3;
 
         // nx^2, ny^2, nz^2 for the eigenvectors
