@@ -44,11 +44,13 @@ class SlabOrientation : public Calculation
 
         void printHistogram(std::string name);
         void printNumResidue(std::string name);
+        void printHistogramSquared(std::string name);
 
         void binUsingMinMax();
 
     private:
         Binptr costBin_;
+        Binptr costsquaredBin_;
         Binptr zBin_;
 
         std::string direction_ = "z";
@@ -62,7 +64,12 @@ class SlabOrientation : public Calculation
         // the name of the residuegroup provided
         std::string residueGroupName_;
 
+        // This is 2d histogram for P(cos(theta), z)
         std::vector<std::vector<Real>> histogram2d_;
+        std::vector<std::vector<Real>> BWcostZ_;
+
+        // This is 2d histogram for P(cos2(theta),z)
+        std::vector<std::vector<Real>> histogram2d_squared_;
 
         int headIndex_;
         int tailIndex_;
@@ -80,10 +87,15 @@ class SlabOrientation : public Calculation
 
         // number of residues per bin
         std::vector<Real> numResiduePerBin_;
+        std::vector<Real> numResiduePerBinSquared_;
         std::vector<Real> ResidueLocationPerBin_;
 
         // we are binning z directions using min/max of the COM
-        int numbins_;
+        int numzbins_;
+        int numtbins_=30;
         Real above_;
         bool usingMinMax_=false;
+
+        // anchoring strenght 
+        std::vector<Real> anchoring_strength_;
 };

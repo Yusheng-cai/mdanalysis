@@ -10,16 +10,20 @@ SlabOrientation::SlabOrientation(const CalculationInput& input)
 {
     // initialize the bins first --> zbin and thetabin
     auto zbinPack = input.pack_.findParamPack("zbin", ParameterPack::KeyType::Optional);
-    auto costBinPack = input.pack_.findParamPack("tbin", ParameterPack::KeyType::Required);
-    costBin_ = Binptr(new Bin(*costBinPack));
+
+    // default to be 30
+    pack_.ReadNumber("numtbins", ParameterPack::KeyType::Optional, numtbins_);
+    costBin_ = Binptr(new Bin({{-1,1}}, numtbins_));
+    costsquaredBin_ = Binptr(new Bin({{0,1}}, numtbins_));
+
     if(zbinPack != nullptr)
     {
         zBin_    = Binptr(new Bin(*zbinPack));
-        numbins_= zBin_->getNumbins();
+        numzbins_= zBin_->getNumbins();
     }
     else
     {
-        pack_.ReadNumber("numbins", ParameterPack::KeyType::Required, numbins_);
+        pack_.ReadNumber("numzbins", ParameterPack::KeyType::Required, numzbins_);
         pack_.ReadNumber("above", ParameterPack::KeyType::Required, above_);
         zBin_    = Binptr(new Bin());
         usingMinMax_ = true;
@@ -36,19 +40,21 @@ SlabOrientation::SlabOrientation(const CalculationInput& input)
     auto& res = getResidueGroup(residueGroupName_);
 
     // size histogram 2d      
-    histogram2d_.resize(numbins_, std::vector<Real>(costBin_->getNumbins(),0.0));
+    histogram2d_.resize(numzbins_, std::vector<Real>(numtbins_,0.0));
+    histogram2d_squared_.resize(numzbins_, std::vector<Real>(numtbins_,0.0));
 
     // resize the molecular director size
     uij_.resize(res.size());
 
     // resize the number of residues to size of residue
-    numResiduePerBin_.resize(numbins_,0.0);
-    ResidueLocationPerBin_.resize(numbins_,0.0);
+    numResiduePerBin_.resize(numzbins_,0.0);
+    ResidueLocationPerBin_.resize(numzbins_,0.0);
 }
 
 void SlabOrientation::RegisterOutputs()
 {
     registerOutputFunction("PCosthetaZ", [this](std::string name)->void {this -> printHistogram(name);});
+    registerOutputFunction("PCosthetaZSquared", [this](std::string name) -> void {this -> printHistogramSquared(name);});
     registerOutputFunction("ResiduePerBin", [this](std::string name) -> void {this -> printNumResidue(name);});
 }
 
@@ -104,9 +110,12 @@ void SlabOrientation::calculate()
         {  
             int zbinNum = zBin_->findBin(dist);
             int tbinNum = costBin_->findBin(cost);
+            int tsquaredbinNum = costsquaredBin_->findBin(cost*cost);
 
             histogram2d_[zbinNum][tbinNum] += 1;
             numResiduePerBin_[zbinNum] += 1;
+
+            histogram2d_squared_[zbinNum][tsquaredbinNum] += 1;
         }
     }
 }
@@ -135,9 +144,9 @@ void SlabOrientation::binUsingMinMax()
 
     std::cout << "Max = " << max << " Min = " << min << std::endl;
 
-    zBin_ -> update(range, numbins_);
+    zBin_ -> update(range, numzbins_);
 
-    for (int i=0;i<numbins_;i++)
+    for (int i=0;i<numzbins_;i++)
     {
         ResidueLocationPerBin_[i] += zBin_->getCenterLocationOfBin(i);
     }
@@ -161,25 +170,51 @@ void SlabOrientation::finishCalculate()
         for (int j=0;j<histogram2d_[0].size();j++)
         {
             histogram2d_[i][j] /= Numframes;
+            histogram2d_squared_[i][j] /= Numframes;
         }
     }
 
-    // Real sum = 0.0;
-    // for (int i=0;i<histogram2d_.size();i++)
-    // {
-    //     for (int j=0;j<histogram2d_[0].size();j++)
-    //     {
-    //         sum += histogram2d_[i][j];
-    //     }
-    // }
 
-    // for (int i=0;i<histogram2d_.size();i++)
-    // {
-    //     for (int j=0;j<histogram2d_[0].size();j++)
-    //     {
-    //         histogram2d_[i][j] = histogram2d_[i][j] / sum;
-    //     }
-    // }
+    // calculate anchoring energy 
+    Real3 sides = simstate_.getSimulationBox().getSides(); 
+    Real AreaXY = 1;
+    for (int i=0;i<3;i++)
+    {
+        if (i != directionIndex_)
+        {
+            AreaXY *= sides[i];
+        }
+    }
+    
+    // Calculate normalized 2d histogram
+    std::vector<std::vector<Real>> PcostZ(numzbins_, std::vector<Real>(numtbins_,0.0));
+    BWcostZ_.resize(numzbins_, std::vector<Real>(numtbins_,0.0));
+    Real sum = 0.0;
+    for (int i=0;i<histogram2d_.size();i++)
+    {
+        for (int j=0;j<histogram2d_[0].size();j++)
+        {
+            sum += histogram2d_[i][j];
+        }
+    }
+
+    for (int i=0;i<PcostZ.size();i++)
+    {
+        for (int j=0;j<PcostZ[i].size();j++)
+        {
+            PcostZ[i][j] = histogram2d_[i][j] / sum;
+            BWcostZ_[i][j] = -std::log(PcostZ[i][j])/AreaXY * numResiduePerBin_[i];
+        }
+    }
+
+    for (int i=0;i<BWcostZ_.size();i++)
+    {
+        Real mini= *std::min_element(BWcostZ_[i].begin(), BWcostZ_[i].end());
+        for (int j=0;j<BWcostZ_[i].size();j++)
+        {
+            BWcostZ_[i][j] = BWcostZ_[i][j] - mini;
+        }
+    }
 }
 
 void SlabOrientation::printHistogram(std::string name)
@@ -191,12 +226,28 @@ void SlabOrientation::printHistogram(std::string name)
 
     for (int i=0;i<histogram2d_.size();i++)
     {
-        for (int j=0;j<histogram2d_[0].size();j++)
+        for (int j=0;j<histogram2d_[i].size();j++)
         {
-            ofs << i << "\t" << j << "\t" << histogram2d_[i][j] << "\n";
+            ofs << i << "\t" << j << "\t" << histogram2d_[i][j] << "\t" << BWcostZ_[i][j] << "\n";
         }
     }
     ofs.close();
+}
+
+void SlabOrientation::printHistogramSquared(std::string name)
+{
+    std::ofstream ofs;
+    ofs.open(name);
+
+    ofs << std::fixed << std::setprecision(precision_);
+
+    for (int i=0;i<histogram2d_squared_.size();i++)
+    {
+        for (int j=0;j<histogram2d_squared_[i].size();j++)
+        {
+            ofs << i << "\t" << j << "\t" << histogram2d_squared_[i][j] << "\n";
+        }
+    }
 }
 
 void SlabOrientation::printNumResidue(std::string name)
