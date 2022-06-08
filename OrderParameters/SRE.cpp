@@ -51,89 +51,73 @@ void SRE::initializeSoluteSolventIndices()
     int soluteResSize  = solute[0].atoms_.size();
 
     // obtain per residue indices --> [atom1, atom2, ...]
-    std::vector<int> SoluteIndicesPerResidue;
-    std::vector<int> SolventIndicesPerResidue;
-    SoluteIndicesPerResidue.resize(soluteResSize);
-    SolventIndicesPerResidue.resize(solventResSize);
-    std::iota(SoluteIndicesPerResidue.begin(), SoluteIndicesPerResidue.end(), 0);
-    std::iota(SolventIndicesPerResidue.begin(), SolventIndicesPerResidue.end(), 0);
+    SolventIndices_.resize(solventResSize);
+    SoluteIndices_.resize(soluteResSize);
+    std::iota(SolventIndices_.begin(), SolventIndices_.end(), 0);
+    std::iota(SoluteIndices_.begin(),SoluteIndices_.end(), 0);
 
     // read in the actual indices 
-    std::vector<std::string> soluteInd_;
-    std::vector<std::string> solventInd_;
-    pack_.ReadVectorString("soluteIndices", ParameterPack::KeyType::Optional,soluteInd_);
-    pack_.ReadVectorString("solventIndices", ParameterPack::KeyType::Optional, solventInd_);
-    StringTools::ConvertStringToIndices(soluteInd_, SoluteIndicesPerResidue);
-    StringTools::ConvertStringToIndices(solventInd_, SolventIndicesPerResidue);
-
-    // make it into a whole vector of local indices 
-    for (int i=0;i<solvent.size();i++)
-    {
-        for (int j=0;j<SolventIndicesPerResidue.size();j++)
-        {
-            SolventIndices_.push_back(i * solventResSize + SolventIndicesPerResidue[j]);
-        }
-    }
-
-    for (int i=0;i<solute.size();i++)
-    {
-        for (int j=0;j<SoluteIndicesPerResidue.size();j++)
-        {
-            SoluteIndices_.push_back(i* soluteResSize + SoluteIndicesPerResidue[j]);
-        }
-    }
+    std::vector<std::string> soluteInd, solventInd;
+    pack_.ReadVectorString("soluteIndices", ParameterPack::KeyType::Optional,soluteInd);
+    pack_.ReadVectorString("solventIndices", ParameterPack::KeyType::Optional, solventInd);
+    StringTools::ConvertStringToIndices(soluteInd, SoluteIndices_);
+    StringTools::ConvertStringToIndices(solventInd, SolventIndices_);
 }
 
 void SRE::getInsidePVIndices()
 {
-    const auto& solvent  = getResidueGroup(SolventName_).getTotalResidue().atoms_;
-    InsidePVIndices_.clear();
-    indus_indicators_.clear();
+    // get the residue groups
+    const auto& solvent  = getResidueGroup(SolventName_).getResidues();
+    const auto& solute   = getResidueGroup(SoluteName_).getResidues();
 
-    for (int i=0;i<SolventIndices_.size();i++)
-    {
-        int index = SolventIndices_[i];
-        Real3 pos = solvent[index].positions_;
-        Real htildex=1.0;
+    // number of solvent and solute molecules
+    int numSolvent = solvent.size();
+    int numSolute  = solute.size();
 
-        if (isInPV(pos, htildex))
-        {
-            InsidePVIndices_.push_back(index);
-            indus_indicators_.push_back(htildex);
-        }
-    }
-}
-
-void SRE::getNonZeroCharges()
-{
-    const auto& solvent = getResidueGroup(SolventName_).getTotalResidue().atoms_;
-    const auto& solute  = getResidueGroup(SoluteName_).getTotalResidue().atoms_;
-
+    // clear the vectors
     NonZeroSolvent_.clear();
     NonZeroSolute_.clear();
     nonzero_indus_indicators_.clear();
 
-    for (int i=0;i<InsidePVIndices_.size();i++)
-    {
-        int index = InsidePVIndices_[i];
-        Real charge = solvent[index].charge_;
-        Real htildex= indus_indicators_[i];
+    int numAtomsPerSolvent = solvent[0].atoms_.size();
+    int numAtomsPerSolute  = solute[0].atoms_.size();
 
-        if (charge != 0)
+    // first calculate solvent 
+    int solventindex = 0;
+    for (int i=0;i<numSolvent;i++)
+    {
+        for (int j=0;j<SolventIndices_.size();j++)
         {
-            NonZeroSolvent_.push_back(index);
-            nonzero_indus_indicators_.push_back(htildex);
+            int index = SolventIndices_[j];
+            Real3 pos = solvent[i].atoms_[index].positions_;
+            Real htildex=1.0;
+
+            if (isInPV(pos, htildex))
+            {
+                Real charge = solvent[i].atoms_[index].charge_;
+
+                if (charge != 0)
+                {
+                    NonZeroSolvent_.push_back(i*numAtomsPerSolvent+index);
+                    nonzero_indus_indicators_.push_back(htildex);
+                }
+            }
         }
     }
-    
-    for (int i=0;i<SoluteIndices_.size();i++)
-    {
-        int index = SoluteIndices_[i];
-        Real charge = solute[index].charge_;
 
-        if (charge != 0)
+    // calculate solute
+    for (int i=0;i<numSolute;i++)
+    {
+        for (int j=0;j<SoluteIndices_.size();j++)
         {
-            NonZeroSolute_.push_back(index);
+            int index = SoluteIndices_[j];
+
+            Real charge = solute[i].atoms_[index].charge_;
+
+            if (charge != 0)
+            {
+                NonZeroSolute_.push_back(i*numAtomsPerSolute+index);
+            }
         }
     }
 }
@@ -143,7 +127,6 @@ void SRE::update()
     cell_ -> update();
 
     getInsidePVIndices();
-    getNonZeroCharges();
 
     PerAtomContribution_.clear();
 }
@@ -152,7 +135,6 @@ void SRE::calculateWithNS()
 {
     const auto& solvent = getResidueGroup(SolventName_).getTotalResidue().atoms_;
     const auto& solute  = getResidueGroup(SoluteName_).getTotalResidue().atoms_;
-
 
     PerAtomContribution_.resize(solvent.size());
 
@@ -194,7 +176,7 @@ void SRE::calculateWithNS()
                 {
                     Real3 possl = solute[index].positions_;
                     Real qj     = solute[index].charge_;
-                    Real qiqj = qi * qj;
+                    Real qiqj   = qi * qj;
 
                     Real3 dist;
                     Real distsq;
@@ -299,9 +281,6 @@ void SRE::calculate()
     {
         calculateWithoutNS();
     }
-
-    std::cout << "Energy = " << energy_ << "\n";
-    std::cout << "Repulsive energy = " << repulsive_energy_ << "\n";
 }
 
 void SRE::printEnergyPerIter(std::ofstream& ofs)

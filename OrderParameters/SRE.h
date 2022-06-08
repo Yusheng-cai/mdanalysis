@@ -30,7 +30,6 @@ class SRE : public Calculation
 
         void initializeSoluteSolventIndices();
 
-        void getNonZeroCharges();
         void getInsidePVIndices();
 
         Real getEnergy() {return energy_;}
@@ -64,9 +63,6 @@ class SRE : public Calculation
         // mode at which we want to operate at 
         std::string mode_="NS";
 
-        // indices of the atoms that are inside the probe volume
-        std::vector<int> InsidePVIndices_;
-
         // per atom contribution to the SRE energy 
         std::vector<Real> PerAtomContribution_;
 
@@ -75,6 +71,5 @@ class SRE : public Calculation
         std::vector<int> SolventIndices_;
 
         // indus indicator
-        std::vector<Real> indus_indicators_;
         std::vector<Real> nonzero_indus_indicators_;
 };
