@@ -119,5 +119,10 @@ void QtensorCalc::finishCalculate()
 
     auto pair = LinAlg3x3::OrderEigenSolver(QtensorTot_);
     p2_ = pair.first[0];
-    v0_ = pair.second[0];
+
+    for (int i=0;i<3;i++)
+    {
+        v0_[i] = pair.second[i][0];
+
+    }
 }
