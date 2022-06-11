@@ -29,12 +29,6 @@ class QtensorCalc : public Calculation
         virtual void finishCalculate() override;
 
         // dots the vectors uij with respect to the largest eigenvector
-        void printcos2thetaPerIter(std::ofstream& ofs);
-        void printevPerIter(std::ofstream& ofs);
-        void printp2PerIter(std::ofstream& ofs);
-        void printQtensorPerIter(std::ofstream& ofs);
-        void printcos2PerIter(std::ofstream& ofs);
-        void printcosPerIter(std::ofstream& ofs);
         void printaverageQ(std::string name);
 
         Real getBiaxiality() const {return biaxiality_;}
@@ -50,6 +44,7 @@ class QtensorCalc : public Calculation
     
     private:
         Matrix Qtensor_;
+
         // The average Qtensor over time
         Matrix QtensorTot_;
 

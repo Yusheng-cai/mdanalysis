@@ -29,12 +29,6 @@ QtensorCalc::QtensorCalc(const CalculationInput& input)
 
     // register per iter output
     registerOutputFunction("Q", [this](std::string name) -> void {this -> printaverageQ(name);});
-    registerPerIterOutputFunction("cos20", [this](std::ofstream& ofs) -> void {this -> printcos2thetaPerIter(ofs);});
-    registerPerIterOutputFunction("cos0", [this](std::ofstream& ofs) -> void {this -> printcosPerIter(ofs);});
-    registerPerIterOutputFunction("ev", [this](std::ofstream& ofs) -> void {this -> printevPerIter(ofs);});
-    registerPerIterOutputFunction("p2", [this](std::ofstream& ofs) -> void {this -> printp2PerIter(ofs);});
-    registerPerIterOutputFunction("qtensor", [this](std::ofstream& ofs) -> void {this -> printQtensorPerIter(ofs);});
-    registerPerIterOutputFunction("cos2dir", [this](std::ofstream& ofs) -> void {this -> printcos2PerIter(ofs);});
 
     // register outputfile output
     registerOutputFileOutputs("biaxiality", [this](void) -> Real {return this -> getBiaxiality();});
@@ -53,50 +47,16 @@ QtensorCalc::QtensorCalc(const CalculationInput& input)
     initializeNotInProbeVolumes();
 }
 
-void QtensorCalc::printQtensorPerIter(std::ofstream& ofs)
-{
-    auto result = Qtensor::orderedeig_Qtensor(Qtensor_);
-    ofs << Qtensor_[0][0] << " " << Qtensor_[0][1] << " " << Qtensor_[0][2] << " " << Qtensor_[1][1] << " " << Qtensor_[1][2] \
-    << " " << result.second[0] << " " << result.second[1] << " " << result.second[2] << "\n";
-}
-
 void QtensorCalc::printaverageQ(std::string name)
 {
     std::ofstream ofs;
     ofs.open(name);
 
-    auto res = Qtensor::orderedeig_Qtensor(QtensorTot_);    
-    Real3 eigenvector;
-    for (int i=0;i<3;i++)
-    {
-        eigenvector[i] = res.first[i][0];
-    }
-
-    Real p2 = res.second[0];
-
     ofs << "# Qxx Qxy Qxz Qyy Qyz p2 v1x v1y v1z\n";
-    ofs << QtensorTot_[0][0] << " " << QtensorTot_[0][1] << " " << QtensorTot_[0][2] << " " << QtensorTot_[1][1] << " " << QtensorTot_[1][2] << " " << p2 << \
-    " " << eigenvector[0] << " " << eigenvector[1] << " " << eigenvector[2];
+    ofs << QtensorTot_[0][0] << " " << QtensorTot_[0][1] << " " << QtensorTot_[0][2] << " " << QtensorTot_[1][1] << " " << QtensorTot_[1][2] << " " << p2_ << \
+    " " << v0_[0] << " " << v0_[1] << " " << v0_[2];
 
     ofs.close();
-}
-
-void QtensorCalc::printevPerIter(std::ofstream& ofs)
-{
-    Real3 v;
-    for (int i=0;i<3;i++)
-    {
-        v[i] = eigenvector_[i][0];
-
-        ofs << v[i] << " ";
-    }
-
-    ofs << "\n";
-}
-
-void QtensorCalc::printp2PerIter(std::ofstream& ofs)
-{
-    ofs << eigenval_[1] * (-2.0) << "\n";
 }
 
 void QtensorCalc::calculate()
@@ -131,27 +91,19 @@ void QtensorCalc::calculate()
 
         simstate_.getSimulationBox().calculateDistance(atoms[head_index_].positions_, atoms[tail_index_].positions_, distance, dist_sq);
 
-        uij_[i] = Qtensor::normalize_director(distance);
+        LinAlg3x3::normalize(distance);
+        uij_[i] = distance;
+
         Matrix localQ = LinAlg3x3::LocalQtensor(uij_[i]);
 
-        Qtensor::matrix_accum_inplace(Qtensor_, localQ);
+        LinAlg3x3::matrix_accum_inplace(Qtensor_, localQ);
     }
 
     // calculate the actualy Qtensor
-    Qtensor::matrix_mult_inplace(Qtensor_, 1/(2.0*num));
+    LinAlg3x3::matrix_mult_inplace(Qtensor_, 1/(2.0*num));
 
     // Add the current Qtensor to Qtensortot
-    Qtensor::matrix_accum_inplace(QtensorTot_, Qtensor_);
-
-    // order from largest to smallest
-    auto result = Qtensor::orderedeig_Qtensor(Qtensor_);
-
-    eigenvector_=  result.first;
-    eigenval_   = result.second;
-
-    p2_ = eigenval_[0];
-
-    biaxiality_ = eigenval_[1] * 2.0 + eigenval_[0];
+    LinAlg3x3::matrix_accum_inplace(QtensorTot_, Qtensor_);
 }
 
 void QtensorCalc::finishCalculate()
@@ -164,88 +116,8 @@ void QtensorCalc::finishCalculate()
             QtensorTot_[i][j] /=  numframes;
         }
     }
-}
 
-void QtensorCalc::printcos2PerIter(std::ofstream& ofs)
-{
-    std::vector<Real> dottedval(uij_.size(),0.0);
-    auto& res = getResidueGroup(residue_name_);
-
-    for (int i=0;i<uij_.size();i++)
-    {
-        Real val = LinAlg3x3::DotProduct(arr_, uij_[i]);
-        val = val * val;
-        dottedval[i] = val;
-    }
-
-    int frameNum = simstate_.getFrameNumber();
-    ofs << frameNum << " ";
-
-    for (int i=0;i<dottedval.size();i++)
-    {
-        for (int j=0;j<res[i].atoms_.size();j++)
-        {
-            ofs << dottedval[i] << " ";
-        }
-    }
-
-    ofs << "\n";
-}
-
-void QtensorCalc::printcosPerIter(std::ofstream& ofs)
-{
-    std::vector<Real> dottedval(uij_.size(),0.0);
-    auto& res = getResidueGroup(residue_name_);
-
-    for (int i=0;i<uij_.size();i++)
-    {
-        Real val = LinAlg3x3::DotProduct(arr_, uij_[i]);
-        dottedval[i] = val;
-    }
-
-    int frameNum = simstate_.getFrameNumber();
-    ofs << frameNum << " ";
-
-    for (int i=0;i<dottedval.size();i++)
-    {
-        for (int j=0;j<res[i].atoms_.size();j++)
-        {
-            ofs << dottedval[i] << " ";
-        }
-    }
-
-    ofs << "\n";
-}
-
-void QtensorCalc::printcos2thetaPerIter(std::ofstream& ofs)
-{
-    Real3 v;
-    auto& res = getResidueGroup(residue_name_);
-    for (int i=0;i<3;i++)
-    {
-        v[i] = eigenvector_[i][0];
-    }
-
-    std::vector<Real> dottedVal(uij_.size(),0.0);
-
-    for (int i=0;i<uij_.size();i++)
-    {
-        Real val  = LinAlg3x3::DotProduct(v, uij_[i]);
-        val = val*val;
-
-        dottedVal[i] = val;
-    }
-
-    int frameNum = simstate_.getFrameNumber();
-    ofs << frameNum << " ";
-
-    for (int i=0;i<dottedVal.size();i++)
-    {
-        for (int j=0;j<res[i].atoms_.size();j++)
-        {
-            ofs << dottedVal[i] << " ";
-        }
-    }
-
-    ofs << "\n";
+    auto pair = LinAlg3x3::OrderEigenSolver(QtensorTot_);
+    p2_ = pair.first[0];
+    v0_ = pair.second[0];
 }
