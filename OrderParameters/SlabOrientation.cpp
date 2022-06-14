@@ -245,7 +245,8 @@ void SlabOrientation::printHistogramSquared(std::string name)
     {
         for (int j=0;j<histogram2d_squared_[i].size();j++)
         {
-            ofs << i << "\t" << j << "\t" << histogram2d_squared_[i][j] << "\n";
+            ofs << i << "\t" << j << "\t" << ResidueLocationPerBin_[i] << "\t" << costBin_->getCenterLocationOfBin(j) \
+            << "\t" << histogram2d_squared_[i][j] << "\n";
         }
     }
 }
