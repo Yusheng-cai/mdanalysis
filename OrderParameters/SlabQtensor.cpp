@@ -31,7 +31,7 @@ SlabQtensor::SlabQtensor(const CalculationInput& input)
     }
     else
     {
-        input.pack_.ReadNumber("numbins", ParameterPack::KeyType::Required, numbins_);
+        input.pack_.ReadNumber("numzbins", ParameterPack::KeyType::Required, numbins_);
         input.pack_.ReadNumber("above", ParameterPack::KeyType::Optional, above_);
         bin_ = Binptr(new Bin());
         usingMinMaxBins_ = true;

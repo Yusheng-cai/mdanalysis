@@ -21,7 +21,7 @@ SlabAtomicProperty::SlabAtomicProperty(const CalculationInput& input)
     }
     else
     {
-        pack_.ReadNumber("numbins", ParameterPack::KeyType::Required, numbins_);
+        pack_.ReadNumber("numzbins", ParameterPack::KeyType::Required, numbins_);
         pack_.ReadNumber("above", ParameterPack::KeyType::Required, above_);
         bin_    = Binptr(new Bin());
         usingMinMax_ = true;
