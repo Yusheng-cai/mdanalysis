@@ -44,7 +44,15 @@ CellGrid::index3 CellGrid::getCellGridIndex(const Real3& pos)
 
     for (int i=0;i<3;i++)
     {
-        index[i] = (int)std::floor(shiftedPos[i] / dL_ );
+        // take care of edge cases when shiftedPos is exactly N[i] * dL
+        if std::abs(shiftedPos[i] - N_[i] * dL_) < 1e-5 
+        {
+            index[i] = N_[i] - 1;
+        }
+        else
+        {
+            index[i] = (int)std::floor(shiftedPos[i] / dL_ );
+        }
         ASSERT((index[i] < N_[i]), "Index out of range, index is " << index[i] << " max is " << N_[i] << " Position = " << shiftedPos[i] << " dL = " << dL_);
     }
 
