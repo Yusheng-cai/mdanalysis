@@ -1,0 +1,34 @@
+xdrfile = {
+    path = CNSAM/CNSAM.xtc
+}
+
+grofile = {
+    path = CNSAM/CNSAM.gro
+}
+
+topology = {
+    path = CNSAM/topol.top
+}
+
+residuegroup = {
+	name = lc
+	selection = [ resname 5CB ]
+}
+
+calculation = {
+    type = SlabQtensor
+    residue = lc
+    direction = z
+
+    numzbins = 30
+    above = 2.0
+
+    headindex = 1
+    tailindex = 2
+
+    array = [ 0 0 1 ]
+
+    outputs = [ p2z ] 
+    outputNames = [ p2z.out ]
+    COMIndices = [ 1 2 ]
+}
