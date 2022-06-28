@@ -54,18 +54,23 @@ void RDFresidue::calculate()
     COM2_.clear();
     COM2_.resize(res2.size());
 
-    for (int i=0;i<COM1_.size();i++)
+    #pragma omp parallel
     {
-        Real3 C1 = CalculationTools::getCOM(res1[i], simstate_, COMIndices1_);
+        #pragma omp for
+        for (int i=0;i<COM1_.size();i++)
+        {
+            Real3 C1 = CalculationTools::getCOM(res1[i], simstate_, COMIndices1_);
 
-        COM1_[i] = C1;
-    }
+            COM1_[i] = C1;
+        }
 
-    for (int i=0;i<COM2_.size();i++)
-    {
-        Real3 C2 = CalculationTools::getCOM(res2[i], simstate_, COMIndices2_);
+        #pragma omp for
+        for (int i=0;i<COM2_.size();i++)
+        {
+            Real3 C2 = CalculationTools::getCOM(res2[i], simstate_, COMIndices2_);
 
-        COM2_[i] = C2;
+            COM2_[i] = C2;
+        }
     }
 
 
