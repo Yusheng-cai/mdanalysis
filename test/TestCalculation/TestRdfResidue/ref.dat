@@ -31,5 +31,5 @@ calculation = {
     COMIndices1 = [ 1 2 ]
     COMIndices2 = [ 1 2 ]
     outputs = [ RDF ] 
-    outputNames = [ rdf.out ] 
+    outputNames = [ rdf_ref.out ] 
 }

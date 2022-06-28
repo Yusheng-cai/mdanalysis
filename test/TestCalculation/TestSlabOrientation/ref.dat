@@ -1,0 +1,30 @@
+xdrfile = {
+    path = CNSAM/CNSAM.xtc
+}
+
+grofile = {
+    path = CNSAM/CNSAM.gro
+}
+
+topology = {
+    path = CNSAM/topol.top
+}
+
+residuegroup = {
+	name = lc
+	selection = [ resname 5CB ]
+}
+
+calculation = {
+    type = SlabOrientation
+    residue = lc
+    numtbins = 30
+    numzbins = 50
+    above    = 2.0
+    array    = [ 0 0 1 ]
+
+    headindex = 1
+    tailindex = 2
+    outputs = [ PCosthetaZ ]
+    outputNames = [ pcost_ref.out ]
+}

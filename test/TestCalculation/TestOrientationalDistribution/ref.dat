@@ -1,0 +1,33 @@
+xdrfile = {
+    path = CNSAM/CNSAM.xtc
+}
+
+grofile = {
+    path = CNSAM/CNSAM.gro
+}
+
+topology = {
+    path = CNSAM/topol.top
+}
+
+probevolume = {
+	name = v
+	type = simbox
+}
+
+residuegroup = {
+	name = lc
+	selection = [ resname 5CB ]
+}
+
+calculation = {
+    type = OrientationalDistribution
+    residue = lc
+    numbins = 50
+    headindex = 1
+    tailindex = 2
+    array = [ 0 0 1 ]
+    probevolumes = [ v ]
+    outputs = [ Distribution ] 
+    outputNames = [ dist_ref.out ]
+}

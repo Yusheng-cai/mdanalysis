@@ -1,0 +1,42 @@
+xdrfile = {
+    path = CNSAM/CNSAM.xtc
+}
+
+grofile = {
+    path = CNSAM/CNSAM.gro
+}
+
+topology = {
+    path = CNSAM/topol.top
+}
+
+probevolume = {
+	name = v
+	type = simbox
+}
+
+residuegroup = {
+	name = lc
+	selection = [ resname 5CB ]
+}
+
+residuegroup = {
+	name = SAM
+	selection = [ resname CN ]
+}
+
+calculation = {
+    name = s
+    type = SRE
+    solvent = lc
+    solute  = SAM
+    epsilon = 0.384
+    cutoff  = 1.2
+    mode    = NS
+    probevolumes = [ v ]
+}
+
+outputfile = {
+    name = op.out
+    value = [ s.energy s.repulsive_energy s.attractive_energy ] 
+}

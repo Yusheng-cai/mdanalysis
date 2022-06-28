@@ -47,7 +47,7 @@ calculation = {
 	
     # managing outputs
     outputs = [ histogram ]
-    outputNames = [ g1.out ]
+    outputNames = [ g1_ref.out ]
 
     # COM used to check whether or not we are within a PV
     COMIndices1 = [ 1 2 ]
