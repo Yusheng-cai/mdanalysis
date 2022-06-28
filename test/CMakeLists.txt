@@ -52,8 +52,17 @@ find_program(BASH bash)
 if(NOT BASH)
   message(FATAL_ERROR "Unable to find bash for testing")
 else()
-  message("BASH = ${BASH}")
+  message("Found BASH, bash path is ${BASH}")
 endif()
+
+# Find python
+find_package(Python3 COMPONENTS Interpreter Development)
+if(Python3_Interpreter_FOUND)
+  message("Python3 found, interpreter is ${Python3_EXECUTABLE}")
+else()
+  message(FATAL_ERROR, "Python not found")
+endif()
+    
 
 # Add the test and run with the bash script run_test.sh
 foreach(TEST_NAME IN LISTS OMP_TEST)
