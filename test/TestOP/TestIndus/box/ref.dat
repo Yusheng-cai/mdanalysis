@@ -24,6 +24,6 @@ orderparameter =
 }
 
 outputfile = {
-    name = op.out
+    name = op_ref.out
     value = [ g.n g.ntilde ] 
 }
