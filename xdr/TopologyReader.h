@@ -37,6 +37,7 @@ class TopologyReader
         Molecule::atom& getAtomByIndex(int i) {return atoms_[i];}
         Molecule::residue& getResidueByIndex(int i) {return residues_[i];}
 
+
         enum TopIdx
         {
             atomnumber = 0,
@@ -63,4 +64,7 @@ class TopologyReader
 
         // the abs path
         std::string absolute_path_;
+
+        // if parse has been run
+        bool is_empty = true;
 };

@@ -12,6 +12,4 @@ int main(int argc, char** argv)
 
     TopologyReader top;
     top.Parse(fname);
-
-    top.print();
 }

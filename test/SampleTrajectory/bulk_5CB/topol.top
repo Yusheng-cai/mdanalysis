@@ -1,0 +1,15 @@
+; Topology for bulk 5CB
+; - Force field by Tiberio et al. (Chem. Phys. Chem. 2009, 10, 125-126)
+
+[ defaults ]   
+;comb-rule   gen-pairs   fudgeLJ   fudgeQQ
+       1          2          yes       0.5   0.83333
+
+#include "ff_LC.itp"
+#include "5CB.itp"
+
+[ system ]
+Bulk 5CB
+ 
+[ molecules ]
+5CB       2400

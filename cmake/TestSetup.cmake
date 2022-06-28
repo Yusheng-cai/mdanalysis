@@ -26,14 +26,6 @@ function(add_unit_test  TEST_SUBDIR TEST_NAME)
   set(multiValueArgs SOURCES LIBS  INCLUDES  DRIVER  ARGS  MPI_NP  OMP_NT)
   cmake_parse_arguments(PARSE_ARGV 1 "TEST" "${options}" "${oneValueArgs}" "${multiValueArgs}")
 
-  #if((NOT TEST_OMP_NT) OR (NOT HAVE_OPENMP))
-  #  set(TEST_OMP_NT 1)
-  #endif()
-  #if((NOT TEST_MPI_NP) OR (NOT HAVE_MPI))
-  #  set(TEST_MPI_NP 1)
-  #endif()
-
-  message(("TESTNAME = ${TEST_NAME}"))
   set(TEST_EXE ${TEST_NAME})
 
   # Build the test driver

@@ -35,25 +35,19 @@ add_unit_test("TestXdr/"
              ARGS ${CMAKE_CURRENT_LIST_DIR}/SampleTrajectory/5CB.itp)
 
 # Now add the test which tests the main program (only test if they run) 
-set(OMP_THREADS 1 4 8)
+set(OMP_THREADS 1 2 4)
 set(OMP_TEST "")
 list(APPEND OMP_TEST "TestOP/TestIndus/box")
 list(APPEND OMP_TEST "TestOP/TestIndus/sphere")
-list(APPEND OMP_TEST "TestOP/TestP2")
-list(APPEND OMP_TEST "TestOP/TestP2tilde")
+list(APPEND OMP_TEST "TestCalculation/TestOrientationalDistribution")
+list(APPEND OMP_TEST "TestCalculation/TestSlabOrientation")
 list(APPEND OMP_TEST "TestCalculation/TestRdfResidue")
-list(APPEND OMP_TEST "TestCalculation/Testgcost")
+list(APPEND OMP_TEST "TestCalculation/TestGcost")
+list(APPEND OMP_TEST "TestCalculation/TestUsr/TestNS")
 
+# get the program path
 set(PROGRAM_PATH "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mdanalysis")
-set(TEST_RUN_SCRIPT "${CMAKE_CURRENT_LIST_DIR}/run_test.sh")
-
-# Find bash
-find_program(BASH bash)
-if(NOT BASH)
-  message(FATAL_ERROR "Unable to find bash for testing")
-else()
-  message("Found BASH, bash path is ${BASH}")
-endif()
+set(TEST_RUN_SCRIPT "${CMAKE_CURRENT_LIST_DIR}/run_test.py")
 
 # Find python
 find_package(Python3 COMPONENTS Interpreter Development)
@@ -69,10 +63,8 @@ foreach(TEST_NAME IN LISTS OMP_TEST)
     foreach(THREADS IN LISTS OMP_THREADS)
         set(TEST_SCRIPT "${TEST_NAME}/input.dat")
         set(TEST_DIR "${CMAKE_CURRENT_LIST_DIR}/${TEST_NAME}")
-        set(TEST_REF_DIR "${CMAKE_CURRENT_LIST_DIR}/SampleTrajectory")
-        set(TEST_CMD ${BASH} ${TEST_RUN_SCRIPT} -p ${PROGRAM_PATH} -d ${TEST_DIR} 
-        -o ${CMAKE_CURRENT_BINARY_DIR}/op.out -r ref.out
-             -i ${CMAKE_CURRENT_LIST_DIR}/${TEST_SCRIPT} -n ${THREADS} -f ${TEST_REF_DIR})
+        set(TRAJ_DIR "${CMAKE_CURRENT_LIST_DIR}/SampleTrajectory")
+        set(TEST_CMD ${Python3_EXECUTABLE} ${TEST_RUN_SCRIPT} -p ${PROGRAM_PATH} -nt ${THREADS} -i ${CMAKE_CURRENT_LIST_DIR}/${TEST_SCRIPT} -a ${TRAJ_DIR} -r ${TEST_DIR}) 
 
         # set working directory to be the directory processed currently
         add_test(NAME "${TEST_NAME}::OMP_${THREADS}"
@@ -83,18 +75,13 @@ foreach(TEST_NAME IN LISTS OMP_TEST)
 endforeach()
 
 set(NONOMP_TEST "")
-list(APPEND NONOMP_TEST "TestCalculation/TestPcostz")
-list(APPEND NONOMP_TEST "TestCalculation/TestPcost")
-list(APPEND NONOMP_TEST "TestCalculation/TestDipole")
 list(APPEND NONOMP_TEST "TestCalculation/TestFindNear")
 
 foreach(TEST_NAME IN LISTS NONOMP_TEST)
     set(TEST_SCRIPT "${TEST_NAME}/input.dat")
     set(TEST_DIR "${CMAKE_CURRENT_LIST_DIR}/${TEST_NAME}")
-    set(TEST_REF_DIR "${CMAKE_CURRENT_LIST_DIR}/SampleTrajectory")
-    set(TEST_CMD ${BASH} ${TEST_RUN_SCRIPT} -p ${PROGRAM_PATH} -d ${TEST_DIR} 
-    -o ${CMAKE_CURRENT_BINARY_DIR}/op.out -r ref.out
-            -i ${CMAKE_CURRENT_LIST_DIR}/${TEST_SCRIPT} -n 1 -f ${TEST_REF_DIR})
+    set(TRAJ_DIR "${CMAKE_CURRENT_LIST_DIR}/SampleTrajectory")
+    set(TEST_CMD ${Python3_EXECUTABLE} ${TEST_RUN_SCRIPT} -p ${PROGRAM_PATH} -nt 1 -i ${CMAKE_CURRENT_LIST_DIR}/${TEST_SCRIPT} -a ${TRAJ_DIR} -r ${TEST_DIR}) 
 
     # set working directory to be the directory processed currently
     add_test(NAME "${TEST_NAME}"
