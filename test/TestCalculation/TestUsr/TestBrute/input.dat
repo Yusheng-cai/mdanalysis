@@ -32,11 +32,11 @@ calculation = {
     solute  = SAM
     epsilon = 0.384
     cutoff  = 1.2
-    mode    = NS
+    mode    = Brute
     probevolumes = [ v ]
 }
 
 outputfile = {
-    name = op_ref.out
+    name = op.out
     value = [ s.energy s.repulsive_energy s.attractive_energy ] 
 }

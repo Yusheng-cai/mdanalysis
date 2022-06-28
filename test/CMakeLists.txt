@@ -44,6 +44,7 @@ list(APPEND OMP_TEST "TestCalculation/TestSlabOrientation")
 list(APPEND OMP_TEST "TestCalculation/TestRdfResidue")
 list(APPEND OMP_TEST "TestCalculation/TestGcost")
 list(APPEND OMP_TEST "TestCalculation/TestUsr/TestNS")
+list(APPEND OMP_TEST "TestCalculation/TestUsr/TestBrute")
 list(APPEND OMP_TEST "TestCalculation/TestSlabQtensor")
 
 # get the program path
