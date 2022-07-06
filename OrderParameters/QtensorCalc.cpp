@@ -64,9 +64,11 @@ void QtensorCalc::calculate()
     // zero out Qtensor 
     Qtensor_.fill({});
 
+    // obtain the residues 
     auto& res = getResidueGroup(residue_name_).getResidues();
     int N = res.size();
 
+    // resize center of mass 
     COM_.clear();
     COM_.resize(N);
 
@@ -77,13 +79,12 @@ void QtensorCalc::calculate()
         COM_[i] = CalculationTools::getCOM(res[i], simstate_, COMIndices_);
     }
 
+    // find the COM indices inside the probe volume of interest 
     std::vector<int> InsideIndices = InsidePVIndices(COM_);
 
-    int num = 0;
     for (int i=0;i<InsideIndices.size();i++)
     { 
         int index = InsideIndices[i];
-        num ++;
         const auto& r = res[index];
         const auto& atoms = r.atoms_;
         Real3 distance;
@@ -100,7 +101,12 @@ void QtensorCalc::calculate()
     }
 
     // calculate the actualy Qtensor
-    LinAlg3x3::matrix_mult_inplace(Qtensor_, 1/(2.0*num));
+    LinAlg3x3::matrix_mult_inplace(Qtensor_, 1/(2.0*InsideIndices.size()));
+
+    // calculate the eigenvector and eigenvalues 
+    auto result = LinAlg3x3::OrderEigenSolver(Qtensor_);
+    eigenvector_= result.second;
+    p2_ = result.first[0];
 
     // Add the current Qtensor to Qtensortot
     LinAlg3x3::matrix_accum_inplace(QtensorTot_, Qtensor_);
@@ -123,6 +129,5 @@ void QtensorCalc::finishCalculate()
     for (int i=0;i<3;i++)
     {
         v0_[i] = pair.second[i][0];
-
     }
 }
