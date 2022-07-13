@@ -49,7 +49,8 @@ target_sources(mdaOrderParameters PRIVATE
     "EndToEndDistance.cpp"
     "DeuteriumOP.cpp"
     "SlabG1r.cpp"
-    "QtensorCalc.cpp"
+    "Qtensor.cpp"
+    "RDF2d.cpp"
 )
 
 set(mdaOrderParameters_HEADER
@@ -100,7 +101,8 @@ set(mdaOrderParameters_HEADER
     "EndToEndDistance.h"
     "DeuteriumOP.h"
     "SlabG1r.h"
-    "QtensorCalc.h"
+    "Qtensor.h"
+    "RDF2d.h"
 )
 
 

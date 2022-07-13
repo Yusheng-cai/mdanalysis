@@ -16,14 +16,14 @@
 
 // calculate distribution of cosine theta of the angles in a probe volume
 
-class QtensorCalc : public Calculation
+class Qtensor : public Calculation
 {
     public:
         using Matrix = CommonTypes::Matrix;
         using Real3  = CommonTypes::Real3;
         using Real   = CommonTypes::Real;
 
-        QtensorCalc(const CalculationInput& input);
+        Qtensor(const CalculationInput& input);
 
         virtual void calculate() override;
         virtual void finishCalculate() override;

@@ -1,11 +1,11 @@
-#include "QtensorCalc.h"
+#include "Qtensor.h"
 
 namespace CalculationRegistry
 {
-    registry_<QtensorCalc> pQtensorCalcRegister_("Qtensor");
+    registry_<Qtensor> pQtensorRegister_("Qtensor");
 }
 
-QtensorCalc::QtensorCalc(const CalculationInput& input)
+Qtensor::Qtensor(const CalculationInput& input)
 : Calculation(input)
 {
     pack_.ReadNumber("headindex", ParameterPack::KeyType::Required, head_index_);
@@ -16,10 +16,6 @@ QtensorCalc::QtensorCalc(const CalculationInput& input)
     // read in the residue 
     pack_.ReadString("residue", ParameterPack::KeyType::Required, residue_name_);
     initializeResidueGroup(residue_name_);
-
-    // read in the array 
-    pack_.ReadArrayNumber("array" , ParameterPack::KeyType::Optional, arr_);
-
     auto& res = getResidueGroup(residue_name_);
     size_  = res.size();
     uij_.resize(size_);
@@ -47,7 +43,7 @@ QtensorCalc::QtensorCalc(const CalculationInput& input)
     initializeNotInProbeVolumes();
 }
 
-void QtensorCalc::printaverageQ(std::string name)
+void Qtensor::printaverageQ(std::string name)
 {
     std::ofstream ofs;
     ofs.open(name);
@@ -59,7 +55,7 @@ void QtensorCalc::printaverageQ(std::string name)
     ofs.close();
 }
 
-void QtensorCalc::calculate()
+void Qtensor::calculate()
 {
     // zero out Qtensor 
     Qtensor_.fill({});
@@ -82,22 +78,34 @@ void QtensorCalc::calculate()
     // find the COM indices inside the probe volume of interest 
     std::vector<int> InsideIndices = InsidePVIndices(COM_);
 
-    for (int i=0;i<InsideIndices.size();i++)
-    { 
-        int index = InsideIndices[i];
-        const auto& r = res[index];
-        const auto& atoms = r.atoms_;
-        Real3 distance;
-        Real dist_sq;
+    // iterate over the inside indices 
+    #pragma omp parallel
+    {
+        Matrix Qlocal;
+        Qlocal.fill({});
+        #pragma omp for
+        for (int i=0;i<InsideIndices.size();i++)
+        { 
+            int index = InsideIndices[i];
+            const auto& r = res[index];
+            const auto& atoms = r.atoms_;
+            Real3 distance;
+            Real dist_sq;
 
-        simstate_.getSimulationBox().calculateDistance(atoms[head_index_].positions_, atoms[tail_index_].positions_, distance, dist_sq);
+            simstate_.getSimulationBox().calculateDistance(atoms[head_index_].positions_, atoms[tail_index_].positions_, distance, dist_sq);
 
-        LinAlg3x3::normalize(distance);
-        uij_[i] = distance;
+            LinAlg3x3::normalize(distance);
+            uij_[i] = distance;
 
-        Matrix localQ = LinAlg3x3::LocalQtensor(uij_[i]);
+            Matrix singleQ = LinAlg3x3::LocalQtensor(uij_[i]);
 
-        LinAlg3x3::matrix_accum_inplace(Qtensor_, localQ);
+            LinAlg3x3::matrix_accum_inplace(Qlocal, singleQ);
+        }
+
+        #pragma omp critical
+        {
+            LinAlg3x3::matrix_accum_inplace(Qtensor_, Qlocal);
+        }
     }
 
     // calculate the actualy Qtensor
@@ -112,7 +120,7 @@ void QtensorCalc::calculate()
     LinAlg3x3::matrix_accum_inplace(QtensorTot_, Qtensor_);
 }
 
-void QtensorCalc::finishCalculate()
+void Qtensor::finishCalculate()
 {
     int numframes = simstate_.getTotalFrames();
     for (int i=0;i<3;i++)
