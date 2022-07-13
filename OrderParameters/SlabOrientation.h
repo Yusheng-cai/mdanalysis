@@ -71,8 +71,8 @@ class SlabOrientation : public Calculation
         // This is 2d histogram for P(cos2(theta),z)
         std::vector<std::vector<Real>> histogram2d_squared_;
 
-        int headIndex_;
-        int tailIndex_;
+        int headIndex_=1;
+        int tailIndex_=2;
 
         int directionIndex_;
 

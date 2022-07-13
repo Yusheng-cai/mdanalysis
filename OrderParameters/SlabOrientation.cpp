@@ -61,8 +61,8 @@ void SlabOrientation::RegisterOutputs()
 void SlabOrientation::ReadInputs()
 {
     pack_.ReadString("residue", ParameterPack::KeyType::Required, residueGroupName_);
-    pack_.ReadNumber("headindex", ParameterPack::KeyType::Required,headIndex_);
-    pack_.ReadNumber("tailindex", ParameterPack::KeyType::Required,tailIndex_);
+    pack_.ReadNumber("headindex", ParameterPack::KeyType::Optional,headIndex_);
+    pack_.ReadNumber("tailindex", ParameterPack::KeyType::Optional,tailIndex_);
     pack_.ReadString("direction", ParameterPack::KeyType::Optional, direction_);
     pack_.ReadArrayNumber("array", ParameterPack::KeyType::Optional, arr_);
     pack_.ReadNumber("precision", ParameterPack::KeyType::Optional, precision_);
