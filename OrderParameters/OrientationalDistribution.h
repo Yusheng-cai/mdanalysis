@@ -35,7 +35,6 @@ class OrientationalDistribution : public Calculation
         // printing functions
         void PrintDistribution(std::string name);
         void PrintCosthetasquared_betafactors(std::ofstream& ofs);
-        void PrintDistributionXY(std::string name);
 
         // per iterations printing functions
         void printResidueAngles(std::ofstream& ofs);
@@ -66,14 +65,6 @@ class OrientationalDistribution : public Calculation
         Range  CosThetaRange_ = {{-1.0,1.0}};
         Binptr CosThetaSquaredBin_;
         Range CosThetaSquaredRange_ = {{0.0,1.0}};
-
-        // distribution xy 
-        std::vector<std::vector<Real>> PcostDistributionXY_;
-        std::vector<std::vector<Real>> HisotgramXY_;
-        int numxbin_=50;
-        int numybin_=50;
-        Binptr xbin_;
-        Binptr ybin_;
 
         // director of each of the molecules
         std::vector<Real3> uij_;

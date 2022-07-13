@@ -14,16 +14,8 @@ OrientationalDistribution::OrientationalDistribution(const CalculationInput& inp
     pack_.ReadNumber("numbins", ParameterPack::KeyType::Required, NumBins_);
     pack_.ReadArrayNumber("array", ParameterPack::KeyType::Optional, arr_);
     pack_.Readbool("usedirector", ParameterPack::KeyType::Optional, useDirector_);
-    pack_.ReadNumber("xbins", ParameterPack::KeyType::Optional, numxbin_);
-    pack_.ReadNumber("ybins", ParameterPack::KeyType::Optional, numybin_);
     HeadIndex_--;
     TailIndex_--;
-
-    // resize the xy histogram
-    PcostDistributionXY_.resize(numxbin_, std::vector<Real>(numybin_,0.0));
-    HisotgramXY_.resize(numxbin_, std::vector<Real>(numybin_,0.0));
-    xbin_ = Binptr(new Bin());
-    ybin_ = Binptr(new Bin());
 
     // initialize Residue
     initializeResidueGroup(ResidueGroupName_);
@@ -57,7 +49,6 @@ void OrientationalDistribution::registerOutputs()
     registerOutputFunction("Distribution", [this](std::string name) -> void {this -> PrintDistribution(name);});
     registerPerIterOutputFunction("costhetasquared_betafactor", [this](std::ofstream& ofs) -> void {this -> PrintCosthetasquared_betafactors(ofs);});
     registerPerIterOutputFunction("ResidueAngles", [this](std::ofstream& ofs)-> void {this -> printResidueAngles(ofs);});
-    registerOutputFunction("DistributionXY", [this](std::string name) -> void {this->PrintDistributionXY(name);});
 }
 
 void OrientationalDistribution::finishCalculate()
@@ -73,17 +64,6 @@ void OrientationalDistribution::finishCalculate()
 
         CosThetaTot += PCosTheta_[i];
         CosSquaredThetaTot += PCosThetaSquared_[i];
-    }
-
-    for (int i=0;i<numxbin_;i++)
-    {
-        for (int j=0;j<numybin_;j++)
-        {
-            if (HisotgramXY_[i][j] != 0)
-            {
-                PcostDistributionXY_[i][j] = PcostDistributionXY_[i][j] / HisotgramXY_[i][j];
-            }
-        }
     }
 }
 
@@ -131,6 +111,7 @@ void OrientationalDistribution::update()
     // find atoms within probe volume
     AtomIndices_ = InsidePVIndices(COM_);
 
+    // if we are using director to calculate p(cos(theta)), then we must first calculate the Q tensor
     if (useDirector_)
     {
         Matrix Qtensor = {};
@@ -157,10 +138,6 @@ void OrientationalDistribution::update()
             arr_[i] = res.second[i][0];
         }
     }
-
-    // update the x and y bins
-    xbin_->update({{0,BoxSides[0]}}, numxbin_);
-    ybin_->update({{0,BoxSides[1]}}, numybin_);
 }
 
 void OrientationalDistribution::calculate()
@@ -183,10 +160,6 @@ void OrientationalDistribution::calculate()
 
         // local map from residue index to its cos(theta) value with array
         std::map<int, Real> localMap;
-
-        // local xy histogram
-        std::vector<std::vector<Real>> localHistogram(numxbin_, std::vector<Real>(numybin_,0.0));
-        std::vector<std::vector<Real>> localcosthetaxy(numxbin_, std::vector<Real>(numybin_,0.0));
 
         #pragma omp for
         for (int i=0;i<AtomIndices_.size();i++)
@@ -212,12 +185,6 @@ void OrientationalDistribution::calculate()
                 int index = res[k].atoms_[j].atomNumber_-1;
                 costhetasquared_betafactor_[index] = costsq;
             }
-
-            // find the x and y index 
-            int xindex = xbin_->findBin(COM_[k][0]);
-            int yindex = ybin_->findBin(COM_[k][1]);
-            localHistogram[xindex][yindex] += 1;
-            localcosthetaxy[xindex][yindex]+= cost;
         }
 
         #pragma omp critical
@@ -232,15 +199,6 @@ void OrientationalDistribution::calculate()
             AvgCostheta_ = AvgCostheta_ + localavgcostheta;
 
             MapIndexToAngle_.insert(localMap.begin(), localMap.end());
-
-            for (int i=0;i<numxbin_;i++)
-            {
-                for (int j=0;j<numybin_;j++)
-                {
-                    HisotgramXY_[i][j] += localHistogram[i][j];
-                    PcostDistributionXY_[i][j] += localcosthetaxy[i][j];
-                }
-            }
         }
     }
 
@@ -271,21 +229,4 @@ void OrientationalDistribution::printResidueAngles(std::ofstream& ofs)
     {
         ofs << it -> first << " " << it -> second << "\n";
     }
-}
-
-void OrientationalDistribution::PrintDistributionXY(std::string name)
-{
-    std::ofstream ofs;
-    ofs.open(name);
-
-    for (int i=0;i<numxbin_;i++)
-    {
-        for (int j=0;j<numybin_;j++)
-        {
-            ofs << PcostDistributionXY_[i][j] << " ";
-        }
-        ofs << "\n";
-    }
-
-    ofs.close();
 }
