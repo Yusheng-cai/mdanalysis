@@ -21,6 +21,10 @@ class SimulationBox
         // calculate pbc corrected distance between x1 and x2
         void calculateDistance(const Real3& x1, const Real3& x2, Real3& distance, Real& sq_dist) const;
 
+        // templated function for calculating distance 
+        template <class array>
+        void calculateDistance(const array& x1, const array& x2, array& distance, Real& sq_dist) const;
+
         // calculate the shift between x1 and x2
         Real3 calculateShift(const Real3& x1, const Real3& ref) const;
 
@@ -59,3 +63,20 @@ class SimulationBox
         // center of the box
         Real3 center_;
 };
+
+template<class array>
+void SimulationBox::calculateDistance(const array& x1, const array& x2, array& distance, Real& sq_dist) const
+{
+    int size = x1.size();
+    sq_dist = 0.0;
+    for (int i=0;i<size;i++)
+    {
+        Real dist = x1[i] - x2[i];
+        if (dist > hlength_[i]) {dist -= length_[i];}
+        else if (dist < mhlength_[i]) {dist += length_[i];}
+        else { dist = dist;}
+
+        distance[i] = dist;
+        sq_dist += dist*dist;
+    }
+}

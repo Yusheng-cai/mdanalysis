@@ -5,6 +5,7 @@ namespace CalculationRegistry
     registry_<RDFresidue> registerRDFresidue("RDFresidue");
 }
 
+// TODO, perform 2d RDF 
 RDFresidue::RDFresidue(const CalculationInput& input)
 :Calculation(input)
 {

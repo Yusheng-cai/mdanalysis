@@ -22,7 +22,7 @@ SlabQtensor::SlabQtensor(const CalculationInput& input)
     tailIndex_--;
     
     // initialize bin
-    auto binPack = input.pack_.findParamPack("bin", ParameterPack::KeyType::Optional);
+    auto binPack = input.pack_.findParamPack("zbin", ParameterPack::KeyType::Optional);
     // create the bin object , if specified, then used user specified bin, else we use min max of the COM
     if (binPack != nullptr)
     {
