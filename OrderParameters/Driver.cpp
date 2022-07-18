@@ -78,17 +78,13 @@ void Driver::initializeCalculation()
 
 void Driver::initializeTop()
 {
-    auto topPack    = pack_.findParamPack("topology", ParameterPack::KeyType::Optional);
+    auto topPack    = pack_.findParamPack("topology", ParameterPack::KeyType::Required);
+    std::string topPath_;
+    topPack->ReadString("path", ParameterPack::KeyType::Required, topPath_);
+    
+    std::string topAbsPath = FileSystem::joinPath(apath_, topPath_);
 
-    if (topPack != nullptr)
-    {
-        std::string topPath_;
-        topPack->ReadString("path", ParameterPack::KeyType::Required, topPath_);
-        
-        std::string topAbsPath = FileSystem::joinPath(apath_, topPath_);
-
-        top_.Parse(topAbsPath);
-    }
+    top_.Parse(topAbsPath);
 }
 
 bool Driver::isValidStep(int step)
