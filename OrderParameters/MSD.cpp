@@ -28,9 +28,9 @@ MSD::MSD(const CalculationInput& input)
     }
 
     // add the residue group
-    addResidueGroup(residueName_);
-    auto& resgroup = getResidueGroup(residueName_);
-    numAtoms_ = resgroup.getAtomSize();
+    initializeResidueGroup(residueName_);
+    const auto& res = getResidueGroup(residueName_);
+    numAtoms_ = res.getResidues().size();
 
     // register outputs
     registerOutputFunction("msd", [this](std::string name) -> void {this -> printMSD(name);});
@@ -40,17 +40,17 @@ void MSD::calculate()
 {
     auto& resgroup = getResidueGroup(residueName_).getResidues();
 
-    std::vector<Real3> atomPos;
+    // numresidue,3
+    std::vector<Real3> COM;
+    COM.resize(resgroup.size());
 
+    #pragma omp parallel for 
     for (int i=0;i<resgroup.size();i++)
     {
-        int numAtomsInres = resgroup[i].atoms_.size();
-        for (int j=0;j<numAtomsInres;j++)
-        {
-            atomPos.push_back(resgroup[i].atoms_[j].positions_);
-        }
+        COM[i] = calcCOM(resgroup[i], COMIndices_);
     }
-    positions_.push_back(atomPos);
+
+    positions_.push_back(COM);
 }
 
 void MSD::finishCalculate()
@@ -63,14 +63,14 @@ void MSD::finishCalculate()
 
     for (int i=0;i<numAtoms_;i++)
     {
-        std::vector<Real3> atomPos(numFrames);
+        std::vector<Real3> ResiduePos(numFrames);
         for (int j=0;j<numFrames;j++)
         {
-            atomPos[j] = positions_[j][i];
+            ResiduePos[j] = positions_[j][i];
         }
 
         // (numdir, numFrames)
-        std::vector<std::vector<Real>> MSD_atom = calculateMSD(atomPos);
+        std::vector<std::vector<Real>> MSD_atom = calculateMSD(ResiduePos);
 
         for (int j=0;j<numdir;j++)
         {

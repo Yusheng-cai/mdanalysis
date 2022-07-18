@@ -27,6 +27,7 @@ class MSD : public Calculation
         void printMSD(std::string name);
 
     private:
+        // (num_frames, num_residue, 3)
         std::vector<std::vector<Real3>> positions_;
 
         std::string residueName_;
