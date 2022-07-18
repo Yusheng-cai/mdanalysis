@@ -45,6 +45,21 @@ Calculation::Real3 Calculation::calcCOM(const Molecule::residue& residues)
     }
 }
 
+Calculation::Real3 Calculation::calcCOM(const Molecule::residue& residues, std::vector<int>& COMIndices)
+{
+    if (COM_mode_ == "mass")
+    {
+        return CalculationTools::getCOM(residues, simstate_, COMIndices);
+    }
+    else if (COM_mode_ == "charge")
+    {
+        return CalculationTools::getCOC(residues, simstate_, COMIndices);
+    }
+    else
+    {
+        ASSERT((true == false), "The mode " << COM_mode_ << " is not yet available.");
+    }
+}
 
 void Calculation::initializeNotInProbeVolumes()
 {
@@ -483,6 +498,22 @@ std::vector<int> Calculation::InsidePVIndices(std::vector<Real3>& pos, std::vect
     return insideindices;
 }
 
+void Calculation::ReadResidueIndices(const std::string& residuename, std::string IndicesName, std::vector<int>& Indices)
+{
+    // cleat the indices 
+    Indices.clear();
+
+    const auto res = getResidueGroup(residuename);
+    int atomsize   = res.getResidues()[0].atoms_.size(); 
+    Indices.resize(atomsize);
+    std::iota(Indices.begin(), Indices.end(), 1.0);
+
+    pack_.ReadVectorNumber(IndicesName, ParameterPack::KeyType::Optional, Indices);
+    for (int i=0;i<Indices.size();i++)
+    {
+        Indices[i] = Indices[i]-1;
+    }
+}
 
 
 CalculationTools::Real3 CalculationTools::getCOG(const Molecule::residue& residueGroup, const SimulationState& simstate, \
@@ -531,4 +562,40 @@ std::vector<int>& indices_)
     }
 
     return COM_pos;
+}
+
+void CalculationTools::CalculateUsrBetweenPair(const Molecule::residue& residue1, const Molecule::residue& residue2, \
+                                 const SimulationState& simstate, Real r, \
+                                 const std::vector<int>& indices1, const std::vector<int>& indices2, Real beta, \
+                                 Real& attr, Real& repul, Real& total)
+{
+    attr=0.0;
+    repul=0.0;
+    total=0.0;
+
+    Real f = 138.935485;
+
+    for (int i=0;i<indices1.size();i++)
+    {
+        for (int j=0;j<indices2.size();j++)
+        {
+            Real qi = residue1.atoms_[i].charge_;
+            Real qj = residue2.atoms_[j].charge_;
+
+            Real qiqj = qi * qj;
+            Real e = f * std::erfc(beta * r)/r * qiqj;
+
+            if (qiqj < 0)
+            {
+                attr += e;
+            }
+            
+            if (qiqj > 0)
+            {
+                repul += e;
+            }
+
+            total += e;
+        }
+    }
 }

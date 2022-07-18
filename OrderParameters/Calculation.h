@@ -19,6 +19,7 @@
 #include <map>
 #include <functional>
 #include <memory>
+#include <math.h>
 
 class SimulationState;
 
@@ -63,6 +64,7 @@ class Calculation
         int getNumResidueGroups() const { return ResidueGroups_.size();}
 
         Real3 calcCOM(const Molecule::residue& residues);
+        Real3 calcCOM(const Molecule::residue& residues, std::vector<int>& COMIndices);
 
         void registerOutputFunction(std::string name, outputFunc func);
         outputFunc& getOutputByName(std::string name);
@@ -78,6 +80,9 @@ class Calculation
         void initializeResidueGroup(const std::string& residueName);
         void initializeResidueGroup(const std::string& residueName, std::string COMName, std::vector<int>& COMIndices, \
         std::vector<Real3>& COM);
+
+        // read any indices , if not read, then the indices will be 0-ResidueLength 
+        void ReadResidueIndices(const std::string& residueName, std::string IndicesName, std::vector<int>& Indices);
 
 
         void initializeProbeVolumes();
@@ -170,4 +175,10 @@ namespace CalculationTools
     Real3 getCOM(const Molecule::residue& residues, const SimulationState& simstate, std::vector<int>& indices_);
     Real3 getCOC(const Molecule::residue& residues, const SimulationState& simstate, std::vector<int>& indices_);
     Real3 getCOG(const Molecule::residue& residues, const SimulationState& simstate, std::vector<int>& indices_);
+
+    // calculate Usr between a pair of residues 
+    void CalculateUsrBetweenPair(const Molecule::residue& residue1, const Molecule::residue& residue2, \
+                                 const SimulationState& simstate, Real r, \
+                                 const std::vector<int>& Usrindices1, const std::vector<int>& Usrindices2, Real sigma, \
+                                 Real& attr, Real& repul, Real& total);
 };
