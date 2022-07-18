@@ -60,8 +60,28 @@ CylindricalRDF::CylindricalRDF(const CalculationInput& input)
         }
     }
 
+    // read in the properties if we are doing any
+    pack_.Readbool("Usr", ParameterPack::KeyType::Optional, calcUsr_);
+    cylindrical_Usr_.resize(numzbin_, std::vector<Real>(numrbin_,0.0));
+    cylindrical_Usr_attr_.resize(numzbin_, std::vector<Real>(numrbin_,0.0));
+    cylindrical_Usr_repul_.resize(numzbin_, std::vector<Real>(numrbin_,0.0));
+    if (calcUsr_)
+    {
+        ReadResidueIndices(residue1_, "UsrIndices1", UsrIndices1_);
+        ReadResidueIndices(residue2_, "UsrIndices2", UsrIndices2_);
+        Real sigma;
+        pack_.ReadNumber("sigma", ParameterPack::KeyType::Optional, sigma);
+        pack_.ReadNumber("Usrcutoff", ParameterPack::KeyType::Optional, Usr_cutoff_);
+        beta_ = 1.0/sigma;
+    }
+
+    // read if the calculation is for interface, this will affect the density calculation
+    pack_.Readbool("interface", ParameterPack::KeyType::Optional, interface_);
+
     // register the printing function
     registerOutputFunction("RDF", [this](std::string name)-> void {this -> printCylindricalRDF(name);});
+    registerOutputFunction("Usr", [this](std::string name)-> void {this -> printCylindricalUsr(name);});
+    registerOutputFunction("UsrAttr", [this](std::string name)-> void {this -> printCylindricalUsrAttr(name);});
 }
 
 void CylindricalRDF::calculate()
@@ -71,8 +91,21 @@ void CylindricalRDF::calculate()
     const auto& res2 = getResidueGroup(residue2_).getResidues();
 
     // obtain the volume 
-    Real volume = simstate_.getSimulationBox().getVolume();
-    rho_ += res1.size()/volume;
+    if (interface_)
+    {
+        Real area=1.0;
+        Real3 sides = simstate_.getSimulationBox().getSides();
+        for (int i=0;i<2;i++)
+        {
+            area *= sides[i];
+        }
+        rho_ += res1.size()/area;
+    }
+    else
+    {
+        Real volume = simstate_.getSimulationBox().getVolume();
+        rho_ += res1.size()/volume;
+    }
 
     // calculate director using residue1
     if (usedirector_)
@@ -129,6 +162,9 @@ void CylindricalRDF::calculate()
     #pragma omp parallel
     {
         std::vector<std::vector<Real>> local_cylindrical_rdf(numzbin_, std::vector<Real>(numrbin_,0.0));
+        std::vector<std::vector<Real>> local_cylindrical_Usr(numzbin_, std::vector<Real>(numrbin_,0.0));
+        std::vector<std::vector<Real>> local_cylindrical_Usr_attr(numzbin_, std::vector<Real>(numrbin_, 0.0));
+        std::vector<std::vector<Real>> local_cylindrical_usr_repul(numzbin_, std::vector<Real>(numrbin_,0.0));
         #pragma omp for
         for (int i=0;i<COM1_.size();i++)
         {
@@ -153,6 +189,19 @@ void CylindricalRDF::calculate()
                         int rindex = rbin_->findBin(r);
 
                         local_cylindrical_rdf[hindex][rindex] += 1;
+
+                        if (calcUsr_)
+                        {
+                            Real dist = std::sqrt(distsq);
+                            if (dist < Usr_cutoff_)
+                            {
+                                Real attr, repul, total;
+                                CalculationTools::CalculateUsrBetweenPair(res1[i], res2[j], simstate_, dist, UsrIndices1_, UsrIndices2_, beta_, attr, repul, total);
+                                local_cylindrical_Usr[hindex][rindex] += total;
+                                local_cylindrical_Usr_attr[hindex][rindex] += attr;
+                                local_cylindrical_usr_repul[hindex][rindex] += repul;
+                            }
+                        }
                     }
                 }
             }
@@ -164,6 +213,9 @@ void CylindricalRDF::calculate()
             for (int j=0;j<numrbin_;j++)
             {
                 cylindrical_rdf_[i][j] += local_cylindrical_rdf[i][j];
+                cylindrical_Usr_[i][j] += local_cylindrical_Usr[i][j];
+                cylindrical_Usr_attr_[i][j] += local_cylindrical_Usr_attr[i][j];
+                cylindrical_Usr_repul_[i][j] += local_cylindrical_usr_repul[i][j];
             }
         }
     }
@@ -174,6 +226,19 @@ void CylindricalRDF::finishCalculate()
     int totalFrames = simstate_.getTotalFrames();
     rho_ = rho_/totalFrames;
 
+    if (calcUsr_)
+    {
+        for (int i=0;i<numzbin_;i++)
+        {
+            for (int j=0;j<numrbin_;j++)
+            {
+                cylindrical_Usr_[i][j] /= cylindrical_rdf_[i][j];
+                cylindrical_Usr_attr_[i][j] /= cylindrical_rdf_[i][j];
+                cylindrical_Usr_repul_[i][j] /= cylindrical_rdf_[i][j];
+            }
+        }
+    }
+
     for (int i=0;i<numzbin_;i++)
     {
         for (int j=0;j<numrbin_;j++)
@@ -181,6 +246,42 @@ void CylindricalRDF::finishCalculate()
             cylindrical_rdf_[i][j] = cylindrical_rdf_[i][j] / (totalFrames * numres_* rho_ * cylindrical_volume_[i][j]);
         }
     }
+}
+
+void CylindricalRDF::printCylindricalUsr(std::string name)
+{
+    ASSERT(calcUsr_, "Usr is not calculated.");
+
+    std::ofstream ofs;
+    ofs.open(name);
+    for (int i=0;i<numzbin_;i++)
+    {
+        for (int j=0;j<numrbin_;j++)
+        {
+            ofs << cylindrical_Usr_[i][j] << " ";
+        }
+        ofs << "\n";
+    }
+
+    ofs.close();
+}
+
+void CylindricalRDF::printCylindricalUsrAttr(std::string name)
+{
+    ASSERT(calcUsr_, "Usr is not calculated.");
+
+    std::ofstream ofs;
+    ofs.open(name);
+    for (int i=0;i<numzbin_;i++)
+    {
+        for (int j=0;j<numrbin_;j++)
+        {
+            ofs << cylindrical_Usr_attr_[i][j] << " ";
+        }
+        ofs << "\n";
+    }
+
+    ofs.close();
 }
 
 void CylindricalRDF::printCylindricalRDF(std::string name)
