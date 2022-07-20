@@ -16,5 +16,5 @@ namespace FFT
     void fft(const std::vector<ComplexReal>& data, std::vector<ComplexReal>& output);
     void ifft(const std::vector<ComplexReal>& data, std::vector<ComplexReal>& output);
 
-    void autocorrelation(std::vector<std::vector<Real>>& data, std::vector<std::vector<Real>>& AC_vector, bool biased);
+    void autocorrelation(std::vector<std::vector<Real>>& data, std::vector<std::vector<Real>>& AC_vector);
 }

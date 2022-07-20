@@ -74,66 +74,44 @@ void FFT::ifft(const std::vector<ComplexReal>& data, std::vector<ComplexReal>& o
     return;
 }
 
-void FFT::autocorrelation(std::vector<std::vector<Real>>& data, std::vector<std::vector<Real>>& AC_vector, bool biased)
+void FFT::autocorrelation(std::vector<std::vector<Real>>& data, std::vector<std::vector<Real>>& AC_vector)
 {
     int dimension = data[0].size();
-
-    // we have an autocorrelation for each dimension
-    AC_vector.clear();
-    AC_vector.resize(dimension);
-
     int N = data.size();
     int N2 = N*2;
 
+    // we have an autocorrelation for each dimension
+    AC_vector.clear();
+    AC_vector.resize(N, std::vector<Real>(dimension,0.0));
+
     for (int i=0;i<dimension;i++)
     {
-        // to calculate autocorrelation, we must split the data up
-        std::vector<Real> tempdata(N2,0.0);
+        // perform forward fft
+        std::vector<ComplexReal> forward_result;
+        std::vector<ComplexReal> input(N2, {0,0});
 
-        // resize the ith dimension AC to be data size large
-        AC_vector[i].resize(N,0.0);
-        
         for (int j=0;j<N;j++)
         {
-            tempdata[j] = data[j][i];
+            input[j] = {data[j][i],0.0};
         }
+        FFT::fft(input, forward_result);
 
-        std::vector<ComplexReal> fft;
-        std::vector<ComplexReal> input(N2);
-
+        // obtain the Power spectral density (PSD)
+        std::vector<ComplexReal> PSD(N2);
         for (int j=0;j<N2;j++)
         {
-            ComplexReal number(tempdata[j],0);
-            input[j] = number;
+            Real square = std::pow(forward_result[j].real(),2.0) + std::pow(forward_result[j].imag(),2.0);
+            PSD[j] = {square,0.0};
         }
 
-        FFT::fft(input, fft);
-
-        std::vector<ComplexReal> squared(N2);
-        for (int j=0;j<N2;j++)
-        {
-            Real square = std::pow(fft[j].real(),2.0) + std::pow(fft[j].imag(),2.0);
-            ComplexReal number(square,0.0);
-            squared[j] = number;
-        }
-
+        // perform inverse fft
         std::vector<ComplexReal> ifft;
-        FFT::ifft(squared, ifft);
+        FFT::ifft(PSD, ifft);
 
-        // divide by N or (N-m)
-        if ( ! biased)
+        // copy the ifft result to autocorrelation vector
+        for (int j=0;j<N;j++)
         {
-            for (int j=0;j<N;j++)
-            {
-                AC_vector[i][j] = ifft[j].real()/N;
-            }
-        }
-        else
-        {
-            for (int j=0;j<N;j++)
-            {
-                AC_vector[i][j] = ifft[j].real()/(N-j);
-            }
+            AC_vector[j][i] = ifft[j].real();
         }
     }
 }
