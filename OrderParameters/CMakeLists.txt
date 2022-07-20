@@ -50,7 +50,6 @@ target_sources(mdaOrderParameters PRIVATE
     "DeuteriumOP.cpp"
     "SlabG1r.cpp"
     "Qtensor.cpp"
-    "RDFProperty.cpp"
     "CylindricalRDF.cpp"
 )
 
@@ -103,7 +102,6 @@ set(mdaOrderParameters_HEADER
     "DeuteriumOP.h"
     "SlabG1r.h"
     "Qtensor.h"
-    "RDFProperty.h"
     "CylindricalRDF.h"
 )
 
