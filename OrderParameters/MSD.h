@@ -32,7 +32,7 @@ class MSD : public Calculation
 
         std::string residueName_;
 
-        int numAtoms_;
+        int numResidues_;
 
         std::string directionStr_="xyz";
 
