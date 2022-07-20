@@ -23,7 +23,7 @@ class SimulationState
         ~SimulationState(){};
 
         void setSimulationBox(Matrix boxMat){box_.setBoxMatrix(boxMat);}
-        void setTime(Real time){time_ = time;}
+        void setTime(Real time){time_ = time; timestamps_.push_back(time);}
         void setStep(int step){step_ = step;}
         void setTotalFrames(int totalFrames){totalframes_ = totalFrames;}
         void setTotalNumberAtoms(int totalAtoms){totalNumberAtoms_=totalAtoms;}
@@ -41,6 +41,7 @@ class SimulationState
         int getStep() const {return step_;}
         int getTotalNumberAtoms() const {return totalNumberAtoms_;}
         int getFrameNumber() const {return FrameNumber_;}
+        std::vector<Real> gettimestamps() const {return timestamps_;}
 
         // registers AtomGroups
         void registerAtomGroup(std::string name, AtomGroup& ag);
@@ -77,6 +78,7 @@ class SimulationState
 
     private:
         Real time_;
+        std::vector<Real> timestamps_;
         int step_;
 
         SimulationBox box_;
