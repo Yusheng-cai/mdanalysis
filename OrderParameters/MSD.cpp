@@ -96,6 +96,7 @@ void MSD::finishCalculate()
 void MSD::printMSD(std::string name)
 {
     std::vector<Real> timestamps = simstate_.gettimestamps();
+    Real dt = timestamps[1] - timestamps[0];
 
     std::ofstream ofs;
 
@@ -105,7 +106,7 @@ void MSD::printMSD(std::string name)
     int numframes = MSD_[0].size();
 
     // write the header
-    ofs << "# time[ps]\t";
+    ofs << "# lagtime[ps]\t";
     for (auto dir : VectorDirection_)
     {
         ofs << dir << "\t";
@@ -114,7 +115,7 @@ void MSD::printMSD(std::string name)
 
     for (int i=0;i<numframes;i++)
     {
-        ofs << timestamps[i] << "\t";
+        ofs << dt * i << "\t";
         for (int j=0;j<numdir;j++)
         {
             ofs << MSD_[j][i] << "\t";
