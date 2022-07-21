@@ -28,11 +28,75 @@ MSD::MSD(const CalculationInput& input)
 
     // register outputs
     registerOutputFunction("msd", [this](std::string name) -> void {this -> printMSD(name);});
+
+    // added a functionality to be able to rotate to some predefined direction
+    // we always rotate such that the director is the z axis 
+    rotate_ = pack_.ReadString("RotateToDefinedDirector", ParameterPack::KeyType::Optional, RotationMode_);
+    if (rotate_)
+    {
+        if (RotationMode_ == "usedirector")
+        {
+            UseDirector_=true;
+            pack_.ReadNumber("headindex", ParameterPack::KeyType::Optional, headindex_);
+            pack_.ReadNumber("tailindex", ParameterPack::KeyType::Optional, tailindex_);
+            headindex_--;
+            tailindex_--;
+        }
+        else if (RotationMode_ == "array")
+        {
+            pack_.ReadArrayNumber("array", ParameterPack::KeyType::Required, array_);
+            UseDirector_=false;
+        }
+        else
+        {
+            ASSERT((true==false), "Rotation mode " << RotationMode_ << " is not supported, only usedirection/array is supported.");
+        }
+    }
 }
 
 void MSD::calculate()
 {
-    auto& resgroup = getResidueGroup(residueName_).getResidues();
+    const auto& resgroup = getResidueGroup(residueName_).getResidues();
+
+    // are we rotating to some other frame of reference
+    if (rotate_)
+    {
+        if (UseDirector_)
+        {
+            Matrix Qtensor = {};
+            #pragma omp parallel
+            {
+                Matrix Qlocal = {};
+                #pragma omp for
+                for (int i=0;i<resgroup.size();i++)
+                {
+                    Real3 headposition = resgroup[i].atoms_[headindex_].positions_;
+                    Real3 tailposition = resgroup[i].atoms_[tailindex_].positions_;
+                    Real3 r;
+                    Real rsq;
+                    simstate_.getSimulationBox().calculateDistance(headposition, tailposition, r, rsq);
+
+                    LinAlg3x3::normalize(r);
+                    Matrix singleQ = LinAlg3x3::LocalQtensor(r);
+
+                    LinAlg3x3::matrix_accum_inplace(Qlocal, singleQ);
+                }
+
+                #pragma omp critical
+                LinAlg3x3::matrix_accum_inplace(Qtensor, Qlocal);
+            }
+
+            LinAlg3x3::matrix_mult_inplace(Qtensor, 1.0/(2.0 * resgroup.size()));
+            auto res = LinAlg3x3::OrderEigenSolver(Qtensor);
+            for (int i=0;i<3;i++)
+            {
+                array_[i] = res.second[i][0];
+            }
+        }
+
+        // matrix that rotates array to [0,0,1] which is the z axis 
+        RotationMatrix_ = LinAlg3x3::GetRotationMatrix(array_, {{0,0,1}});
+    }
 
     // numresidue,3
     std::vector<Real3> COM;
@@ -41,7 +105,14 @@ void MSD::calculate()
     #pragma omp parallel for 
     for (int i=0;i<resgroup.size();i++)
     {
-        COM[i] = calcCOM(resgroup[i], COMIndices_);
+        Real3 c = calcCOM(resgroup[i], COMIndices_);
+
+        if (rotate_)
+        {
+            c = LinAlg3x3::MatrixDotVector(RotationMatrix_, c);
+        }
+
+        COM[i] = c;
     }
 
     positions_.push_back(COM);
@@ -152,8 +223,28 @@ std::vector<std::vector<MSD::Real>> MSD::calculateMSD(std::vector<Real3>& positi
             for (int k=0;k<directionSize;k++)
             {
                 int index = directionsIndex_[i][k];
-                squares[i][j] += std::pow(position[j][index],2.0);
                 data[i][j][k] = position[j][index];
+            }
+        }
+    }
+
+    // shift all the positions with respect to the first time frame
+    Real3 boxLength = simstate_.getSimulationBox().getSides();
+    for (int i=0;i<numdir;i++)
+    {
+        int directionSize = directionsIndex_[i].size();
+        for (int j=0;j<numFrames;j++)
+        {
+            for (int k=0;k<directionSize;k++)
+            {
+                Real shift;
+                int index = directionsIndex_[i][k];
+                Real diff = data[i][j][k] - data[i][0][k];
+                if (diff > (0.5 * boxLength[index])) shift = -boxLength[index];
+                else if (diff < (-0.5 * boxLength[index])) shift = boxLength[index];
+                else shift = 0.0;
+                data[i][j][k] += shift;
+                squares[i][j] += std::pow(data[i][j][k],2.0);
             }
         }
     }

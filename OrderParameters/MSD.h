@@ -4,6 +4,7 @@
 #include "tools/Assert.h"
 #include "Calculation.h"
 #include "SimulationState.h"
+#include "LinAlgTools.h"
 
 #include <vector>
 #include <string>
@@ -14,6 +15,7 @@ class MSD : public Calculation
 {
     public:
         using INT2 = std::array<int,2>;
+        using Matrix = CommonTypes::Matrix;
         MSD(const CalculationInput& input);
 
         virtual void calculate() override;
@@ -54,4 +56,12 @@ class MSD : public Calculation
          {"xy", {0,1}},
          {"yz", {1,2}},
          {"xyz",{0,1,2}}};
+
+         std::string RotationMode_;
+         Real3 array_;
+         bool UseDirector_=false;
+         int headindex_=1;
+         int tailindex_=2;
+         bool rotate_=false;
+         Matrix RotationMatrix_;
 };
