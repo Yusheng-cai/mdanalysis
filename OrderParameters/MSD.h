@@ -64,4 +64,6 @@ class MSD : public Calculation
          int tailindex_=2;
          bool rotate_=false;
          Matrix RotationMatrix_;
+
+         std::vector<Real3> boxSides_;
 };

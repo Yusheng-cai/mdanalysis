@@ -115,7 +115,10 @@ void MSD::calculate()
         COM[i] = c;
     }
 
+    Real3 sides = simstate_.getSimulationBox().getSides();
+
     positions_.push_back(COM);
+    boxSides_.push_back(sides);
 }
 
 void MSD::finishCalculate()
@@ -133,6 +136,16 @@ void MSD::finishCalculate()
         for (int j=0;j<numFrames;j++)
         {
             ResiduePos[j] = positions_[j][i];
+        }
+
+        // unwrap the positions
+        for (int j=1;j<numFrames;j++)
+        {
+            Real3 shift = simstate_.getSimulationBox().calculateShift(ResiduePos[j], ResiduePos[j-1], boxSides_[j]);
+            for (int k=0;k<3;k++)
+            {
+                ResiduePos[j][k] += shift[k];
+            }
         }
 
         // (numdir, numFrames) calculate the mean squared displacement
@@ -224,26 +237,6 @@ std::vector<std::vector<MSD::Real>> MSD::calculateMSD(std::vector<Real3>& positi
             {
                 int index = directionsIndex_[i][k];
                 data[i][j][k] = position[j][index];
-            }
-        }
-    }
-
-    // shift all the positions with respect to the first time frame
-    Real3 boxLength = simstate_.getSimulationBox().getSides();
-    for (int i=0;i<numdir;i++)
-    {
-        int directionSize = directionsIndex_[i].size();
-        for (int j=0;j<numFrames;j++)
-        {
-            for (int k=0;k<directionSize;k++)
-            {
-                Real shift;
-                int index = directionsIndex_[i][k];
-                Real diff = data[i][j][k] - data[i][0][k];
-                if (diff > (0.5 * boxLength[index])) shift = -boxLength[index];
-                else if (diff < (-0.5 * boxLength[index])) shift = boxLength[index];
-                else shift = 0.0;
-                data[i][j][k] += shift;
                 squares[i][j] += std::pow(data[i][j][k],2.0);
             }
         }

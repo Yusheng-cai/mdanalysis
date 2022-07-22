@@ -66,6 +66,21 @@ SimulationBox::Real3 SimulationBox::calculateShift(const Real3& x1, const Real3&
     return shift;
 }
 
+SimulationBox::Real3 SimulationBox::calculateShift(const Real3& x1, const Real3& ref, const Real3& sides) const
+{
+    Real3 shift;
+    for (int i=0;i<3;i++)
+    {
+        Real dist = x1[i] - ref[i];
+
+        if (dist < -0.5 * sides[i]) { shift[i] = sides[i]; }
+        else if (dist > 0.5 * sides[i]) { shift[i] = -sides[i];}
+        else {shift[i] = 0.0;}
+    }
+
+    return shift;
+}
+
 SimulationBox::Real3 SimulationBox::shiftIntoBox(const Real3& x1) const 
 {
     Real3 shift = calculateShift(x1, center_);

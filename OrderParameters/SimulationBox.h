@@ -28,6 +28,9 @@ class SimulationBox
         // calculate the shift between x1 and x2
         Real3 calculateShift(const Real3& x1, const Real3& ref) const;
 
+        // calculate the shift between x1 and x2
+        Real3 calculateShift(const Real3& x1, const Real3& ref, const Real3& sides) const;
+
         // shift the position into box
         Real3 shiftIntoBox(const Real3& x1) const;
 
