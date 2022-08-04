@@ -51,6 +51,7 @@ target_sources(mdaOrderParameters PRIVATE
     "SlabG1r.cpp"
     "Qtensor.cpp"
     "CylindricalRDF.cpp"
+    "CrossSectionalDensity.cpp"
 )
 
 set(mdaOrderParameters_HEADER
@@ -103,6 +104,7 @@ set(mdaOrderParameters_HEADER
     "SlabG1r.h"
     "Qtensor.h"
     "CylindricalRDF.h"
+    "CrossSectionalDensity.h"
 )
 
 
