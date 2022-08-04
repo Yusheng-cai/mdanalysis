@@ -1,5 +1,10 @@
 #include "CrossSectionalDensity.h"
 
+namespace CalculationRegistry
+{
+    registry_<CrossSectionalDensity> registerCrossSectionalDensity("CrossSectionalDensity");
+}
+
 CrossSectionalDensity::CrossSectionalDensity(const CalculationInput& input)
 : Calculation(input)
 {
