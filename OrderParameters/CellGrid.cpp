@@ -24,6 +24,33 @@ void CellGrid::update()
     {
         N_[i] = (int)std::ceil(Sides[i]/dL_);
     }
+    totalIndices_ = N_[0] * N_[1] * N_[2];
+}
+
+std::vector<std::vector<int>> CellGrid::calculateIndices(const std::vector<Real3>& pos)
+{
+    std::vector<std::vector<int>> ret_indices(totalIndices_);
+
+    #pragma omp parallel
+    {
+        std::vector<std::vector<int>> ret_indices_local(totalIndices_);
+        #pragma omp for
+        for (int i=0;i<pos.size();i++)
+        {
+            int index = getCellGridIntIndex(pos[i]);
+            ret_indices_local[index].push_back(i);
+        }
+
+        #pragma omp critical
+        {
+            for (int i=0;i<totalIndices_;i++)
+            {
+                ret_indices[i].insert(ret_indices[i].end(), ret_indices_local[i].begin(), ret_indices_local[i].end());
+            }
+        }
+    }
+
+    return ret_indices;
 }
 
 int CellGrid::ConvertGridIndexToIndex(index3& index)

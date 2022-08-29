@@ -52,6 +52,7 @@ target_sources(mdaOrderParameters PRIVATE
     "Qtensor.cpp"
     "CylindricalRDF.cpp"
     "CrossSectionalDensity.cpp"
+    "QtensorLattice.cpp"
 )
 
 set(mdaOrderParameters_HEADER
@@ -105,6 +106,7 @@ set(mdaOrderParameters_HEADER
     "Qtensor.h"
     "CylindricalRDF.h"
     "CrossSectionalDensity.h"
+    "QtensorLattice.hpp"
 )
 
 

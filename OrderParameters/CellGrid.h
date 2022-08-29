@@ -21,6 +21,9 @@ class CellGrid
 
         void update();
 
+        // no thread-safe
+        std::vector<std::vector<int>> calculateIndices(const std::vector<Real3>& pos);
+
         index3 getCellGridIndex(const Real3& pos);
         int ConvertGridIndexToIndex(index3& index);
         int getCellGridIntIndex(const Real3& pos);
@@ -33,6 +36,7 @@ class CellGrid
         Real3 L_;
         SimulationState& simstate_;
         index3 N_;
+        int totalIndices_;
         int searchnum_;
 
         std::vector<index3> Offsets_;

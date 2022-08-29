@@ -36,6 +36,7 @@ class Calculation
 
         using Real = CommonTypes::Real;
         using Real3= CommonTypes::Real3;
+        using INT3 = CommonTypes::index3;
         using outputFunc = std::function<void(std::string)>;
         using perIteroutputFunc = std::function<void(std::ofstream&)>;
         using ofsptr = std::unique_ptr<std::ofstream>;
