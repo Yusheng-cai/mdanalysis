@@ -14,11 +14,13 @@ class Lattice
         Lattice(int nx, int ny, int nz);
         Lattice() {nx_=0;ny_=0;nz_=0;total_size_=0;shape_={{nx_,ny_,nz_}};};
 
-        T operator()(int a, int b, int c);
-        T operator()(INT3 index3);
+        T& operator()(int a, int b, int c);
+        T& operator()(INT3 index3);
 
         void resize(int nx, int ny, int nz);
+        void resize(int nx, int ny, int nz, T value);
         void resize(INT3 shape);
+        void resize(INT3 shape, T value);
 
         INT3 getIndex3(int index);
         int getIndex(int a, int b, int c);
@@ -47,7 +49,7 @@ Lattice<T>::Lattice(int nx, int ny , int nz)
 }
 
 template <typename T>
-T Lattice<T>::operator()(int a, int b, int c)
+T& Lattice<T>::operator()(int a, int b, int c)
 {
     int index = getIndex(a,b,c);
 
@@ -55,7 +57,7 @@ T Lattice<T>::operator()(int a, int b, int c)
 }
 
 template <typename T>
-T Lattice<T>::operator()(INT3 index)
+T& Lattice<T>::operator()(INT3 index)
 {
     return operator()(index[0], index[1], index[2]);
 }
@@ -101,6 +103,13 @@ Lattice<T> Lattice<T>::operator+(T num)
 }
 
 template <typename T>
+void Lattice<T>::resize(int nx, int ny, int nz, T value)
+{
+    resize(nx, ny, nz);
+    std::fill(lattice_.begin(), lattice_.end(), value);
+}
+
+template <typename T>
 void Lattice<T>::resize(int nx, int ny, int nz)
 {
     nx_ = nx; ny_=ny; nz_=nz;
@@ -116,6 +125,12 @@ template <typename T>
 void Lattice<T>::resize(INT3 shape)
 {
     resize(shape[0], shape[1], shape[2]);
+}
+
+template <typename T>
+void Lattice<T>::resize(INT3 shape, T value)
+{
+    resize(shape[0], shape[1], shape[2], value);
 }
 
 template <typename T>
