@@ -10,12 +10,20 @@ QtensorLattice::QtensorLattice(const CalculationInput& input)
 {
     pack_.ReadArrayNumber("LatticeShape", ParameterPack::KeyType::Required, lattice_shape_);
     pack_.ReadString("residue", ParameterPack::KeyType::Required, resname_);
+
+    // read in the cut off (how far do we search near a lattice point for COM)
     pack_.ReadNumber("cutoff", ParameterPack::KeyType::Required, cutoff_);
     cutoff_sq_ = cutoff_ * cutoff_;
+
+    // read in head and tail index
     pack_.ReadNumber("headindex", ParameterPack::KeyType::Optional, headIndex_);
     pack_.ReadNumber("tailindex", ParameterPack::KeyType::Optional, tailIndex_);
     headIndex_--;
     tailIndex_--;
+
+    // the minimum distance in which there needs to be a COM point near the lattice point
+    pack_.ReadNumber("minDist", ParameterPack::KeyType::Optional, min_dist_);
+    min_dist_sq_ = min_dist_ * min_dist_;
 
     // initialize residue
     initializeResidueGroup(resname_);
@@ -23,6 +31,7 @@ QtensorLattice::QtensorLattice(const CalculationInput& input)
     // resize the lattice 
     lattice_.resize(lattice_shape_);
     lattice_Qtensor_.resize(lattice_shape_, {});
+    lattice_num_atoms_.resize(lattice_shape_,0.0);
 
     // cell grid
     cell_  = cellptr(new CellGrid(simstate_, cutoff_, 1));
@@ -89,7 +98,11 @@ void QtensorLattice::calculate()
 
         // find the COMs in the neighborhood
         Matrix Qtensor = {};
-        int numCounted = 0;
+
+        // sum of the number of atoms in the neighborhood
+        int sum=0;
+        // vector that keeps track of all the distances 
+        std::vector<Real> vectorDistsq;
         for (int j=0;j<neighborIdx.size();j++)
         {
             // the neighbot index
@@ -109,12 +122,22 @@ void QtensorLattice::calculate()
                 {
                     Matrix localQ = LinAlg3x3::LocalQtensor(uij_[resIndex]);
                     Qtensor = Qtensor + localQ;
-                    numCounted += 1;
+                    sum += 1;
+                    vectorDistsq.push_back(distsq);
                 }
             }
         }
-        Qtensor = Qtensor * (1.0/(2.0 * numCounted));
-        lattice_Qtensor_(index3) = lattice_Qtensor_(index3) + Qtensor;
+
+        if (sum != 0)
+        {
+            Real min = *std::min_element(vectorDistsq.begin(), vectorDistsq.end());
+
+            if (min < min_dist_sq_)
+            {
+                lattice_Qtensor_(index3) = lattice_Qtensor_(index3) + Qtensor;
+                lattice_num_atoms_(index3) += sum;
+            }
+        }
     }
 }
 
@@ -133,9 +156,6 @@ void QtensorLattice::update()
 
 void QtensorLattice::finishCalculate()
 {
-    int numFrames = simstate_.getTotalFrames();
-    Real fac = 1.0/numFrames;
-
     lattice_director_.resize(lattice_shape_);
     lattice_order_.resize(lattice_shape_);
 
@@ -143,16 +163,24 @@ void QtensorLattice::finishCalculate()
     for (int i=0;i<lattice_Qtensor_.getSize();i++)
     {
         INT3 index3 = lattice_Qtensor_.getIndex3(i);
-        lattice_Qtensor_(index3) = lattice_Qtensor_(index3) * fac;
-
-        auto res = LinAlg3x3::OrderEigenSolver(lattice_Qtensor_(index3));
-        Real3 d;
-        for (int j=0;j<3;j++)
+        if (lattice_num_atoms_(index3) != 0)
         {
-            d[j] = res.second[0][j];
+            lattice_Qtensor_(index3) = lattice_Qtensor_(index3) * (0.5/lattice_num_atoms_(index3));
+
+            auto res = LinAlg3x3::OrderEigenSolver(lattice_Qtensor_(index3));
+            Real3 d;
+            for (int j=0;j<3;j++)
+            {
+                d[j] = res.second[j][0];
+            }
+            lattice_order_(index3) = res.first[0];
+            lattice_director_(index3) = d;
         }
-        lattice_order_(index3) = res.first[0];
-        lattice_director_(index3) = d;
+        else
+        {
+            lattice_order_(index3) = -1.0;
+            lattice_director_(index3) = {{0,0,0}};
+        }
     }
 }
 
@@ -160,6 +188,7 @@ void QtensorLattice::printDirector(std::string name)
 {
     std::ofstream ofs;
     ofs.open(name);
+    Real3 zero_vec={{0,0,0}};
 
     for (int i=0;i<lattice_shape_[0];i++)
     {
@@ -167,7 +196,10 @@ void QtensorLattice::printDirector(std::string name)
         {
             for (int k=0;k<lattice_shape_[2];k++)
             {
-                ofs << i << " " << j << " " << k << " " << lattice_director_(i,j,k)[0] << " " << lattice_director_(i,j,k)[1] << " " << lattice_director_(i,j,k)[2] << "\n";
+                if (lattice_director_(i,j,k) != zero_vec)
+                {
+                    ofs << i << " " << j << " " << k << " " << lattice_director_(i,j,k)[0] << " " << lattice_director_(i,j,k)[1] << " " << lattice_director_(i,j,k)[2] << "\n";
+                }
             }
         }
     }

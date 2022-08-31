@@ -39,6 +39,7 @@ class QtensorLattice : public Calculation
         Lattice<Matrix> lattice_Qtensor_;
         Lattice<Real3> lattice_director_;
         Lattice<Real> lattice_order_;
+        Lattice<Real> lattice_num_atoms_;
 
         INT3 lattice_shape_;
         Real3 dL_;
@@ -49,6 +50,8 @@ class QtensorLattice : public Calculation
         // the cutoff
         Real cutoff_;
         Real cutoff_sq_;
+        Real min_dist_=0.5;
+        Real min_dist_sq_;
 
         // uij
         std::vector<Real3> uij_;
