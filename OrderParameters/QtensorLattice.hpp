@@ -29,6 +29,7 @@ class QtensorLattice : public Calculation
         void printDirector(std::string name);
         void printOrder(std::string name);
         void printQtensor(std::string name);
+        void printVelocity(std::string name);
 
     private:
         // define the cellgrid

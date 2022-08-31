@@ -40,6 +40,7 @@ QtensorLattice::QtensorLattice(const CalculationInput& input)
     registerOutputFunction("Director", [this](std::string name) -> void {this -> printDirector(name);});
     registerOutputFunction("Order", [this](std::string name) -> void {this -> printOrder(name);});
     registerOutputFunction("Qtensor",[this](std::string name) -> void {this -> printQtensor(name);});
+    registerOutputFunction("velocity", [this](std::string name) -> void {this -> printVelocity(name);});
 }
 
 void QtensorLattice::calculate()
@@ -239,6 +240,30 @@ void QtensorLattice::printQtensor(std::string name)
                 ofs << i << " " << j << " " << k << " " << lattice_Qtensor_(i,j,k)[0][0] << " " <<  \
                 lattice_Qtensor_(i,j,k)[0][1] << " " << lattice_Qtensor_(i,j,k)[0][2] << " " \
                 << lattice_Qtensor_(i,j,k)[1][0] << " " << lattice_Qtensor_(i,j,k)[1][1] << "\n";
+            }
+        }
+    }
+
+    ofs.close();
+}
+
+void QtensorLattice::printVelocity(std::string name)
+{
+    std::ofstream ofs;
+    ofs.open(name);
+    Real3 zero_vec = {};
+    for (int i=0;i<lattice_shape_[0];i++)
+    {
+        for (int j=0;j<lattice_shape_[1];j++)
+        {
+            for (int k=0;k<lattice_shape_[2];k++)
+            {
+                if (lattice_director_(i,j,k) != zero_vec)
+                {
+                    ofs << i << " " << j << " " << k << " " << lattice_director_(i,j,k)[0] * lattice_order_(i,j,k) \
+                     << " " << lattice_director_(i,j,k)[1] * lattice_order_(i,j,k) \
+                     << " " << lattice_director_(i,j,k)[2] * lattice_order_(i,j,k) << "\n";
+                }
             }
         }
     }
