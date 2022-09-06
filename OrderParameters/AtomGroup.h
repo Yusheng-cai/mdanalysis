@@ -47,6 +47,7 @@ class AtomGroup
         std::string getName() const{return name_;}
         const std::vector<int>& getAtomGroupIndices() const {return AtomGroupGlobalIndices_;} 
         int getNumAtoms() const {return atoms_.size();}
+        const std::vector<Real3>& getAtomPositions() const {return atom_positions_;}
 
         // convert from AtomGroupIndices to global indices
         int AtomGroupIndices2GlobalIndices(int atomgroupIndices) const;
@@ -57,7 +58,6 @@ class AtomGroup
         const std::vector<OP::Atom>& getAtoms() const {return atoms_;}
         std::vector<OP::Atom>& accessAtoms() {return atoms_;}
 
-        
 
     private:
         // Indices of the AtomGroup
@@ -89,4 +89,7 @@ class AtomGroup
 
         //GroFile
         GroFile& grofile_;
+
+        // total positions
+        std::vector<Real3> atom_positions_;
 };

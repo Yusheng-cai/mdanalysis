@@ -29,6 +29,8 @@ void AtomGroup::update(const VectorReal3& total_atoms)
     numAtomGroupatoms_ = AtomGroupGlobalIndices_.size();
     atoms_.clear();
     atoms_.resize(numAtomGroupatoms_);
+    atom_positions_.clear();
+    atom_positions_.resize(numAtomGroupatoms_);
 
     for (int i=0;i < numAtomGroupatoms_;i++)
     {
@@ -36,6 +38,7 @@ void AtomGroup::update(const VectorReal3& total_atoms)
         p.position = total_atoms[AtomGroupGlobalIndices_[i]];
         p.index = AtomGroupGlobalIndices_[i];
         atoms_[i] = p;
+        atom_positions_[i] = p.position;
     }
 }
 
