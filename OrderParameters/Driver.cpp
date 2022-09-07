@@ -79,6 +79,7 @@ void Driver::initializeCalculation()
 void Driver::initializeTop()
 {
     auto topPack    = pack_.findParamPack("topology", ParameterPack::KeyType::Required);
+
     std::string topPath_;
     topPack->ReadString("path", ParameterPack::KeyType::Required, topPath_);
     
@@ -116,7 +117,7 @@ void Driver::initializeDriverPack()
     }
 
     int nframes = Xdr_ -> getNframes();
-    ASSERT((nframes > startingFrame_), "The starting frame specified " << startingFrame_ << " is more than the total number of frames " << nframes);
+    ASSERT((nframes >= startingFrame_), "The starting frame specified " << startingFrame_ << " is more than the total number of frames " << nframes);
 
     int frames = startingFrame_;
     int numframes = 0;
