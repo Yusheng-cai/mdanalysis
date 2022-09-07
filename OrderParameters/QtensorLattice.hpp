@@ -41,6 +41,7 @@ class QtensorLattice : public Calculation
         Lattice<Real3> lattice_director_;
         Lattice<Real> lattice_order_;
         Lattice<Real> lattice_num_atoms_;
+        Lattice<Real> lattice_biaxiality_;
 
         INT3 lattice_shape_;
         Real3 dL_;

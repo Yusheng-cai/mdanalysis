@@ -32,6 +32,7 @@ QtensorLattice::QtensorLattice(const CalculationInput& input)
     lattice_.resize(lattice_shape_);
     lattice_Qtensor_.resize(lattice_shape_, {});
     lattice_num_atoms_.resize(lattice_shape_,0.0);
+    lattice_biaxiality_.resize(lattice_shape_,{});
 
     // cell grid
     cell_  = cellptr(new CellGrid(simstate_, cutoff_, 1));
@@ -169,6 +170,7 @@ void QtensorLattice::finishCalculate()
             lattice_Qtensor_(index3) = lattice_Qtensor_(index3) * (0.5/lattice_num_atoms_(index3));
 
             auto res = LinAlg3x3::OrderEigenSolver(lattice_Qtensor_(index3));
+            Real biaxi = res.first[1] * 2 + res.first[0];
             Real3 d;
             for (int j=0;j<3;j++)
             {
@@ -176,11 +178,13 @@ void QtensorLattice::finishCalculate()
             }
             lattice_order_(index3) = res.first[0];
             lattice_director_(index3) = d;
+            lattice_biaxiality_(index3) = biaxi;
         }
         else
         {
             lattice_order_(index3) = -1.0;
             lattice_director_(index3) = {{0,0,0}};
+            lattice_biaxiality_(index3) = -0.0;
         }
     }
 }
@@ -219,7 +223,8 @@ void QtensorLattice::printOrder(std::string name)
         {
             for (int k=0;k<lattice_shape_[2];k++)
             {
-                ofs << i << " " << j << " " << k << " " << lattice_order_(i,j,k) << "\n";
+                ofs << i << " " << j << " " << k << " " << lattice_order_(i,j,k) << " " << \
+                lattice_biaxiality_(i,j,k) << "\n";
             }
         }
     }
