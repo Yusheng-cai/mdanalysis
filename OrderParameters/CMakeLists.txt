@@ -53,6 +53,7 @@ target_sources(mdaOrderParameters PRIVATE
     "CylindricalRDF.cpp"
     "CrossSectionalDensity.cpp"
     "QtensorLattice.cpp"
+    "ChillPlus.cpp"
 )
 
 set(mdaOrderParameters_HEADER
@@ -107,6 +108,7 @@ set(mdaOrderParameters_HEADER
     "CylindricalRDF.h"
     "CrossSectionalDensity.h"
     "QtensorLattice.hpp"
+    "ChillPlus.h"
 )
 
 
@@ -116,11 +118,11 @@ target_include_directories(mdaOrderParameters
                         $<INSTALL_INTERFACE:${PROJECT_BINARY_DIR}/include>
 )
 
-target_include_directories(mdaOrderParameters PUBLIC ${FFTW3_INCLUDE_DIRS})
+target_include_directories(mdaOrderParameters PUBLIC ${FFTW3_INCLUDE_DIRS} ${Boost_LIBRARY_DIRS})
 
 message("In src, ${FFTW3_LIBRARIES}")
 
-target_link_libraries(mdaOrderParameters PUBLIC mdatools mdaxdr mdaparallel ${FFTW3_LIBRARIES})
+target_link_libraries(mdaOrderParameters PUBLIC mdatools mdaxdr mdaparallel ${FFTW3_LIBRARIES} ${Boost_LIBRARIES})
 
 include(InstallLibraryWithStandardSetup)
 InstallLibraryWithStandardSetup(mdaOrderParameters 
