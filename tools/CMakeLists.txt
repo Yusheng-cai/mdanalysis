@@ -5,6 +5,7 @@ target_sources(mdatools PRIVATE
     "InputParser.cpp"
     "CommandLineArguments.cpp"
     "FileSystem.cpp"
+    "Algorithm.cpp"
 )
 
 set(mdaTOOLS_HEADER
@@ -16,6 +17,7 @@ set(mdaTOOLS_HEADER
     "CommandLineArguments.h"
     "Registry.h"
     "FileSystem.h"
+    "Algorithm.h"
 )
 
 target_include_directories(mdatools
