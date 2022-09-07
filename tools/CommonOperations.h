@@ -3,6 +3,8 @@
 #include "CommonTypes.h"
 
 #include <iostream>
+#include <array>
+#include <vector>
 
 using Real3  = CommonTypes::Real3;
 using Real   = CommonTypes::Real;
@@ -11,6 +13,28 @@ using Matrix = CommonTypes::Matrix;
 
 inline std::ostream& operator<<(std::ostream &out, const Real3& v) {
     return out << v[0] << ' ' << v[1] << ' ' << v[2];
+}
+
+template <typename T, std::size_t dim>
+inline std::ostream& operator<<(std::ostream& out, const std::array<T,dim>& arr)
+{
+    for (int i=0;i<dim;i++)
+    {
+        out << arr[i] << " ";
+    }
+
+    return out;
+}
+
+template <typename T>
+inline std::ostream& operator<<(std::ostream& out, const std::vector<T>& v)
+{
+    for (int i=0;i<v.size();i++)
+    {
+        out << v[i] << " ";
+    }
+
+    return out;
 }
 
 inline Real3 operator+(const Real3& v1, const Real3& v2)
