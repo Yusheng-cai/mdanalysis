@@ -107,6 +107,15 @@ void Calculation::addAtomgroup(std::string name)
     MapAtomGroupNameToIndex_.insert(std::make_pair(name, index));
 }
 
+const AtomGroup& Calculation::getAtomGroup(std::string name) const
+{
+    auto it  = MapAtomGroupNameToIndex_.find(name);
+
+    ASSERT((it != MapAtomGroupNameToIndex_.end()), "The residue with name " << name << " is not registered.");
+
+    return *AtomGroups_[it->second];
+}
+
 void Calculation::addResidueGroup(std::string name)
 {
     // Check if the ResidueGroupName is not in the map

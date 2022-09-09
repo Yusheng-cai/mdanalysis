@@ -55,6 +55,7 @@ class Calculation
         Function that adds and obtains the atomgroup pointers from the vector
         */
         void addAtomgroup(std::string name);
+        const AtomGroup& getAtomGroup(std::string name) const;
         int getNumAtomGroups() const {return AtomGroups_.size();}
 
         /*

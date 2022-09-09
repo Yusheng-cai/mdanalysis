@@ -3,6 +3,7 @@
 #include "tools/Assert.h"
 #include "tools/CommonTypes.h"
 #include "SimulationState.h"
+#include "tools/CommonOperations.h"
 
 #include <vector>
 #include <array>
