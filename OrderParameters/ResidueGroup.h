@@ -12,16 +12,14 @@
 #include <array>
 #include <memory>
 
-struct ResidueInput
-{
+struct ResidueInput{
     ParameterPack& pack_;
     GroFile& grofile_;
     TopologyReader& top_;
 };
 
 // ResidueGroup have the positions of all the atoms, the masses of all the masses and the atom indices of the atoms in that residue
-class ResidueGroup
-{
+class ResidueGroup{
     public:
         using Real = CommonTypes::Real;
         using Real3= CommonTypes::Real3;
