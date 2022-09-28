@@ -1,6 +1,7 @@
 #pragma once
 
 #include "tools/CommonTypes.h"
+#include "tools/CommonOperations.h"
 
 #include <vector>
 #include <array>
@@ -10,6 +11,7 @@ class Lattice
 {
     public:
         using INT3 = std::array<int,3>;
+        using INT2 = std::array<int,2>;
 
         Lattice(int nx, int ny, int nz);
         Lattice() {nx_=0;ny_=0;nz_=0;total_size_=0;shape_={{nx_,ny_,nz_}};};
@@ -32,12 +34,23 @@ class Lattice
 
         T operator[] (int num);
 
+        // reduction 
+        std::vector<std::vector<T>> reduce(int reduce_dim);
+
     private:
         std::vector<T> lattice_;
         int nx_,ny_,nz_;
         int total_size_;
         INT3 shape_;
 };
+
+template <typename T>
+std::vector<std::vector<T>> Lattice<T>::reduce(int reduce_dim){
+    int dim1,dim2;
+    if (reduce_dim == 0){dim1=ny_;dim2=nz_;}
+    else if (reduce_dim == 1){dim1=nx_;dim2=nz_;}
+    else {dim1=nx_;dim2=ny_;}
+}
 
 template <typename T> 
 Lattice<T>::Lattice(int nx, int ny , int nz)

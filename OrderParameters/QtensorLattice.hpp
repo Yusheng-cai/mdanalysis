@@ -13,11 +13,11 @@
 #include <array>
 #include <memory>
 
-class QtensorLattice : public Calculation
-{
+class QtensorLattice : public Calculation{
     public:
         using cellptr = std::unique_ptr<CellGrid>;
         using Matrix  = CommonTypes::Matrix;
+        using INT2    = CommonTypes::index2;
 
         QtensorLattice(const CalculationInput& input);
 
@@ -30,6 +30,8 @@ class QtensorLattice : public Calculation
         void printOrder(std::string name);
         void printQtensor(std::string name);
         void printVelocity(std::string name);
+        void printReducedDirector(std::string name);
+        void printReducedOrder(std::string name);
 
     private:
         // define the cellgrid
@@ -57,6 +59,14 @@ class QtensorLattice : public Calculation
 
         // uij
         std::vector<Real3> uij_;
+
+        // whether we are reducing the lattice on 2 dimensions
+        INT2 reduced_dimensions_={{0,1}};
+        bool reduced_=false;
+        std::vector<std::vector<Matrix>> reduced_Q_;
+        std::vector<std::vector<Real>> reduced_num_;
+        std::vector<std::vector<Real3>> reduced_director_;
+        std::vector<std::vector<Real>> reduced_order_;
 
         // head and tail index 
         int headIndex_=1, tailIndex_=2;
