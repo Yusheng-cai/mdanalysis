@@ -3,12 +3,9 @@
 CellGrid::CellGrid(SimulationState& simstate, Real dL, int searchnum)
 : simstate_(simstate), dL_(dL), searchnum_(searchnum)
 {
-    for (int i=-searchnum_;i<=searchnum_;i++)
-    {
-        for (int j=-searchnum_;j<=searchnum_;j++)
-        {
-            for (int k=-searchnum_;k<=searchnum_;k++)
-            {
+    for (int i=-searchnum_;i<=searchnum_;i++){
+        for (int j=-searchnum_;j<=searchnum_;j++){
+            for (int k=-searchnum_;k<=searchnum_;k++){
                 index3 ind = {{i,j,k}};
                 Offsets_.push_back(ind);
             }
@@ -20,8 +17,7 @@ void CellGrid::update()
 {
     Real3 Sides = simstate_.getSimulationBox().getSides();
     // Example like 5 / 3 --> 1 but N should be 2  -- > 0 1
-    for (int i=0;i<3;i++)
-    {
+    for (int i=0;i<3;i++){
         N_[i] = (int)std::ceil(Sides[i]/dL_);
     }
     totalIndices_ = N_[0] * N_[1] * N_[2];

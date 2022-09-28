@@ -164,12 +164,9 @@ void Driver::initializeAtomGroups()
 
 void Driver::RegisterOuputValues()
 {
-    for (int i=0; i<OP_.size();i++)
-    {
+    for (int i=0; i<OP_.size();i++){
         auto registry = OP_[i]->getOutputRegistry();
-
-        for (auto it = registry.begin(); it != registry.end();it++)
-        {
+        for (auto it = registry.begin(); it != registry.end();it++){
             std::string op_name = OP_[i]->getName();
             std::string output_name = it -> first;
             std::string full_name = op_name + "." + output_name;
@@ -178,12 +175,9 @@ void Driver::RegisterOuputValues()
         }
     }
 
-    for (int i=0;i<Calc_.size();i++)
-    {
+    for (int i=0;i<Calc_.size();i++){
         auto registry = Calc_[i] -> getOutputRegistry();
-
-        for (auto it = registry.begin() ;it != registry.end(); it++)
-        {
+        for (auto it = registry.begin() ;it != registry.end(); it++){
             std::string calc_name = Calc_[i]->getName();
             std::string output_name = it -> first;
             std::string full_name = calc_name + "." + output_name;
@@ -241,8 +235,7 @@ void Driver::initializeProbeVolume()
 {
     auto PVpack = pack_.findParamPacks("probevolume", ParameterPack::KeyType::Optional);
 
-    for (int i=0; i< PVpack.size();i++)
-    {
+    for (int i=0; i< PVpack.size();i++){
         auto pack = PVpack[i];
         std::string pv_type;
         std::string pv_name;

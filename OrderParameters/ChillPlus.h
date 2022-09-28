@@ -16,18 +16,15 @@
 #include <array>
 #include <complex>
 
-enum ChillPlusTypes
-{
+enum ChillPlusTypes{
     Cubic, Hexagonal, Interfacial, Clathrate, Interfacial_Clathrate, Liquid
 };
 
-enum BondTypes
-{
+enum BondTypes{
     eclipse, staggered
 };
 
-class ChillPlus : public Calculation
-{
+class ChillPlus : public Calculation{
     public:
         using cellptr = std::unique_ptr<CellGrid>;
         using INT2    = CommonTypes::index2;
@@ -45,16 +42,14 @@ class ChillPlus : public Calculation
 
 
     private:
-
         cellptr cell_;
         
-        Real solvation_shell_r_=0.35;
-        Real solvation_shell_r_squared_;
+        Real solvation_shell_r_=0.35, solvation_shell_r_squared_;
 
-        int harmonics_degree_=3;
+        int harmonics_degree_=3, num_m_;
         std::vector<int> m_vec_;
-        int num_m_;
 
+        // atom group names 
         std::string atomgroup_name_;
 
         std::map<INT2, int> mapBondToIceType_ = 

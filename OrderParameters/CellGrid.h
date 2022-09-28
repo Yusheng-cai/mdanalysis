@@ -11,15 +11,16 @@
 #include <string>
 #include <cmath>
 
-class CellGrid
-{
+class CellGrid{
     public:
         using Real = CommonTypes::Real;
         using Real3= CommonTypes::Real3;
         using index3= CommonTypes::index3;
 
+        // initialize cell grid 
         CellGrid(SimulationState& simstate, Real dL, int searchnum);
 
+        // update the cell grid dimensions every iteration
         void update();
 
         // no thread-safe
@@ -33,12 +34,10 @@ class CellGrid
         int getSize() const {return N_[0] * N_[1] * N_[2];}
 
     private:
-        Real dL_;
-        Real3 L_;
+        Real dL_, L_;
         SimulationState& simstate_;
         index3 N_;
-        int totalIndices_;
-        int searchnum_;
+        int totalIndices_, searchnum_;
 
         std::vector<index3> Offsets_;
 };

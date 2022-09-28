@@ -47,26 +47,17 @@ Calculation::Real3 Calculation::calcCOM(const Molecule::residue& residues)
 
 Calculation::Real3 Calculation::calcCOM(const Molecule::residue& residues, std::vector<int>& COMIndices)
 {
-    if (COM_mode_ == "mass")
-    {
-        return CalculationTools::getCOM(residues, simstate_, COMIndices);
-    }
-    else if (COM_mode_ == "charge")
-    {
-        return CalculationTools::getCOC(residues, simstate_, COMIndices);
-    }
-    else
-    {
-        ASSERT((true == false), "The mode " << COM_mode_ << " is not yet available.");
-    }
+    if (COM_mode_ == "mass"){return CalculationTools::getCOM(residues, simstate_, COMIndices);}
+    else if (COM_mode_ == "charge"){return CalculationTools::getCOC(residues, simstate_, COMIndices);}
+    else if (COM_mode_ == "geometry"){return CalculationTools::getCOG(residues, simstate_, COMIndices);}
+    else{ASSERT((true == false), "The mode " << COM_mode_ << " is not yet available.");}
 }
 
 void Calculation::initializeNotInProbeVolumes()
 {
     pack_.ReadVectorString("NotInprobevolumes", ParameterPack::KeyType::Optional, NotInprobevolumeNames_);
 
-    for (int i=0;i<NotInprobevolumeNames_.size();i++)
-    {
+    for (int i=0;i<NotInprobevolumeNames_.size();i++){
         auto& pv = simstate_.getProbeVolume(NotInprobevolumeNames_[i]);
         NotInprobevolumes_.push_back(&pv);
     }
@@ -77,8 +68,7 @@ void Calculation::initializeProbeVolumes()
     // read in the names of the probevolumes
     pack_.ReadVectorString("probevolumes", ParameterPack::KeyType::Optional, probevolumeNames_);
 
-    for (int i=0;i<probevolumeNames_.size();i++)
-    {
+    for (int i=0;i<probevolumeNames_.size();i++){
         auto& pv = simstate_.getProbeVolume(probevolumeNames_[i]);
         probevolumes_.push_back(&pv);
     }
@@ -154,10 +144,7 @@ void Calculation::initializeResidueGroup(const std::string& residueName)
 
     // COMIndices are in 1-based counting 
     pack_.ReadVectorNumber("COMIndices", ParameterPack::KeyType::Optional, COMIndices_);
-    for (int i=0;i<COMIndices_.size();i++)
-    {
-        COMIndices_[i] -= 1;
-    }
+    COMIndices_ = COMIndices_ - 1;
 
     // resize the COM 
     COM_.resize(res.size());
@@ -178,10 +165,7 @@ std::vector<Real3>& COM)
 
     // COMIndices are in 1-based counting 
     pack_.ReadVectorNumber(COMName, ParameterPack::KeyType::Optional, COMIndices);
-    for (int i=0;i<COMIndices.size();i++)
-    {
-        COMIndices[i] -= 1;
-    }
+    COMIndices = COMIndices - 1;
 
     // resize the COM 
     COM.resize(res.size());
@@ -191,21 +175,17 @@ bool Calculation::isInPV(Real3& pos)
 {
     // if it's in the probe volumes that it's not supposed to be in 
     // then we should return false  --> if that makes any sense
-    for (auto pv : NotInprobevolumes_)
-    {
+    for (auto pv : NotInprobevolumes_){
         auto out = pv -> calculate(pos);
 
-        if (out.hx_ == 1)
-        {
+        if (out.hx_ == 1){
             return false;
         }
     }
 
-    for (auto pv : probevolumes_)
-    {
+    for (auto pv : probevolumes_){
         auto out = pv -> calculate(pos);
-        if (out.hx_ == 1)
-        {
+        if (out.hx_ == 1){
             return true;
         }
     }
@@ -216,21 +196,16 @@ bool Calculation::isInPV(Real3& pos)
 bool Calculation::isInPV(Real3& pos, Real& htildex)
 {
     htildex = 1.0;
-    for (auto pv : NotInprobevolumes_)
-    {
+    for (auto pv : NotInprobevolumes_){
         auto out = pv -> calculate(pos);
-
-        if (out.htilde_x_ > 0)
-        {
+        if (out.htilde_x_ > 0){
             return false;
         }
     }
 
-    for (auto pv : probevolumes_)
-    {
+    for (auto pv : probevolumes_){
         auto out = pv -> calculate(pos);
-        if (out.htilde_x_ > 0)
-        {
+        if (out.htilde_x_ > 0){
             htildex = out.htilde_x_;
             return true;
         }
@@ -242,8 +217,7 @@ bool Calculation::isInPV(Real3& pos, Real& htildex)
 
 void Calculation::printOutput()
 {
-    for (int i=0;i<vectorOutputs_.size();i++)
-    {
+    for (int i=0;i<vectorOutputs_.size();i++){
         getOutputByName(vectorOutputs_[i])(vectorOutputNames_[i]);
     }
 
@@ -298,15 +272,13 @@ void Calculation::printOutputOnStep()
 
 void Calculation::closeAllOutputPerIter()
 {
-    for (int i=0;i<ofsVector_.size();i++)
-    {
+    for (int i=0;i<ofsVector_.size();i++){
         ofsVector_[i]->close();
     }
 }
 
 CalculationTools::Real3 CalculationTools::getCOM(const Molecule::residue& residueGroup, const SimulationState& simstate, \
-std::vector<int>& indices_)
-{
+std::vector<int>& indices_){
     auto& simbox = simstate.getSimulationBox();
 
     // For COM calculation, for each residue, we shift the atoms with respect to the first atom
@@ -320,41 +292,24 @@ std::vector<int>& indices_)
     
 
     // iterate over the indices of interest
-    for (int j=0;j<indices_.size();j++)
-    {
+    for (int j=0;j<indices_.size();j++){
         Real3 distance;
         Real distsq;
 
         int index = indices_[j];
         Real3 shiftWRTatom1 = simbox.calculateShift(residueGroup.atoms_[index].positions_, pos1);
 
-        Real3 shiftedPos;
-
-        for (int k=0;k<3;k++)
-        {
-            shiftedPos[k] = residueGroup.atoms_[index].positions_[k] + shiftWRTatom1[k];
-        }
-
-        for (int k=0;k<3;k++)
-        {
-            COM_pos[k] += shiftedPos[k] * residueGroup.atoms_[index].mass_;
-        }
-
+        Real3 shiftedPos = residueGroup.atoms_[index].positions_ + shiftWRTatom1;
+        COM_pos = COM_pos + shiftedPos * residueGroup.atoms_[index].mass_;
         massTot += residueGroup.atoms_[index].mass_;
     }
 
-    for (int j=0;j<3;j++)
-    {
-        COM_pos[j] = COM_pos[j]/massTot;
-    }
+    // calculate the center of mass 
+    COM_pos = COM_pos / massTot;
 
     // check if it is outside of the box, if it is, then move it inside the box
     Real3 shift = simbox.calculateShift(COM_pos, simbox.getCenter());
-
-    for (int j=0;j<3;j++)
-    {
-        COM_pos[j] += shift[j];
-    }
+    COM_pos = COM_pos + shift;
 
     return COM_pos;
 }
@@ -373,34 +328,20 @@ std::vector<int>& indices_)
     Real3 COM_pos = {{0,0,0}};
     
     // iterate over the indices of interest
-    for (int j=0;j<indices_.size();j++)
-    {
+    for (int j=0;j<indices_.size();j++){
         Real3 distance;
         Real distsq;
 
         int index = indices_[j];
         Real3 shiftWRTatom1 = simbox.calculateShift(residueGroup.atoms_[index].positions_, pos1);
 
-        Real3 shiftedPos;
-
-        for (int k=0;k<3;k++)
-        {
-            shiftedPos[k] = residueGroup.atoms_[index].positions_[k] + shiftWRTatom1[k];
-        }
-
-        for (int k=0;k<3;k++)
-        {
-            COM_pos[k] += shiftedPos[k] * residueGroup.atoms_[index].charge_;
-        }
+        Real3 shiftedPos = residueGroup.atoms_[index].positions_ + shiftWRTatom1;
+        COM_pos = COM_pos + shiftedPos * residueGroup.atoms_[index].charge_;
     }
 
     // check if it is outside of the box, if it is, then move it inside the box
     Real3 shift = simbox.calculateShift(COM_pos, simbox.getCenter());
-
-    for (int j=0;j<3;j++)
-    {
-        COM_pos[j] += shift[j];
-    }
+    COM_pos = COM_pos + shift;
 
     return COM_pos;
 }
@@ -518,57 +459,41 @@ void Calculation::ReadResidueIndices(const std::string& residuename, std::string
     std::iota(Indices.begin(), Indices.end(), 1.0);
 
     pack_.ReadVectorNumber(IndicesName, ParameterPack::KeyType::Optional, Indices);
-    for (int i=0;i<Indices.size();i++)
-    {
-        Indices[i] = Indices[i]-1;
-    }
+    Indices = Indices - 1;
 }
 
 
 CalculationTools::Real3 CalculationTools::getCOG(const Molecule::residue& residueGroup, const SimulationState& simstate, \
-std::vector<int>& indices_)
+std::vector<int>& indices)
 {
     auto& simbox = simstate.getSimulationBox();
 
     // For COM calculation, for each residue, we shift the atoms with respect to the first atom
     // obtain the position of the first atom in the residue group
-    int index0 = indices_[0];
+    int index0 = indices[0];
     auto& pos1 = residueGroup.atoms_[index0].positions_;
 
     // Total mass of the atoms of interest
     Real chargeTot = 0;
     Real3 COM_pos = {{0,0,0}};
-    
 
     // iterate over the indices of interest
-    for (int j=0;j<indices_.size();j++)
-    {
+    for (int j=0;j<indices.size();j++){
         Real3 distance;
         Real distsq;
 
-        int index = indices_[j];
+        int index = indices[j];
         Real3 shiftWRTatom1 = simbox.calculateShift(residueGroup.atoms_[index].positions_, pos1);
 
-        Real3 shiftedPos;
-
-        for (int k=0;k<3;k++)
-        {
-            shiftedPos[k] = residueGroup.atoms_[index].positions_[k] + shiftWRTatom1[k];
-        }
-
-        for (int k=0;k<3;k++)
-        {
-            COM_pos[k] += shiftedPos[k];
-        }
+        Real3 shiftedPos = residueGroup.atoms_[index].positions_ + shiftWRTatom1;
+        COM_pos = COM_pos + shiftedPos;
     }
+
+    COM_pos = COM_pos / indices.size();
 
     // check if it is outside of the box, if it is, then move it inside the box
     Real3 shift = simbox.calculateShift(COM_pos, simbox.getCenter());
-
-    for (int j=0;j<3;j++)
-    {
-        COM_pos[j] += shift[j];
-    }
+    COM_pos = COM_pos + shift;
 
     return COM_pos;
 }
@@ -594,16 +519,8 @@ void CalculationTools::CalculateUsrBetweenPair(const Molecule::residue& residue1
             Real qiqj = qi * qj;
             Real e = f * std::erfc(beta * r)/r * qiqj;
 
-            if (qiqj < 0)
-            {
-                attr += e;
-            }
-            
-            if (qiqj > 0)
-            {
-                repul += e;
-            }
-
+            if (qiqj < 0){attr += e;}
+            if (qiqj > 0){repul += e;}
             total += e;
         }
     }

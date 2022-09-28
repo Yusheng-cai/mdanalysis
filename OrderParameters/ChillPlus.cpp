@@ -17,8 +17,7 @@ ChillPlus::ChillPlus(const CalculationInput& input)
 
     pack_.ReadNumber("harmonics_degree", ParameterPack::KeyType::Optional, harmonics_degree_);
     num_m_ = harmonics_degree_ * 2 + 1;
-    for (int i=-harmonics_degree_;i<=harmonics_degree_;i++)
-    {
+    for (int i=-harmonics_degree_;i<=harmonics_degree_;i++){
         m_vec_.push_back(i);
     }
     ASSERT((m_vec_.size() == num_m_), "The size of m vector is incorrect.");
@@ -96,15 +95,12 @@ void ChillPlus::calculate()
     }
 
     #pragma omp parallel for
-    for (int i=0;i<neighbor_indices.size();i++)
-    {
+    for (int i=0;i<neighbor_indices.size();i++){
         std::vector<std::complex<Real>> ql_i;
-        for (int m : m_vec_)
-        {
+        for (int m : m_vec_){
             std::complex<Real> qlm_i = {{0,0}};
             Real factor = 1.0 / neighbor_indices[i].size();
-            for (int j=0;j<neighbor_indices[i].size();j++)
-            {
+            for (int j=0;j<neighbor_indices[i].size();j++){
                 Real3 dist = neighbor_vector_distance[i][j];
 
                 // normalized distance
@@ -113,8 +109,7 @@ void ChillPlus::calculate()
                 // azimuthal angle phi (0, 2 pi)
                 // first quadrant
                 Real phi = std::atan2(dist[1],dist[0]);
-                if (phi < 0)
-                {
+                if (phi < 0){
                     phi += 2 * Constants::PI;
                 }
 
@@ -130,17 +125,14 @@ void ChillPlus::calculate()
     }
 
     #pragma omp parallel for 
-    for (int i=0;i<neighbor_indices.size();i++)
-    {
+    for (int i=0;i<neighbor_indices.size();i++){
         cij[i].resize(neighbor_indices[i].size());
-        for (int j=0;j<neighbor_indices[i].size();j++)
-        {
+        for (int j=0;j<neighbor_indices[i].size();j++){
             int neighborIdx = neighbor_indices[i][j];
             std::complex<Real> top = {{0,0}};
             std::complex<Real> qli = {{0,0}};
             std::complex<Real> qlneighbor = {{0,0}};
-            for (int m=0;m<m_vec_.size();m++)
-            {
+            for (int m=0;m<m_vec_.size();m++){
                 top += qlm[i][m] * std::conj(qlm[neighborIdx][m]);
                 qli += qlm[i][m] * std::conj(qlm[i][m]);
                 qlneighbor += qlm[neighborIdx][m] * std::conj(qlm[neighborIdx][m]);
@@ -154,26 +146,21 @@ void ChillPlus::calculate()
     for (int i=0;i<cij.size();i++)
     {
         INT2 bond = {{0,0}};
-        for (int j=0;j<cij[i].size();j++)
-        {
-            if (isStaggered(cij[i][j]))
-            {
+        for (int j=0;j<cij[i].size();j++){
+            if (isStaggered(cij[i][j])){
                 bond[BondTypes::staggered] += 1;
             }
 
-            if (isEclipse(cij[i][j]))
-            {
+            if (isEclipse(cij[i][j])){
                 bond[BondTypes::eclipse] += 1;
             }
         }
         int type;
 
-        if (Algorithm::IsInMap(mapBondToIceType_, bond, type))
-        {
+        if (Algorithm::IsInMap(mapBondToIceType_, bond, type)){
             ice_t[type] += 1;
         }
-        else
-        {
+        else{
             ice_t[ChillPlusTypes::Liquid] += 1;
         }
     }

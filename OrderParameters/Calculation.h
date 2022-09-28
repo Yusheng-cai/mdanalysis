@@ -9,6 +9,7 @@
 #include "tools/CommonTypes.h"
 #include "Output_values.h"
 #include "ProbeVolume.h"
+#include "tools/CommonOperations.h"
 
 #include <vector>
 #include <array>
@@ -23,14 +24,12 @@
 
 class SimulationState;
 
-struct CalculationInput
-{
+struct CalculationInput{
     ParameterPack& pack_;
     SimulationState& simstate_;
 };
 
-class Calculation
-{
+class Calculation{
     public:
         using OutputRegistry = std::map<std::string,OutputValue>; 
 
@@ -87,13 +86,15 @@ class Calculation
         void ReadResidueIndices(const std::string& residueName, std::string IndicesName, std::vector<int>& Indices);
 
 
+        // initialize the probe volumes 
+        // Probevolumes and not in prove volumes means both have to be satisfied for an atom 
+        // to be counted
         void initializeProbeVolumes();
         void initializeNotInProbeVolumes();
 
+        // obtain the indices inside a certain probe volume
         std::vector<int> InsidePVIndices(std::vector<Real3>& pos);
         std::vector<int> InsidePVIndices(std::vector<Real3>& pos, std::vector<int>& outsideIndices);
-
-
         bool isInPV(Real3& pos);
         bool isInPV(Real3& pos, Real& htildex);
 
