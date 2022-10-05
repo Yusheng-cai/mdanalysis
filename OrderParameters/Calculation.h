@@ -2,6 +2,7 @@
 #include "tools/Assert.h"
 #include "tools/GenericFactory.h"
 #include "tools/InputParser.h"
+#include "tools/Constants.h"
 #include "xdr/TopologyReader.h"
 #include "xdr/GroFile.h"
 #include "AtomGroup.h"
@@ -173,15 +174,26 @@ namespace CalculationRegistry
 namespace CalculationTools
 {
     using Real  = CommonTypes::Real;
+    using INT3  = std::array<int,3>;
     using Real3 = CommonTypes::Real3;
 
-    Real3 getCOM(const Molecule::residue& residues, const SimulationState& simstate, std::vector<int>& indices_);
-    Real3 getCOC(const Molecule::residue& residues, const SimulationState& simstate, std::vector<int>& indices_);
-    Real3 getCOG(const Molecule::residue& residues, const SimulationState& simstate, std::vector<int>& indices_);
+    Real3 getCOM(const Molecule::residue& residues, const SimulationState& simstate, std::vector<int>& indices);
+    Real3 getCOC(const Molecule::residue& residues, const SimulationState& simstate, std::vector<int>& indices);
+    Real3 getCOG(const Molecule::residue& residues, const SimulationState& simstate, std::vector<int>& indices);
 
     // calculate Usr between a pair of residues 
     void CalculateUsrBetweenPair(const Molecule::residue& residue1, const Molecule::residue& residue2, \
                                  const SimulationState& simstate, Real r, \
                                  const std::vector<int>& Usrindices1, const std::vector<int>& Usrindices2, Real sigma, \
                                  Real& attr, Real& repul, Real& total);
+    
+    // reduce a position to the nearest lattice index
+    INT3 NearestLatticeIndex(const Real3& pos, const Real3& dL);
+    INT3 NearestLatticeIndex(const Real3& pos, const Real3& dL, const INT3& Lattice_shape);
+
+    // coarse graining function
+    Real corase_grain_function(Real r, Real sigma);
+
+    // correct for pbc lattice index
+    INT3 correctPBCLatticeIndex(const INT3& latticeIndex, const INT3& lattice_shape);
 };

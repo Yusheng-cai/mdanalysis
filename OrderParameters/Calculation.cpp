@@ -29,20 +29,10 @@ Calculation::Calculation(const CalculationInput& input)
     }
 }
 
-Calculation::Real3 Calculation::calcCOM(const Molecule::residue& residues)
-{
-    if (COM_mode_ == "mass")
-    {
-        return CalculationTools::getCOM(residues, simstate_, COMIndices_);
-    }
-    else if (COM_mode_ == "charge")
-    {
-        return CalculationTools::getCOC(residues, simstate_, COMIndices_);
-    }
-    else
-    {
-        ASSERT((true == false), "The mode " << COM_mode_ << " is not yet available.");
-    }
+Calculation::Real3 Calculation::calcCOM(const Molecule::residue& residues){
+    if (COM_mode_ == "mass"){return CalculationTools::getCOM(residues, simstate_, COMIndices_);}
+    else if (COM_mode_ == "charge"){return CalculationTools::getCOC(residues, simstate_, COMIndices_);}
+    else{ASSERT((true == false), "The mode " << COM_mode_ << " is not yet available.");}
 }
 
 Calculation::Real3 Calculation::calcCOM(const Molecule::residue& residues, std::vector<int>& COMIndices)
@@ -53,8 +43,7 @@ Calculation::Real3 Calculation::calcCOM(const Molecule::residue& residues, std::
     else{ASSERT((true == false), "The mode " << COM_mode_ << " is not yet available.");}
 }
 
-void Calculation::initializeNotInProbeVolumes()
-{
+void Calculation::initializeNotInProbeVolumes(){
     pack_.ReadVectorString("NotInprobevolumes", ParameterPack::KeyType::Optional, NotInprobevolumeNames_);
 
     for (int i=0;i<NotInprobevolumeNames_.size();i++){
@@ -63,8 +52,7 @@ void Calculation::initializeNotInProbeVolumes()
     }
 
 }
-void Calculation::initializeProbeVolumes()
-{
+void Calculation::initializeProbeVolumes(){
     // read in the names of the probevolumes
     pack_.ReadVectorString("probevolumes", ParameterPack::KeyType::Optional, probevolumeNames_);
 
@@ -75,15 +63,13 @@ void Calculation::initializeProbeVolumes()
 }
 
 
-void Calculation::registerOutputFileOutputs(std::string name, OutputValue::ValueFunction func)
-{
+void Calculation::registerOutputFileOutputs(std::string name, OutputValue::ValueFunction func){
     OutputValue val(name, func);
 
     output_.insert(std::make_pair(name, val));
 }
 
-void Calculation::addAtomgroup(std::string name)
-{
+void Calculation::addAtomgroup(std::string name){
     // Check if the AtomGroupName is not in the map
     auto it = MapAtomGroupNameToIndex_.find(name);
     ASSERT((it == MapAtomGroupNameToIndex_.end()), "The AtomGroup with name " << name << " is registered twice.");
@@ -524,4 +510,37 @@ void CalculationTools::CalculateUsrBetweenPair(const Molecule::residue& residue1
             total += e;
         }
     }
+}
+
+CalculationTools::INT3 CalculationTools::NearestLatticeIndex(const Real3& pos, const Real3& dL){
+    Real3 index  = pos / dL;
+    INT3 LatticeIndex;
+    for (int i=0;i<3;i++){
+        LatticeIndex[i]  = std::round(index[i]);
+    }
+
+    return LatticeIndex;
+}
+
+CalculationTools::INT3 CalculationTools::NearestLatticeIndex(const Real3& pos, const Real3& dL, const INT3& lattice_shape){
+    INT3 nonPBCIndex = NearestLatticeIndex(pos, dL);
+
+    return correctPBCLatticeIndex(nonPBCIndex, lattice_shape);
+}
+
+CalculationTools::Real CalculationTools::corase_grain_function(Real rsq, Real sigma){
+    Real sigma2 = sigma*sigma;
+    Real prefactor = std::pow(2*Constants::PI*sigma2, -1.5);
+
+    return prefactor * std::exp(-rsq/(2*sigma2));
+}
+
+CalculationTools::INT3 CalculationTools::correctPBCLatticeIndex(const INT3& latticeIndex, const INT3& lattice_shape){
+    INT3 pbcIndex;
+    for (int i=0;i<3;i++){
+        if (latticeIndex[i] < 0){pbcIndex[i] = latticeIndex[i] + lattice_shape[i];}
+        else{pbcIndex[i] = latticeIndex[i] % lattice_shape[i];}
+    }
+
+    return pbcIndex;
 }
