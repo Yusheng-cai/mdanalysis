@@ -55,6 +55,8 @@ target_sources(mdaOrderParameters PRIVATE
     "QtensorLattice.cpp"
     "SmecticOrder.cpp"
     "ChillPlus.cpp"
+    "marching_cubes.cpp"
+    "Mesh.cpp"
 )
 
 set(mdaOrderParameters_HEADER
@@ -111,6 +113,8 @@ set(mdaOrderParameters_HEADER
     "QtensorLattice.hpp"
     "SmecticOrder.h"
     "ChillPlus.h"
+    "marching_cubes.hpp"
+    "Mesh.h"
 )
 
 
