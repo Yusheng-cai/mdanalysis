@@ -125,9 +125,6 @@ target_include_directories(mdaOrderParameters
 )
 
 target_include_directories(mdaOrderParameters PUBLIC ${FFTW3_INCLUDE_DIRS} ${Boost_LIBRARY_DIRS})
-
-message("In src, ${FFTW3_LIBRARIES}")
-
 target_link_libraries(mdaOrderParameters PUBLIC mdatools mdaxdr mdaparallel ${FFTW3_LIBRARIES} ${Boost_LIBRARIES})
 
 include(InstallLibraryWithStandardSetup)

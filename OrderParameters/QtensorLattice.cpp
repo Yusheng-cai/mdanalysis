@@ -129,53 +129,67 @@ void QtensorLattice::calculateNeighborSearch(){
     }
 
     // start the cell grid calculations 
-    #pragma omp parallel for
-    for (int i=0;i<lattice_.getSize();i++){
-        INT3 index3 = lattice_.getIndex3(i);
-        Real3 latticePos = lattice_(index3);
-        int selfIndex = cell_->getCellGridIntIndex(latticePos);
-        std::vector<int> neighborIdx = cell_->getNeighborIndex(latticePos);
-        neighborIdx.push_back(selfIndex);
+    #pragma omp parallel
+    {
+        #pragma omp for
+        for (int i=0;i<lattice_.getSize();i++){
+            INT3 index3 = lattice_.getIndex3(i);
+            Real3 latticePos = lattice_(index3);
+            int selfIndex = cell_->getCellGridIntIndex(latticePos);
+            std::vector<int> neighborIdx = cell_->getNeighborIndex(latticePos);
+            neighborIdx.push_back(selfIndex);
 
-        // find the COMs in the neighborhood
-        Matrix Qtensor = {};
+            // find the COMs in the neighborhood
+            Matrix Qtensor = {};
 
-        // sum of the number of atoms in the neighborhood
-        int sum=0;
-        // vector that keeps track of all the distances 
-        std::vector<Real> vectorDistsq;
-        for (int j=0;j<neighborIdx.size();j++){
-            // the neighbot index
-            int ind = neighborIdx[j];
+            // sum of the number of atoms in the neighborhood
+            int sum=0;
+            // vector that keeps track of all the distances 
+            std::vector<Real> vectorDistsq;
+            for (int j=0;j<neighborIdx.size();j++){
+                // the neighbot index
+                int ind = neighborIdx[j];
+                for (int k=0;k<cellIndices[ind].size();k++){
+                    // the residue index 
+                    int resIndex = cellIndices[ind][k];
 
-            for (int k=0;k<cellIndices[ind].size();k++){
-                // the residue index 
-                int resIndex = cellIndices[ind][k];
+                    // check the distance between the lattice point and the COM of the LC molecule  
+                    Real3 distance;
+                    Real distsq;
+                    simstate_.getSimulationBox().calculateDistance(latticePos, COM_[resIndex], distance, distsq);
 
-                // check the distance between the lattice point and the COM of the LC molecule  
-                Real3 distance;
-                Real distsq;
-                simstate_.getSimulationBox().calculateDistance(latticePos, COM_[resIndex], distance, distsq);
-
-                if (distsq < cutoff_sq_){
-                    Matrix localQ = LinAlg3x3::LocalQtensor(uij_[resIndex]);
-                    Qtensor = Qtensor + localQ;
-                    sum += 1;
-                    vectorDistsq.push_back(distsq);
+                    // the distance must be less than the cutoff distance
+                    if (distsq <= cutoff_sq_){
+                        Matrix localQ = LinAlg3x3::LocalQtensor(uij_[resIndex]);
+                        Qtensor = Qtensor + localQ;
+                        sum += 1;
+                        vectorDistsq.push_back(distsq);
+                    }
                 }
             }
-        }
 
-        if (sum != 0){
-            Real min = *std::min_element(vectorDistsq.begin(), vectorDistsq.end());
+            // update the local per iter
+            lattice_Qtensor_Iter_(index3) = Qtensor;
+            lattice_num_atoms_Iter_(index3) = sum;
 
-            if (min < min_dist_sq_){
-                lattice_Qtensor_(index3) = lattice_Qtensor_(index3) + Qtensor;
-                lattice_num_atoms_(index3) += sum;
+            if (sum != 0){
+                Real min = *std::min_element(vectorDistsq.begin(), vectorDistsq.end());
+
+                if (min < min_dist_sq_){
+                    lattice_Qtensor_(index3) = lattice_Qtensor_(index3) + Qtensor;
+                    lattice_num_atoms_(index3) += sum;
+                }
             }
         }
     }
 
+    #pragma omp parallel for
+    for (int i=0;i<lattice_Qtensor_Iter_.getSize();i++){
+        INT3 index3 = lattice_Qtensor_Iter_.getIndex3(i);
+        if (lattice_num_atoms_Iter_(index3) != 0){
+            lattice_Qtensor_Iter_(index3) = lattice_Qtensor_Iter_(index3) * (0.5 / lattice_num_atoms_Iter_(index3));
+        }
+    }
 }
 
 void QtensorLattice::calculate()
@@ -214,22 +228,22 @@ void QtensorLattice::calculate()
 
 }
 
-void QtensorLattice::update()
-{
-    // update the cell grid
-    if (! coarse_grain_){cell_->update();}
-
+void QtensorLattice::update(){
     // update the sides 
     Real3 sides = simstate_.getSimulationBox().getSides();
     for (int i=0;i<3;i++){
         dL_[i] = sides[i] / lattice_shape_[i];
     }
 
+    // only calculate lattice offsets if we are doing coarse-grained simulation
     if (coarse_grain_){
+        // update the cell grid
+        cell_->update();
         CalculateLatticeOffsets();
-        lattice_num_atoms_Iter_.resize(lattice_shape_,0);
-        lattice_Qtensor_Iter_.resize(lattice_shape_, {});
     }
+
+    lattice_num_atoms_Iter_.resize(lattice_shape_,0);
+    lattice_Qtensor_Iter_.resize(lattice_shape_, {});
 }
 
 void QtensorLattice::CalculateLatticeOffsets(){
@@ -271,9 +285,9 @@ void QtensorLattice::finishCalculate(){
             lattice_biaxiality_(index3) = biaxi;
         }
         else{
-            lattice_order_(index3) = -1.0;
+            lattice_order_(index3) = 100.0;
             lattice_director_(index3) = {{0,0,0}};
-            lattice_biaxiality_(index3) = -0.0;
+            lattice_biaxiality_(index3) = 100.0;
 }
     }
 
@@ -397,7 +411,7 @@ void QtensorLattice::printOrderPerIter(std::ofstream& ofs){
             order(index3) = res.first[0];
         }
         else{
-            order(index3) = -1;
+            order(index3) = 100;
         }
     }
 

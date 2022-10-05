@@ -306,7 +306,7 @@ void MarchingCubes::triangulate_field(Lattice<Real>& field, Mesh& mesh, Real3 sp
             for (int k = 0; k + inc_ < N_[2]; k++){
                 int x = i, y = j, z = k;
                 INT3 CellGridIndex = {{x%N_[0], y%N_[1], z%N_[2]}};
-                int xplus, yplus, zplus;
+                Real xplus, yplus, zplus;
 
                 // Correct for the positions 
                 xplus = (x+1) % N_[0];
