@@ -36,6 +36,9 @@ namespace StringTools
 
     // sort a vector of ints
     void SortAndCheckDuplicates(std::vector<int>& indices);
+
+    // strip a string of blank spaces
+    std::string strip(const std::string& input);
 }
 
 

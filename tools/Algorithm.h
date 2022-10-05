@@ -3,10 +3,10 @@
 #include "CommonTypes.h"
 
 #include <algorithm>
+#include <map>
 #include <numeric>
 #include <vector>
 #include <random>
-#include <map>
 
 namespace Algorithm
 {
@@ -17,11 +17,11 @@ namespace Algorithm
     template <typename T>
     std::vector<int> argsort(std::vector<T>& vec, bool min=true);
 
-    template <std::size_t dim>
-    int argmin(std::array<Real,dim>& arr);
+    template <typename T, std::size_t dim>
+    int argmin(std::array<T,dim>& arr);
 
-    template <std::size_t dim>
-    int argmax(std::array<Real,dim>& arr);
+    template <typename T, std::size_t dim>
+    int argmax(std::array<T,dim>& arr);
 
     template <typename T>
     int argmin(std::vector<T>& vec);
@@ -41,8 +41,30 @@ namespace Algorithm
     template <typename T>
     T min(std::vector<T>& vec);
 
+    template <typename T, std::size_t dim>
+    T max(std::array<T,dim>& arr);
+
     template <typename T>
     bool contain(std::vector<T>& vec, T num);
+
+    template <typename T>
+    bool contain(std::vector<T>& vec, T num, int& index);
+
+    template <typename T>
+    void unique(std::vector<T>& vec); 
+
+    template <typename T, std::size_t dim>
+    bool is_unique(std::array<T,dim>& arr);
+
+    template <typename T, std::size_t dim>
+    void sort(std::array<T, dim>& arr);
+
+    template <typename key, typename value>
+    bool FindInMap(const std::map<key,value>& map, const key& k, value& v);
+
+    // insert something into map --> this value needs to not exist in the map previously
+    template <typename key, typename value>
+    bool InsertInMap(const std::map<key,value>& map, const key& k, const value& v);
 
     template <typename key, typename val>
     bool IsInMap(std::map<key, val>& map, key& k, val& v);
@@ -56,18 +78,18 @@ std::vector<T> Algorithm::arange(T start, T stop, T step) {
     return values;
 }
 
-template <std::size_t dim>
-int Algorithm::argmin(std::array<Real,dim>& arr)
+template <typename T, std::size_t dim>
+int Algorithm::argmin(std::array<T,dim>& arr)
 {
-    typename std::array<Real,dim>::iterator it = std::min_element(arr.begin(), arr.end());
+    typename std::array<T,dim>::iterator it = std::min_element(arr.begin(), arr.end());
 
     return it - arr.begin();
 }
 
-template <std::size_t dim>
-int Algorithm::argmax(std::array<Real,dim>& arr)
+template <typename T, std::size_t dim>
+int Algorithm::argmax(std::array<T,dim>& arr)
 {
-    typename std::array<Real,dim>::iterator it = std::max_element(arr.begin(), arr.end());
+    typename std::array<T,dim>::iterator it = std::max_element(arr.begin(), arr.end());
 
     return it - arr.begin();
 }
@@ -109,6 +131,14 @@ T Algorithm::max(std::vector<T>& vec)
     return *max_element;
 }
 
+template <typename T, std::size_t dim>
+T Algorithm::max(std::array<T,dim>& arr)
+{
+    typename std::array<T,dim>::iterator max_element = std::max_element(arr.begin(), arr.end());
+
+    return *max_element;
+}
+
 template <typename T>
 T Algorithm::min(std::vector<T>& vec)
 {
@@ -121,6 +151,65 @@ template <typename T>
 bool Algorithm::contain(std::vector<T>& vec, T num)
 {
     return (std::find(vec.begin(), vec.end(), num) != vec.end());
+}
+
+template <typename T>
+bool Algorithm::contain(std::vector<T>& vec, T num, int& index)
+{
+    typename std::vector<T>::iterator it = std::find(vec.begin(), vec.end(), num);
+
+    if (it == vec.end())
+    {
+        index = -1;
+        return false;
+    }
+    else
+    {
+        index = it - vec.begin();
+        return true;
+    }
+}
+
+template <typename T>
+void Algorithm::unique(std::vector<T>& vec)
+{
+    std::sort(vec.begin(), vec.end());
+    typename std::vector<T>::iterator it = std::unique(vec.begin(), vec.end());
+    vec.resize(std::distance(vec.begin(), it));
+}
+
+template <typename T, std::size_t dim>
+bool Algorithm::is_unique(std::array<T,dim>& arr)
+{
+    std::array<T,dim> temp = arr;
+    std::sort(temp.begin(), temp.end());
+    typename std::array<T,dim>::iterator pos = std::adjacent_find(std::begin(temp), std::end(temp));
+    if (pos != std::end(temp)){return false;}
+    else{return true;}
+}
+
+template <typename T, std::size_t dim>
+void Algorithm::sort(std::array<T,dim>& arr)
+{
+    std::sort(arr.begin(), arr.end());
+}
+
+template <typename key, typename value>
+bool Algorithm::FindInMap(const std::map<key,value>& map, const key& k, value& v)
+{
+    typename std::map<key,value>::const_iterator it = map.find(k);
+    if (it != map.end()){v=it->second;return true;}
+    else{return false;}
+}
+
+
+template <typename key, typename value>
+bool Algorithm::InsertInMap(const std::map<key,value>& map, const key& k, const value& v){
+    typename std::map<key,value>::const_iterator it = map.find(k);  
+    if (it != map.end()){map.insert(std::make_pair(k,v));}
+    else{return false;}
+
+    return true;
 }
 
 template <typename T>
@@ -147,6 +236,7 @@ std::vector<int> Algorithm::argsort(std::vector<T>& vec, bool min)
 
     return indices;
 }
+
 
 template <typename key, typename val>
 bool Algorithm::IsInMap(std::map<key,val>& map, key& k, val& v)

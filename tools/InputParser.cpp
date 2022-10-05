@@ -20,6 +20,21 @@ void StringTools::RemoveBlankInString(std::string& str)
     str.erase(std::remove(str.begin(), str.end(), ' '), str.end());
 }
 
+std::string StringTools::strip(const std::string& input){
+    auto start_it = input.begin();
+    auto end_it   = input.rbegin();
+
+    while (std::isspace(*start_it)){
+        ++start_it;
+    }
+
+    while (std::isspace(*end_it)){
+        ++end_it;
+    }
+
+    return std::string(start_it, end_it.base());
+}
+
 void StringTools::ConvertStringToIndices(const std::vector<std::string>& selection_str_, std::vector<int>& indices)
 {
     std::vector<std::string> index_str_;
