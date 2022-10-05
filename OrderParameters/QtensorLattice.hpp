@@ -7,6 +7,8 @@
 #include "LinAlgTools.h"
 #include "tools/CommonTypes.h"
 #include "tools/CommonOperations.h"
+#include "marching_cubes.hpp"
+#include "parallel/OpenMP_buffer.h"
 
 #include <vector>
 #include <string>
@@ -22,8 +24,16 @@ class QtensorLattice : public Calculation{
         QtensorLattice(const CalculationInput& input);
 
         virtual void calculate() override;
+        void calculateCoraseGrain();
+        void calculateNeighborSearch();
         virtual void update() override;
         virtual void finishCalculate() override;
+
+        // initialize lattice offsets
+        void CalculateLatticeOffsets();
+
+        // calculate corase grain functionj
+        Real CalculateCoraseGrainFunction(Real& rsq);
 
         // printing function
         void printDirector(std::string name);
@@ -32,8 +42,15 @@ class QtensorLattice : public Calculation{
         void printVelocity(std::string name);
         void printReducedDirector(std::string name);
         void printReducedOrder(std::string name);
+        void printIsoSurface(std::string name);
+
+        // per iter printing function
+        void printOrderPerIter(std::ofstream& ofs);
+        void printDensityPerIter(std::ofstream& ofs);
 
     private:
+        bool coarse_grain_=false;
+
         // define the cellgrid
         cellptr cell_;
 
@@ -45,17 +62,26 @@ class QtensorLattice : public Calculation{
         Lattice<Real> lattice_num_atoms_;
         Lattice<Real> lattice_biaxiality_;
 
+        // per iter
+        Lattice<Matrix> lattice_Qtensor_Iter_;
+        Lattice<Real> lattice_num_atoms_Iter_;
+
+        //          coarse graining parameters          //
         INT3 lattice_shape_;
         Real3 dL_;
+        Real sigma_, sigma2_, prefactor_, inv_factor_;
+        int n_;
+        std::vector<INT3> lattice_offsets_;
+
+
+        //          non coarse-graining parameters      //
+        Real cutoff_sq_;
+        Real min_dist_sq_;
+        Real cutoff_;
+        Real min_dist_;
 
         // resname
         std::string resname_;
-
-        // the cutoff
-        Real cutoff_;
-        Real cutoff_sq_;
-        Real min_dist_=0.5;
-        Real min_dist_sq_;
 
         // uij
         std::vector<Real3> uij_;
@@ -70,4 +96,12 @@ class QtensorLattice : public Calculation{
 
         // head and tail index 
         int headIndex_=1, tailIndex_=2;
+
+        // are we doing marching cubes
+        MarchingCubes mc_;
+        bool performMC_=false;
+        std::string MC_name_;
+        Real isoval_;
+        Mesh m_;
+        bool pbc_;
 };

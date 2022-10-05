@@ -10,19 +10,34 @@ QtensorLattice::QtensorLattice(const CalculationInput& input)
     pack_.ReadArrayNumber("LatticeShape", ParameterPack::KeyType::Required, lattice_shape_);
     pack_.ReadString("residue", ParameterPack::KeyType::Required, resname_);
 
-    // read in the cut off (how far do we search near a lattice point for COM)
-    pack_.ReadNumber("cutoff", ParameterPack::KeyType::Required, cutoff_);
-    cutoff_sq_ = cutoff_ * cutoff_;
-
     // read in head and tail index
     pack_.ReadNumber("headindex", ParameterPack::KeyType::Optional, headIndex_);
     pack_.ReadNumber("tailindex", ParameterPack::KeyType::Optional, tailIndex_);
     headIndex_--;
     tailIndex_--;
 
-    // the minimum distance in which there needs to be a COM point near the lattice point
-    pack_.ReadNumber("minDist", ParameterPack::KeyType::Optional, min_dist_);
-    min_dist_sq_ = min_dist_ * min_dist_;
+    pack_.Readbool("coarse_grain", ParameterPack::KeyType::Optional, coarse_grain_);
+
+    if (coarse_grain_){
+        pack_.ReadNumber("sigma", ParameterPack::KeyType::Required, sigma_);
+        pack_.ReadNumber("n", ParameterPack::KeyType::Required, n_);
+        sigma2_ = sigma_ * sigma_;
+        prefactor_ = std::pow(2*Constants::PI*sigma2_, -1.5); 
+        inv_factor_ = 1.0 / (2.0 * sigma2_);
+    }
+    else{
+        pack_.ReadNumber("cutoff", ParameterPack::KeyType::Required, cutoff_);
+        cutoff_sq_ = cutoff_ * cutoff_;
+        pack_.ReadNumber("minDist", ParameterPack::KeyType::Required, min_dist_);
+        min_dist_sq_ = min_dist_ * min_dist_;
+        cell_ = cellptr(new CellGrid(simstate_, cutoff_, 1));
+    }
+
+    pack_.Readbool("performMC", ParameterPack::KeyType::Optional, performMC_);
+    if (performMC_){
+        pack_.ReadNumber("isoval", ParameterPack::KeyType::Required, isoval_);
+        pack_.Readbool("pbc", ParameterPack::KeyType::Optional, pbc_);
+    }
 
     // whether we are reducing the dimensions 
     reduced_ = pack_.ReadArrayNumber("reduced_dimension", ParameterPack::KeyType::Optional, reduced_dimensions_);
@@ -36,9 +51,6 @@ QtensorLattice::QtensorLattice(const CalculationInput& input)
     lattice_num_atoms_.resize(lattice_shape_,0.0);
     lattice_biaxiality_.resize(lattice_shape_,{});
 
-    // cell grid
-    cell_  = cellptr(new CellGrid(simstate_, cutoff_, 1));
-
     // register outputs
     registerOutputFunction("Director", [this](std::string name) -> void {this -> printDirector(name);});
     registerOutputFunction("Order", [this](std::string name) -> void {this -> printOrder(name);});
@@ -46,36 +58,62 @@ QtensorLattice::QtensorLattice(const CalculationInput& input)
     registerOutputFunction("velocity", [this](std::string name) -> void {this -> printVelocity(name);});
     registerOutputFunction("reducedOrder", [this](std::string name) -> void {this -> printReducedOrder(name);});
     registerOutputFunction("reducedDirector", [this](std::string name) -> void {this -> printReducedDirector(name);});
+    registerOutputFunction("ply", [this](std::string name) -> void {this -> printIsoSurface(name);});
+
+    // per iter outputs
+    registerPerIterOutputFunction("Order", [this](std::ofstream& ofs) -> void {this -> printOrderPerIter(ofs);});
+    registerPerIterOutputFunction("density", [this](std::ofstream& ofs) -> void {this -> printDensityPerIter(ofs);});
 }
 
-void QtensorLattice::calculate()
-{
-    // assign the cell grid 
-    const auto& res = getResidueGroup(resname_).getResidues();
+void QtensorLattice::calculateCoraseGrain(){
+    #pragma omp parallel
+    {   
+        Lattice<Matrix> mat_local(lattice_shape_, {});
+        Lattice<Real> num_atom_local(lattice_shape_,0);
 
-    // resize uij and COM 
-    uij_.resize(res.size());
-    COM_.resize(res.size());
+        #pragma omp for
+        for (int i=0;i<COM_.size();i++){
+            INT3 index3 = CalculationTools::NearestLatticeIndex(COM_[i], dL_, lattice_shape_);
+            Matrix Q = LinAlg3x3::LocalQtensor(uij_[i]);
+            for (auto off : lattice_offsets_){
+                // offset index and position
+                INT3 offsetIndex = CalculationTools::correctPBCLatticeIndex(index3 + off, lattice_shape_);
+                Real3 pos = dL_ * offsetIndex;
 
-    // calculate the center of mass as well as the uij
-    #pragma omp parallel for
-    for (int i=0;i<COM_.size();i++)
-    {
-        COM_[i] = calcCOM(res[i]);
+                // find diff between atom and lattice
+                Real3 vecdist;
+                Real distsq;
+                simstate_.getSimulationBox().calculateDistance(COM_[i], pos, vecdist, distsq);
 
-        Real3 distance;
-        Real distsq;
+                // find coarse graining factor
+                Real coarse_grain_factor = CalculateCoraseGrainFunction(distsq);
+                mat_local(offsetIndex) = mat_local(offsetIndex) + Q * coarse_grain_factor;
+                num_atom_local(offsetIndex) = num_atom_local(offsetIndex) + coarse_grain_factor;
+            }
+        }
 
-        Real3 headPos = res[i].atoms_[headIndex_].positions_;
-        Real3 tailPos = res[i].atoms_[tailIndex_].positions_;
+        #pragma omp critical
+        {
+            // total
+            lattice_Qtensor_ += mat_local;
+            lattice_num_atoms_ += num_atom_local;
 
-        simstate_.getSimulationBox().calculateDistance(headPos, tailPos, distance, distsq);
-
-        LinAlg3x3::normalize(distance);
-
-        uij_[i] = distance;
+            // per iter
+            lattice_Qtensor_Iter_ += mat_local;
+            lattice_num_atoms_Iter_ += num_atom_local;
+        }
     }
 
+    #pragma omp parallel for
+    for (int i=0;i<lattice_Qtensor_Iter_.getSize();i++){
+        INT3 index3 = lattice_Qtensor_Iter_.getIndex3(i);
+        if (lattice_num_atoms_Iter_(index3) != 0){
+            lattice_Qtensor_Iter_(index3) = lattice_Qtensor_Iter_(index3) * (0.5 / lattice_num_atoms_Iter_(index3));
+        }
+    }
+}
+
+void QtensorLattice::calculateNeighborSearch(){
     // calculate the cell indices 
     std::vector<std::vector<int>> cellIndices = cell_->calculateIndices(COM_);
 
@@ -137,17 +175,78 @@ void QtensorLattice::calculate()
             }
         }
     }
+
+}
+
+void QtensorLattice::calculate()
+{
+    // assign the cell grid 
+    const auto& res = getResidueGroup(resname_).getResidues();
+
+    // resize uij and COM 
+    uij_.resize(res.size());
+    COM_.resize(res.size());
+
+    // calculate the center of mass as well as the uij
+    #pragma omp parallel for
+    for (int i=0;i<COM_.size();i++){
+        COM_[i] = calcCOM(res[i]);
+
+        Real3 distance;
+        Real distsq;
+
+        Real3 headPos = res[i].atoms_[headIndex_].positions_;
+        Real3 tailPos = res[i].atoms_[tailIndex_].positions_;
+
+        simstate_.getSimulationBox().calculateDistance(headPos, tailPos, distance, distsq);
+
+        LinAlg3x3::normalize(distance);
+
+        uij_[i] = distance;
+    }
+
+    if (coarse_grain_){
+        calculateCoraseGrain();
+    }
+    else{
+        calculateNeighborSearch();
+    }
+
 }
 
 void QtensorLattice::update()
 {
     // update the cell grid
-    cell_->update();
+    if (! coarse_grain_){cell_->update();}
 
     // update the sides 
     Real3 sides = simstate_.getSimulationBox().getSides();
     for (int i=0;i<3;i++){
         dL_[i] = sides[i] / lattice_shape_[i];
+    }
+
+    if (coarse_grain_){
+        CalculateLatticeOffsets();
+        lattice_num_atoms_Iter_.resize(lattice_shape_,0);
+        lattice_Qtensor_Iter_.resize(lattice_shape_, {});
+    }
+}
+
+void QtensorLattice::CalculateLatticeOffsets(){
+    INT3 num_offsets;
+    lattice_offsets_.clear();
+
+    for (int i=0;i<3;i++){
+        num_offsets[i] = std::round(n_ * sigma_ / dL_[i]);
+    }
+
+    for (int i=-num_offsets[0];i<num_offsets[0];i++){
+        for (int j=-num_offsets[1];j<num_offsets[1];j++){
+            for (int k=-num_offsets[2];k<num_offsets[2];k++){
+                INT3 index = {{i,j,k}};
+                lattice_offsets_.push_back(index);
+            }
+        }
     }
 }
 
@@ -175,62 +274,18 @@ void QtensorLattice::finishCalculate(){
             lattice_order_(index3) = -1.0;
             lattice_director_(index3) = {{0,0,0}};
             lattice_biaxiality_(index3) = -0.0;
-        }
+}
     }
 
-    if (reduced_){
-        INT3 shape=lattice_Qtensor_.getShape();
-        int dim1,dim2;
-        dim1 = reduced_dimensions_[0];
-        dim2 = reduced_dimensions_[1];
-        int size1 = shape[dim1];
-        int size2 = shape[dim2];
-        reduced_Q_.resize(size1, std::vector<Matrix>(size2,{{}}));
-        reduced_num_.resize(size1, std::vector<Real>(size2,0.0));
-        reduced_order_.resize(size1, std::vector<Real>(size2));
-        reduced_director_.resize(size1, std::vector<Real3>(size2));
-
-        // first let's reduce one of the dimensions 
-        #pragma omp parallel
-        {
-            std::vector<std::vector<Matrix>> localQtensor(size1, std::vector<Matrix>(size2,{{}}));
-            std::vector<std::vector<Real>> localNum(size1, std::vector<Real>(size2,0.0));
-            #pragma omp for
-            for (int i=0;i<lattice_Qtensor_.getSize();i++){
-                INT3 index3 = lattice_Qtensor_.getIndex3(i);
-                if (lattice_num_atoms_(index3) != 0){
-                    localNum[index3[dim1]][index3[dim2]] += lattice_num_atoms_(index3);
-                    localQtensor[index3[dim1]][index3[dim2]] = localQtensor[index3[dim1]][index3[dim2]] + lattice_Qtensor_(index3);
-                }
-            }
-            #pragma omp critical
-            {
-                reduced_Q_ = reduced_Q_ + localQtensor;
-                reduced_num_ = reduced_num_ + localNum;
-            }
-        }
-
-        #pragma omp parallel
-        {
-            #pragma omp parallel for
-            for (int i=0;i<size1;i++){
-                for (int j=0;j<size2;j++){
-                    if (reduced_num_[i][j] != 0){
-                        Matrix thisQ = reduced_Q_[i][j] * (0.5/reduced_num_[i][j]);
-                        auto res = LinAlg3x3::OrderEigenSolver(thisQ);
-                        reduced_order_[i][j] = res.first[0];
-                        Real3 dir;
-                        for (int k=0;k<3;k++){
-                            dir[k] = res.second[k][0];
-                        }
-                        reduced_director_[i][j] = dir;
-                    }
-                }
-            }
-
-        }
+    // calculate MC
+    if (performMC_){
+        mc_.triangulate_field(lattice_order_, m_, dL_, lattice_shape_, isoval_, pbc_);
     }
-    
+}
+
+void QtensorLattice::printIsoSurface(std::string name){
+    ASSERT((performMC_), "Marching cubes options is not turned on.");
+    MeshTools::writePLY(name, m_);
 }
 
 void QtensorLattice::printDirector(std::string name){
@@ -329,4 +384,39 @@ void QtensorLattice::printReducedOrder(std::string name){
     }
 
     ofs.close();
+}
+
+void QtensorLattice::printOrderPerIter(std::ofstream& ofs){
+    Lattice<Real> order(lattice_shape_,0.0);
+
+    #pragma omp parallel for
+    for (int i=0;i<lattice_Qtensor_Iter_.getSize();i++){
+        INT3 index3 = lattice_Qtensor_Iter_.getIndex3(i);
+        if (lattice_num_atoms_Iter_(index3) != 0){
+            auto res = LinAlg3x3::OrderEigenSolver(lattice_Qtensor_Iter_(index3));
+            order(index3) = res.first[0];
+        }
+        else{
+            order(index3) = -1;
+        }
+    }
+
+    for (int i=0;i<lattice_Qtensor_Iter_.getSize();i++){
+        INT3 index3 = lattice_Qtensor_Iter_.getIndex3(i);
+        ofs << order(index3) << " ";
+    }
+
+    ofs << "\n";
+}
+
+void QtensorLattice::printDensityPerIter(std::ofstream& ofs){
+    for (int i=0;i<lattice_num_atoms_Iter_.getSize();i++){
+        ofs << lattice_num_atoms_Iter_[i] << " ";
+    }
+
+    ofs << "\n";
+}
+
+QtensorLattice::Real QtensorLattice::CalculateCoraseGrainFunction(Real& rsq){
+    return prefactor_ * std::exp(-rsq * inv_factor_);
 }
