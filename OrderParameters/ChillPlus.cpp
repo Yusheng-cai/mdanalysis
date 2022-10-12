@@ -48,21 +48,16 @@ void ChillPlus::calculate()
     std::vector<std::vector<Real>> cij(pos.size());
 
     #pragma omp parallel for
-    for (int i=0;i<pos.size();i++)
-    {
+    for (int i=0;i<pos.size();i++){
         std::vector<int> neighbor_cell_indices = cell_->getNeighborIndex(pos[i]);
-        for (int neighbor_cell_ind : neighbor_cell_indices)
-        {
-            for (int neighbor_ind : cell_indices[neighbor_cell_ind])
-            {
-                if (neighbor_ind != i)
-                {
+        for (int neighbor_cell_ind : neighbor_cell_indices){
+            for (int neighbor_ind : cell_indices[neighbor_cell_ind]){
+                if (neighbor_ind != i){
                     Real3 distance;
                     Real distsq;
                     simstate_.getSimulationBox().calculateDistance(pos[neighbor_ind], pos[i], distance, distsq);
 
-                    if (distsq < solvation_shell_r_squared_)
-                    {
+                    if (distsq < solvation_shell_r_squared_){
                         neighbor_indices[i].push_back(neighbor_ind);
                         neighbor_distance[i].push_back(std::sqrt(distsq));
                         neighbor_vector_distance[i].push_back(distance);
@@ -73,17 +68,14 @@ void ChillPlus::calculate()
     }
 
     #pragma omp parallel for
-    for (int i=0;i<neighbor_indices.size();i++)
-    {
+    for (int i=0;i<neighbor_indices.size();i++){
         // if larger than 4, then we sort and reassign the neighbor indices with the 4 of the closest distances
-        if (neighbor_indices[i].size() > 4)
-        {
+        if (neighbor_indices[i].size() > 4){
             std::vector<int> argsortIndices = Algorithm::argsort(neighbor_distance[i], true);
             std::vector<int> ind(4);
             std::vector<Real> dist(4);
             std::vector<Real3> vec_dist(4); 
-            for (int j=0;j<4;j++)
-            {
+            for (int j=0;j<4;j++){
                 ind[j] = neighbor_indices[i][argsortIndices[j]];
                 vec_dist[j] = neighbor_vector_distance[i][argsortIndices[j]];
                 dist[j] = neighbor_distance[i][argsortIndices[j]];
@@ -143,8 +135,7 @@ void ChillPlus::calculate()
         }
     }
 
-    for (int i=0;i<cij.size();i++)
-    {
+    for (int i=0;i<cij.size();i++){
         INT2 bond = {{0,0}};
         for (int j=0;j<cij[i].size();j++){
             if (isStaggered(cij[i][j])){
