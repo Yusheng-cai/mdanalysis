@@ -20,8 +20,7 @@ ResidueGroup::ResidueGroup(const ResidueInput& input)
     TotalResidues_.atoms_.clear();
 
     // a set is always sorted in C++
-    for (auto it = residueIndices.begin();it != residueIndices.end();it++)
-    {
+    for (auto it = residueIndices.begin();it != residueIndices.end();it++){
         int resindex = *it;
         auto& r = top_.getResidueByIndex(resindex);
         Residues_.push_back(r);
@@ -29,8 +28,7 @@ ResidueGroup::ResidueGroup(const ResidueInput& input)
         AtomsPerResidue_.push_back(numatoms);
         atomSize_ += numatoms;
 
-        for (int i=0;i<r.atoms_.size();i++)
-        {
+        for (int i=0;i<r.atoms_.size();i++){
             TotalResidues_.atoms_.push_back(r.atoms_[i]);
         }
     }
