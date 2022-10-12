@@ -13,8 +13,7 @@ CellGrid::CellGrid(SimulationState& simstate, Real dL, int searchnum)
     }
 }
 
-void CellGrid::update()
-{
+void CellGrid::update(){
     Real3 Sides = simstate_.getSimulationBox().getSides();
     // Example like 5 / 3 --> 1 but N should be 2  -- > 0 1
     for (int i=0;i<3;i++){
@@ -31,16 +30,14 @@ std::vector<std::vector<int>> CellGrid::calculateIndices(const std::vector<Real3
     {
         std::vector<std::vector<int>> ret_indices_local(totalIndices_);
         #pragma omp for
-        for (int i=0;i<pos.size();i++)
-        {
+        for (int i=0;i<pos.size();i++){
             int index = getCellGridIntIndex(pos[i]);
             ret_indices_local[index].push_back(i);
         }
 
         #pragma omp critical
         {
-            for (int i=0;i<totalIndices_;i++)
-            {
+            for (int i=0;i<totalIndices_;i++){
                 ret_indices[i].insert(ret_indices[i].end(), ret_indices_local[i].begin(), ret_indices_local[i].end());
             }
         }
@@ -49,10 +46,10 @@ std::vector<std::vector<int>> CellGrid::calculateIndices(const std::vector<Real3
     return ret_indices;
 }
 
-int CellGrid::ConvertGridIndexToIndex(index3& index)
-{
+int CellGrid::ConvertGridIndexToIndex(index3& index){
     // convert index into x + y * Nx + z * Nx * Ny
     int sum = index[0] + index[1] * N_[0] + index[2] * N_[1] * N_[0];
+    ASSERT((sum >= 0) && (sum < totalIndices_) , "The Cell Grid Index " << index << " is out of bounds.");
 
     return sum;
 }
@@ -65,18 +62,18 @@ CellGrid::index3 CellGrid::getCellGridIndex(const Real3& pos)
     // Then let's put the shifted Pos into a cell grid
     index3 index;
 
-    for (int i=0;i<3;i++)
-    {
+    for (int i=0;i<3;i++){
         // take care of edge cases when shiftedPos is exactly N[i] * dL
-        if (std::abs(shiftedPos[i] - N_[i] * dL_) < 1e-5) 
-        {
+        if (std::abs(shiftedPos[i] - N_[i] * dL_) < 1e-5) {
             index[i] = N_[i] - 1;
         }
-        else
-        {
+        else if (std::abs(shiftedPos[i] - 0) < 1e-5){
+            index[i] = 0;
+        }
+        else{
             index[i] = (int)std::floor(shiftedPos[i] / dL_ );
         }
-        ASSERT((index[i] < N_[i]), "Index out of range, index is " << index[i] << " max is " << N_[i] << " Position = " << shiftedPos[i] << " dL = " << dL_);
+        ASSERT((index[i] < N_[i]) && (index[i] >= 0), "Index out of range, index is " << index[i] << " max is " << N_[i] << " Position = " << shiftedPos[i] << " dL = " << dL_);
     }
 
     return index;
@@ -93,10 +90,8 @@ CellGrid::index3 CellGrid::FixIndex(index3& index)
 {
     index3 ret;
 
-    for (int i=0;i<3;i++)
-    {
-        if (index[i] < 0)
-        {
+    for (int i=0;i<3;i++){
+        if (index[i] < 0){
             index[i] += N_[i];
         }
 
@@ -109,15 +104,12 @@ CellGrid::index3 CellGrid::FixIndex(index3& index)
 std::vector<int> CellGrid::getNeighborIndex(const Real3& pos)
 {
     index3 index = getCellGridIndex(pos);
+    int selfIndex= ConvertGridIndexToIndex(index);
     std::vector<int> neighborIndex;
+    neighborIndex.push_back(selfIndex);
 
-    for (auto& off : Offsets_)
-    {
-        index3 newIndex = {};
-        for (int i=0;i<3;i++)
-        {
-            newIndex[i] = index[i] + off[i];
-        }  
+    for (auto& off : Offsets_){
+        index3 newIndex = index + off;
         newIndex = FixIndex(newIndex);
         int ind  = ConvertGridIndexToIndex(newIndex);
         neighborIndex.push_back(ind);
