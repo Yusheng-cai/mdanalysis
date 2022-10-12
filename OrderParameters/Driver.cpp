@@ -41,13 +41,15 @@ Driver::Driver(std::string filename, CommandLineArguments& cmd)
     initializeOutputFiles();
 }
 
-void Driver::initializeResidueGroups()
-{
+void Driver::initializeResidueGroups(){
     auto resPack    = pack_.findParamPacks("residuegroup", ParameterPack::KeyType::Optional);
     VectorResNames_.clear();
 
-    for (int i=0;i<resPack.size();i++)
-    {
+    if (resPack.size() > 0){
+        ASSERT((topology_read_), "Topology file is required if residue group were to be provided.");
+    }
+
+    for (int i=0;i<resPack.size();i++){
         const auto res = resPack[i];
         std::string resname;
         res -> ReadString("name", ParameterPack::KeyType::Required,resname);
@@ -61,8 +63,7 @@ void Driver::initializeResidueGroups()
     }
 }
 
-void Driver::initializeCalculation()
-{
+void Driver::initializeCalculation(){
     auto calcPack  = pack_.findParamPacks("calculation", ParameterPack::KeyType::Optional);
     Calc_.clear();
 
@@ -76,29 +77,28 @@ void Driver::initializeCalculation()
     }
 }
 
-void Driver::initializeTop()
-{
-    auto topPack    = pack_.findParamPack("topology", ParameterPack::KeyType::Required);
+void Driver::initializeTop(){
+    auto topPack    = pack_.findParamPack("topology", ParameterPack::KeyType::Optional);
 
-    std::string topPath_;
-    topPack->ReadString("path", ParameterPack::KeyType::Required, topPath_);
-    
-    std::string topAbsPath = FileSystem::joinPath(apath_, topPath_);
+    if (topPack != nullptr){
+        topology_read_  = true;
+        std::string topPath_;
+        topPack->ReadString("path", ParameterPack::KeyType::Required, topPath_);
+        
+        std::string topAbsPath = FileSystem::joinPath(apath_, topPath_);
 
-    top_.Parse(topAbsPath);
+        top_.Parse(topAbsPath);
+    }
 }
 
 bool Driver::isValidStep(int step)
 {
-    if (step >= startingFrame_)
-    {
+    if (step >= startingFrame_){
         int a = (step - startingFrame_)%(skip_+1);
-        if (a == 0)
-        {
+        if (a == 0){
             return true;
         }
-        else
-        {
+        else{
             return false;
         }
     }
@@ -110,8 +110,7 @@ void Driver::initializeDriverPack()
 {
     auto driverpack = pack_.findParamPack("driver", ParameterPack::KeyType::Optional);
 
-    if(driverpack != nullptr)
-    {
+    if(driverpack != nullptr){
         driverpack -> ReadNumber("startingframe", ParameterPack::KeyType::Optional, startingFrame_);
         driverpack -> ReadNumber("skip", ParameterPack::KeyType::Optional, skip_);
     }
@@ -131,24 +130,20 @@ void Driver::initializeDriverPack()
     simstate_.setTotalFrames(numframes);
 }
 
-void Driver::initializeOutputFiles()
-{
+void Driver::initializeOutputFiles(){
     auto output_pack = pack_.findParamPacks("outputfile", ParameterPack::KeyType::Optional);
 
-    for (int i=0;i<output_pack.size();i++)
-    {
+    for (int i=0;i<output_pack.size();i++){
         auto pack = output_pack[i];
-
         OutputFiles_.push_back(outputptr(new OutputStream(*pack, *this)));
     }
 }
 
 void Driver::initializeAtomGroups()
 {
-    auto agpack     = pack_.findParamPacks("atomgroup", ParameterPack::KeyType::Optional);
+    auto agpack   = pack_.findParamPacks("atomgroup", ParameterPack::KeyType::Optional);
 
-    for (int i=0;i<agpack.size();i++)
-    {
+    for (int i=0;i<agpack.size();i++){
         auto pack = agpack[i];
 
         std::string ag_name;

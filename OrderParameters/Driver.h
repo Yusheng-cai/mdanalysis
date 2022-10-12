@@ -112,4 +112,5 @@ class Driver
 
         // Topolgy obj
         TopologyReader top_;
+        bool topology_read_=false;
 };
