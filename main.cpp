@@ -25,10 +25,8 @@ int main(int argc, char** argv)
     Driver d(fname,cmd);
 
     auto starttot = std::chrono::high_resolution_clock::now();
-    for (int i=0;i<d.getNframes();i++)
-    {
-        if (d.isValidStep(i))
-        {
+    for (int i=0;i<d.getNframes();i++){
+        if (d.isValidStep(i)){
             std::cout << "----------FRAME" << i << "---------" << std::endl;
             d.readFrame(i);
             d.update(); 
