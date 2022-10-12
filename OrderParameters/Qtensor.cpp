@@ -70,8 +70,7 @@ void Qtensor::calculate()
 
     // First let's calculate the COM 
     #pragma omp parallel for 
-    for (int i=0;i<N;i++)
-    {
+    for (int i=0;i<N;i++){
         COM_[i] = CalculationTools::getCOM(res[i], simstate_, COMIndices_);
     }
 

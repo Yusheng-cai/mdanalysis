@@ -9,6 +9,7 @@
 #include "tools/CommonOperations.h"
 #include "marching_cubes.hpp"
 #include "parallel/OpenMP_buffer.h"
+#include "Bin.h"
 
 #include <vector>
 #include <string>
@@ -20,6 +21,7 @@ class QtensorLattice : public Calculation{
         using cellptr = std::unique_ptr<CellGrid>;
         using Matrix  = CommonTypes::Matrix;
         using INT2    = CommonTypes::index2;
+        using Binptr  = std::unique_ptr<Bin>;
 
         QtensorLattice(const CalculationInput& input);
 
@@ -35,6 +37,9 @@ class QtensorLattice : public Calculation{
         // calculate corase grain functionj
         Real CalculateCoraseGrainFunction(Real& rsq);
 
+        // calculate azimuthal qtensor
+        void CalculateAzimuthalQtensor();
+
         // printing function
         void printDirector(std::string name);
         void printOrder(std::string name);
@@ -43,6 +48,7 @@ class QtensorLattice : public Calculation{
         void printReducedDirector(std::string name);
         void printReducedOrder(std::string name);
         void printIsoSurface(std::string name);
+        void printAzimuthalOrder(std::string name);
 
         // per iter printing function
         void printOrderPerIter(std::ofstream& ofs);
@@ -65,6 +71,7 @@ class QtensorLattice : public Calculation{
         // per iter
         Lattice<Matrix> lattice_Qtensor_Iter_;
         Lattice<Real> lattice_num_atoms_Iter_;
+        Lattice<Real> lattice_Order_Iter_;
 
         //          coarse graining parameters          //
         INT3 lattice_shape_;
@@ -82,6 +89,19 @@ class QtensorLattice : public Calculation{
 
         // resname
         std::string resname_;
+        std::string refResname_;
+        std::vector<int> refCOMIndices_;
+        bool reference_=false;
+        Real3 refCOM_;
+        std::vector<std::vector<Matrix>> Azimuthal_Qtensor_;
+        std::vector<std::vector<Real>> Azimuthal_num_;
+        std::vector<std::vector<Real>> Azimuthal_Order_;
+        Binptr Rbin_;
+        int numrbin_;
+        Binptr Thetabin_;
+        int numtbin_;
+        bool usePredefinedDir_=false;
+        Real3 predefinedDir_;
 
         // uij
         std::vector<Real3> uij_;
@@ -103,5 +123,10 @@ class QtensorLattice : public Calculation{
         std::string MC_name_;
         Real isoval_;
         Mesh m_;
-        bool pbc_;
+        bool pbc_=true;
+
+        // global Qtensor 
+        Matrix GlobalQtensor_;
+        Real3 GlobalDirector_;
+        Real GlobalOrder_;
 };
