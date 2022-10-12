@@ -53,6 +53,7 @@ class TopologyReader
         std::vector<std::string> resnames_;
 
         std::vector<int> AtomtypeIndices_;
+        std::vector<int> MoleculeTypeIndices_;
 
         std::map<std::string, Molecule::AtomType> MapTypenameToAtomType_;
         std::map<std::string, int> MapResnameToNumberResidues_;
