@@ -264,12 +264,12 @@ void Calculation::closeAllOutputPerIter()
 }
 
 CalculationTools::Real3 CalculationTools::getCOM(const Molecule::residue& residueGroup, const SimulationState& simstate, \
-std::vector<int>& indices_){
+std::vector<int>& indices){
     auto& simbox = simstate.getSimulationBox();
 
     // For COM calculation, for each residue, we shift the atoms with respect to the first atom
     // obtain the position of the first atom in the residue group
-    int index0 = indices_[0];
+    int index0 = indices[0];
     auto& pos1 = residueGroup.atoms_[index0].positions_;
 
     // Total mass of the atoms of interest
@@ -278,11 +278,11 @@ std::vector<int>& indices_){
     
 
     // iterate over the indices of interest
-    for (int j=0;j<indices_.size();j++){
+    for (int j=0;j<indices.size();j++){
         Real3 distance;
         Real distsq;
 
-        int index = indices_[j];
+        int index = indices[j];
         Real3 shiftWRTatom1 = simbox.calculateShift(residueGroup.atoms_[index].positions_, pos1);
 
         Real3 shiftedPos = residueGroup.atoms_[index].positions_ + shiftWRTatom1;

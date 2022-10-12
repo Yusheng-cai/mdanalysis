@@ -67,6 +67,7 @@ class Calculation{
 
         Real3 calcCOM(const Molecule::residue& residues);
         Real3 calcCOM(const Molecule::residue& residues, std::vector<int>& COMIndices);
+        Real3 calcCOM(const ResidueGroup& resgroup);
 
         void registerOutputFunction(std::string name, outputFunc func);
         outputFunc& getOutputByName(std::string name);
