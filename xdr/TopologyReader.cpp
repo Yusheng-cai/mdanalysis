@@ -162,7 +162,6 @@ void TopologyReader::Parse(std::string& name)
                 }
                 else{ASSERT((true == false), "Something went wrong in the atomtypes reading.");}
                 bool mapped = Algorithm::InsertInMap(MapTypenameToAtomType_, a.type_, a);
-                std::cout << "mapped = " << mapped << "\n";
                 ASSERT(mapped, "The typename " << a.type_ << " is repeated more than once.");
             }
 
