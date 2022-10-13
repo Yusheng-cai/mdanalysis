@@ -13,7 +13,7 @@ ChillPlus::ChillPlus(const CalculationInput& input)
     solvation_shell_r_squared_ = solvation_shell_r_ * solvation_shell_r_;
 
     // create the cell grid object
-    cell_ = cellptr(new CellGrid(simstate_, solvation_shell_r_, 2));
+    cell_ = cellptr(new CellGrid(simstate_, solvation_shell_r_, 1));
 
     pack_.ReadNumber("harmonics_degree", ParameterPack::KeyType::Optional, harmonics_degree_);
     num_m_ = harmonics_degree_ * 2 + 1;
@@ -25,6 +25,12 @@ ChillPlus::ChillPlus(const CalculationInput& input)
     // read atom group
     pack_.ReadString("atomgroup", ParameterPack::KeyType::Required, atomgroup_name_);
     addAtomgroup(atomgroup_name_);
+
+    // read surface atom group
+    pack_.ReadVectorString("surfaceAtomGroups", ParameterPack::KeyType::Optional, surface_atomgroups_);
+    for (auto s : surface_atomgroups_){
+        addAtomgroup(s);
+    }
 
     // register output function 
     registerOutputFunction("ice_types", [this](std::string name)-> void {this -> printIcetypes(name);});
@@ -47,8 +53,16 @@ void ChillPlus::calculate()
     std::vector<std::vector<std::complex<Real>>> qlm(pos.size());
     std::vector<std::vector<Real>> cij(pos.size());
 
+    // define the cell indices fo rsurface atom groups
+    std::vector<std::vector<std::vector<int>>> surface_cell_indices;
+    for (auto s : surface_atomgroups_){
+        const auto& posA = getAtomGroup(s).getAtomPositions();
+        surface_cell_indices.push_back(cell_->calculateIndices(posA));
+    }
+
     #pragma omp parallel for
     for (int i=0;i<pos.size();i++){
+        // first calculate within itself 
         std::vector<int> neighbor_cell_indices = cell_->getNeighborIndex(pos[i]);
         for (int neighbor_cell_ind : neighbor_cell_indices){
             for (int neighbor_ind : cell_indices[neighbor_cell_ind]){
@@ -57,7 +71,7 @@ void ChillPlus::calculate()
                     Real distsq;
                     simstate_.getSimulationBox().calculateDistance(pos[neighbor_ind], pos[i], distance, distsq);
 
-                    if (distsq < solvation_shell_r_squared_){
+                    if (distsq <= solvation_shell_r_squared_){
                         neighbor_indices[i].push_back(neighbor_ind);
                         neighbor_distance[i].push_back(std::sqrt(distsq));
                         neighbor_vector_distance[i].push_back(distance);
@@ -65,6 +79,7 @@ void ChillPlus::calculate()
                 }
             }
         }
+        // then calculate wrt surface atom group
     }
 
     #pragma omp parallel for
@@ -155,6 +170,7 @@ void ChillPlus::calculate()
             ice_t[ChillPlusTypes::Liquid] += 1;
         }
     }
+    std::cout << ice_t << "\n";
     ice_types_.push_back(ice_t);
 }
 

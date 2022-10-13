@@ -51,6 +51,7 @@ class ChillPlus : public Calculation{
 
         // atom group names 
         std::string atomgroup_name_;
+        std::vector<std::string> surface_atomgroups_;
 
         std::map<INT2, int> mapBondToIceType_ = 
         {
