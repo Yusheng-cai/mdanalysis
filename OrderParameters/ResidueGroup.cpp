@@ -36,18 +36,15 @@ ResidueGroup::ResidueGroup(const ResidueInput& input)
 
 void ResidueGroup::update(const VectorReal3& total_atoms)
 {
-    for (int i=0;i<Residues_.size();i++)
-    { 
-        for (int j=0;j<Residues_[i].atoms_.size();j++)
-        {
+    for (int i=0;i<Residues_.size();i++){ 
+        for (int j=0;j<Residues_[i].atoms_.size();j++){
             // be careful, atomNumber is 1 based
             int atNum = Residues_[i].atoms_[j].atomNumber_ - 1;
             Residues_[i].atoms_[j].positions_ = total_atoms[atNum];
         }
     }
 
-    for (int i=0;i<TotalResidues_.atoms_.size();i++)
-    {
+    for (int i=0;i<TotalResidues_.atoms_.size();i++){
         // be careful, atomNumber is 1 based
         int atNum = TotalResidues_.atoms_[i].atomNumber_ - 1;
         TotalResidues_.atoms_[i].positions_ = total_atoms[atNum];

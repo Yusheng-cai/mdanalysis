@@ -18,25 +18,14 @@ void TopologyReader::ReadFile(std::string& name, std::vector<std::string>& conte
     while (std::getline(ifs,sentence)){
         // skip the empty lines
         if (! StringTools::CheckIfOnlyWhiteSpace(sentence)){
-            std::stringstream ss;
-            ss.str(sentence);
-
-            std::string word;
-            std::vector<std::string> words;
-
-            while (ss >> word){
-                // append to words if word is not just empty space
-                if (! StringTools::CheckIfOnlyWhiteSpace(word)){
-                    words.push_back(word);
-                }
-            }
+            std::vector<std::string> words = StringTools::split(sentence);
 
             // if we have a include file, then we read that file
             if (words[0] == "#include"){
                 // remove double quotes from the name
                 words[1].erase(std::remove(words[1].begin(), words[1].end(), '\"'), words[1].end());
 
-                // read the file
+                // read the file --> always search from the provided path
                 std::vector<std::string> content_include;
                 std::string path = FileSystem::joinPath(absolute_path_, words[1]);
                 ReadFile(path, content_include);
@@ -65,10 +54,7 @@ void TopologyReader::Parse(std::string& name)
     ReadFile(name, contents);
 
     // contents is the content of the file --> all the lines inside the file 
-    std::stringstream ss;
-    std::vector<int> StartIndices;
     int moleculeIndices;
-    int start = 0;
 
     // read all the contents starting with [ ] --> usually indicates a starting section 
     for (int i=0;i<contents.size();i++){
@@ -76,22 +62,13 @@ void TopologyReader::Parse(std::string& name)
         // find the first one not space 
         std::string stripped = StringTools::strip(contents[i]);
         if (stripped[0] == '['){
-            // set the stringstream
-            ss.clear();
-            ss.str(stripped);
-
-            std::string word;
-            std::vector<std::string> words;
-
-            while (ss >> word){
-                words.push_back(word);
-            }
-
+            // slit the sentence
+            std::vector<std::string> words = StringTools::split(stripped);
             ASSERT((words.size() != 0), "Read an empty line in topology for some reason");
 
             // if the word is atoms, then we start parsing
             if (words[1] == "atoms"){
-                StartIndices.push_back(i);
+                AtomIndices_.push_back(i);
             }
 
             if (words[1] == "molecules"){
@@ -108,9 +85,7 @@ void TopologyReader::Parse(std::string& name)
         }
     }
 
-    // read the moleculetype
-    // [ moleculetype ]
-    // name 3
+    ////////////////////////////////////////   [ moleculetype ]  ///////////////////////////////////////////////////
     for (int i=0;i<MoleculeTypeIndices_.size();i++){
         int start = MoleculeTypeIndices_[i];
         for (int j=start+1;j<contents.size();j++){
@@ -119,29 +94,14 @@ void TopologyReader::Parse(std::string& name)
                 break;
             }
             else{
-                ss.clear();
-                ss.str(contents[j]);
-
-                std::string word;
-                std::vector<std::string> words;
-
-                while (ss >> word){
-                    // sometimes we have comments at the end of line
-                    // e.g. blah blah ; comment 
-                    if (word == ";"){
-                        break;
-                    }
-                    words.push_back(word);
-                }
+                std::vector<std::string> words = StringTools::split(contents[j], comment_str_);
                 ASSERT(words.size() == 2, "Moleculetype should only have ; name nrexl.");
-                resnames_.push_back(words[0]);
+                unique_resnames_.push_back(words[0]);
             }
         }
     }
 
-    // read the molecules
-    // e.g. [ molecules ]
-    //       m 2000
+    ////////////////////////////////////////    [ molecules ] //////////////////////////////////////////////
     for (int i = moleculeIndices+1;i<contents.size();i++){
         std::string stripped = StringTools::strip(contents[i]);
 
@@ -149,20 +109,8 @@ void TopologyReader::Parse(std::string& name)
             break;
         }
         else{
-            ss.clear();
-            ss.str(stripped);
-            std::string word;
-            std::vector<std::string> words;
-
-            while (ss >> word){
-                if (word == ";"){
-                    // break out of while loop
-                    break;
-                }
-                words.push_back(word);
-            }
-
-            ASSERT((words.size() == 2), "For molecule directives, we must only have 2 entries, [molecuname, number], while we have " << word.size());
+            std::vector<std::string> words = StringTools::split(stripped, comment_str_);
+            ASSERT((words.size() == 2), "For molecule directives, we must only have 2 entries, [molecuname, number], while we have " << words.size());
 
             // map resname to the number of residues
             auto it = MapResnameToNumberResidues_.find(words[0]);
@@ -170,14 +118,15 @@ void TopologyReader::Parse(std::string& name)
             MapResnameToNumberResidues_.insert(std::make_pair(words[0], num));
 
             // record the resnames 
-            // std::vector<std::string> Residues(num, words[0]);
-            // resnames_.insert(resnames_.end(), Residues.begin(), Residues.end());
+            std::vector<std::string> Residues(num, words[0]);
+            resnames_.insert(resnames_.end(), Residues.begin(), Residues.end());
         }
     }
-    ASSERT((MoleculeTypeIndices_.size() == StartIndices.size()), "There must be the same number of moleculetypes and atoms directives.");
-    std::cout << "Atom type number = " << AtomtypeIndices_.size() << "\n";
 
-    // read the atomtypes
+
+    ASSERT((MoleculeTypeIndices_.size() == AtomIndices_.size()), "There must be the same number of moleculetypes and atoms directives.");
+
+    ////////////////////////////////////////    [ atomtypes ] //////////////////////////////////////////////
     for (int i=0;i<AtomtypeIndices_.size();i++){
         int start = AtomtypeIndices_[i];
 
@@ -187,20 +136,7 @@ void TopologyReader::Parse(std::string& name)
                 break;
             }
             else{
-                ss.clear();
-                ss.str(contents[j]);
-
-                std::string word;
-                std::vector<std::string> words;
-
-                while (ss >> word){
-                    // sometimes we have comments at the end of line
-                    // e.g. blah blah ; comment 
-                    if (word == ";"){
-                        break;
-                    }
-                    words.push_back(word);
-                }
+                std::vector<std::string> words =  StringTools::split(contents[j], comment_str_);
 
                 Molecule::AtomType a;
                 if (words.size() == 8){
@@ -225,43 +161,31 @@ void TopologyReader::Parse(std::string& name)
                     a.epsilon_  = StringTools::StringToType<Real>(words[5]);
                 }
                 else{ASSERT((true == false), "Something went wrong in the atomtypes reading.");}
-
-                auto it = MapTypenameToAtomType_.find(a.type_);
-                ASSERT((it == MapTypenameToAtomType_.end()), "The typename " << a.type_ << " is repeated more than once.");
-                MapTypenameToAtomType_.insert(std::make_pair(a.type_, a));
+                bool mapped = Algorithm::InsertInMap(MapTypenameToAtomType_, a.type_, a);
+                std::cout << "mapped = " << mapped << "\n";
+                ASSERT(mapped, "The typename " << a.type_ << " is repeated more than once.");
             }
 
         }
     }
 
     // read the [ atoms ] directives --> see if there's any differences in charge and mass
-    for (int i =0;i<StartIndices.size();i++){
-        int start = StartIndices[i];
+    for (int i =0;i<AtomIndices_.size();i++){
+        int start = AtomIndices_[i];
         for (int j=start+1;j<contents.size();j++){
             int index = contents[j].find_first_not_of(" ");
             if (contents[j][index] == '['){break;}
             else{
-                ss.clear();
-                ss.str(contents[j]);
-
-                std::string word;
-                std::vector<std::string> words;
-
-                while (ss >> word){
-                    // sometimes we have comments at the end of line
-                    // e.g. blah blah ; comment 
-                    if (word == ";"){break;}
-                    words.push_back(word);
-                }
+                std::vector<std::string> words = StringTools::split(contents[j], comment_str_);
 
                 // in [ atoms ] directive, sometimes we also have information about the atom types
                 // we check if the current mass or charge in atom type is zero
-                std::string rname = resnames_[i];
-                std::string tname= words[TopIdx::atomtype];
+                std::string rname = unique_resnames_[i];
+                std::string tname= words[TopologyItemIndex::atomtype];
 
-                // if words size >= 7, that means we have charge info
+                // if words size >= 7, that means we have charge info --> compare to the atomtype
                 if (words.size() >= 7){
-                    Real charge = StringTools::StringToType<Real>(words[TopIdx::charge]);
+                    Real charge = StringTools::StringToType<Real>(words[TopologyItemIndex::charge]);
 
                     if (MapTypenameToAtomType_.find(tname)->second.charge_ == 0){
                         MapTypenameToAtomType_.find(tname)->second.charge_ = charge;
@@ -270,7 +194,7 @@ void TopologyReader::Parse(std::string& name)
 
                 // if words size >= 8, then we have mass info
                 if (words.size() >= 8){
-                    Real mass = StringTools::StringToType<Real>(words[TopIdx::mass]);
+                    Real mass = StringTools::StringToType<Real>(words[TopologyItemIndex::mass]);
 
                     if (MapTypenameToAtomType_.find(tname)->second.mass_ == 0){
                         MapTypenameToAtomType_.find(tname)->second.mass_ = mass;
@@ -283,21 +207,22 @@ void TopologyReader::Parse(std::string& name)
                     it -> second.push_back(tname);
                 }
                 else{
-                    std::vector<std::string> tname = {words[TopIdx::atomtype]};
+                    std::vector<std::string> tname = {words[TopologyItemIndex::atomtype]};
                     MapResnameToTypename_.insert(std::make_pair(rname, tname));
                 }
 
                 auto itatom = MapResnameToAtomname_.find(rname);
                 if (itatom != MapResnameToAtomname_.end()){
-                    itatom -> second.push_back(words[TopIdx::atomName]);
+                    itatom -> second.push_back(words[TopologyItemIndex::atomName]);
                 }
                 else{
-                    std::vector<std::string> aname = {words[TopIdx::atomName]};
+                    std::vector<std::string> aname = {words[TopologyItemIndex::atomName]};
                     MapResnameToAtomname_.insert(std::make_pair(rname, aname));
                 }
             }
         }        
     }
+
     MapIndicesToAtom();
 }
 
@@ -306,9 +231,9 @@ void TopologyReader::MapIndicesToAtom(){
     for (int i=0;i<resnames_.size();i++){
         std::string name = resnames_[i];
 
-        auto it = MapResnameToTypename_.find(name);
-        ASSERT((it != MapResnameToTypename_.end()), "The resname " << name << " is not found.");
-        auto atomtypename = it -> second;
+        std::vector<std::string> atomtypename;
+        bool mapped = Algorithm::FindInMap(MapResnameToTypename_, name, atomtypename);
+        ASSERT(mapped, "The resname " << name << " is not found.");
 
         auto atomname = MapResnameToAtomname_.find(name)->second;
 

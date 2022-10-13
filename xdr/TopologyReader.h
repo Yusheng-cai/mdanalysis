@@ -4,6 +4,7 @@
 #include "tools/InputParser.h"
 #include "xdr/MoleculeStructs.h"
 #include "tools/FileSystem.h"
+#include "tools/CommonOperations.h"
 
 #include <vector>
 #include <array>
@@ -38,8 +39,7 @@ class TopologyReader
         Molecule::residue& getResidueByIndex(int i) {return residues_[i];}
 
 
-        enum TopIdx
-        {
+        enum TopologyItemIndex{
             atomnumber = 0,
             atomtype = 1,
             resname = 3,
@@ -50,10 +50,14 @@ class TopologyReader
     private:
         std::string topName_;
 
+        std::vector<std::string> unique_resnames_;
         std::vector<std::string> resnames_;
+
+        std::vector<std::string> comment_str_={";"};
 
         std::vector<int> AtomtypeIndices_;
         std::vector<int> MoleculeTypeIndices_;
+        std::vector<int> AtomIndices_;
 
         std::map<std::string, Molecule::AtomType> MapTypenameToAtomType_;
         std::map<std::string, int> MapResnameToNumberResidues_;
