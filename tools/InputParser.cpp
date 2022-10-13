@@ -35,6 +35,38 @@ std::string StringTools::strip(const std::string& input){
     return std::string(start_it, end_it.base());
 }
 
+std::vector<std::string> StringTools::split(const std::string& input){
+    std::vector<std::string> words;
+    std::string word;
+
+    std::stringstream ss;
+    ss.str(input);
+
+    while (ss >> word){
+        if (! StringTools::CheckIfOnlyWhiteSpace(word)){
+            words.push_back(word);
+        }
+    }
+
+    return words;
+}
+
+std::vector<std::string> StringTools::split(const std::string& input, const std::vector<std::string>& comment_str){
+    std::vector<std::string> words;
+    std::string word;
+
+    std::stringstream ss;
+    ss.str(input);
+
+    while (ss >> word){
+        if ((! Algorithm::contain(comment_str, word)) && (! StringTools::CheckIfOnlyWhiteSpace(word))){
+            words.push_back(word);
+        }
+    }
+
+    return words;
+}
+
 void StringTools::ConvertStringToIndices(const std::vector<std::string>& selection_str_, std::vector<int>& indices)
 {
     std::vector<std::string> index_str_;
@@ -122,15 +154,13 @@ std::string& ParameterPack::insert(const std::string& key, const std::string& va
     return new_it->second;
 }
 
-std::vector<std::string>& ParameterPack::insert(const std::string& key, const std::vector<std::string>& value)
-{
+std::vector<std::string>& ParameterPack::insert(const std::string& key, const std::vector<std::string>& value){
     auto new_it = vectors_.insert(std::make_pair(key,value));
 
     return new_it->second;
 }
 
-ParameterPack& ParameterPack::insert(const std::string& key, const ParameterPack& parampack)
-{
+ParameterPack& ParameterPack::insert(const std::string& key, const ParameterPack& parampack){
     auto new_it = parampacks_.insert(std::make_pair(key, parampack));
 
     return new_it->second;

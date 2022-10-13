@@ -45,7 +45,7 @@ namespace Algorithm
     T max(std::array<T,dim>& arr);
 
     template <typename T>
-    bool contain(std::vector<T>& vec, T num);
+    bool contain(const std::vector<T>& vec, T num);
 
     template <typename T>
     bool contain(std::vector<T>& vec, T num, int& index);
@@ -64,7 +64,7 @@ namespace Algorithm
 
     // insert something into map --> this value needs to not exist in the map previously
     template <typename key, typename value>
-    bool InsertInMap(const std::map<key,value>& map, const key& k, const value& v);
+    bool InsertInMap(std::map<key,value>& map, const key& k, const value& v);
 
     template <typename key, typename val>
     bool IsInMap(std::map<key, val>& map, key& k, val& v);
@@ -148,7 +148,7 @@ T Algorithm::min(std::vector<T>& vec)
 }
 
 template <typename T>
-bool Algorithm::contain(std::vector<T>& vec, T num)
+bool Algorithm::contain(const std::vector<T>& vec, T num)
 {
     return (std::find(vec.begin(), vec.end(), num) != vec.end());
 }
@@ -204,9 +204,9 @@ bool Algorithm::FindInMap(const std::map<key,value>& map, const key& k, value& v
 
 
 template <typename key, typename value>
-bool Algorithm::InsertInMap(const std::map<key,value>& map, const key& k, const value& v){
-    typename std::map<key,value>::const_iterator it = map.find(k);  
-    if (it != map.end()){map.insert(std::make_pair(k,v));}
+bool Algorithm::InsertInMap(std::map<key,value>& map, const key& k, const value& v){
+    typename std::map<key,value>::iterator it = map.find(k);  
+    if (it == map.end()){map.insert(std::make_pair(k,v));}
     else{return false;}
 
     return true;
@@ -218,16 +218,14 @@ std::vector<int> Algorithm::argsort(std::vector<T>& vec, bool min)
     std::vector<int> indices(vec.size());
     std::iota(indices.begin(), indices.end(), 0);
 
-    if (min)
-    {
+    if (min){
         std::sort(indices.begin(), indices.end(),
                 [&vec](int left, int right) -> bool {
                     // sort indices according to corresponding array element
                     return vec[left] < vec[right];
                 });
     }
-    else
-    {
+    else{
         std::sort(indices.begin(), indices.end(), 
                 [&vec](int left, int right)-> bool {
                     return vec[left] > vec[right];
@@ -243,8 +241,7 @@ bool Algorithm::IsInMap(std::map<key,val>& map, key& k, val& v)
 {
     typename std::map<key,val>::iterator it = map.find(k);
 
-    if (it == map.end())
-    {
+    if (it == map.end()){
         return false;
     }
 
