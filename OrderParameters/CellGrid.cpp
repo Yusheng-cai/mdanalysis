@@ -104,9 +104,7 @@ CellGrid::index3 CellGrid::FixIndex(index3& index)
 std::vector<int> CellGrid::getNeighborIndex(const Real3& pos)
 {
     index3 index = getCellGridIndex(pos);
-    int selfIndex= ConvertGridIndexToIndex(index);
     std::vector<int> neighborIndex;
-    neighborIndex.push_back(selfIndex);
 
     for (auto& off : Offsets_){
         index3 newIndex = index + off;
