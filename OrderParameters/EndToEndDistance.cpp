@@ -24,12 +24,10 @@ EndToEndDistance::EndToEndDistance(const CalculationInput& input)
     registerOutputFunction("histogram", [this](std::string name)->void {this -> printHistogram(name);});
 }
 
-void EndToEndDistance::calculate()
-{
+void EndToEndDistance::calculate(){
     auto residues = getResidueGroup(resname_).getResidues();
 
-    for (int i=0;i<residues.size();i++)
-    {
+    for (int i=0;i<residues.size();i++){
         auto& res = residues[i];
         Real3 headpos = res.atoms_[head_index_].positions_;
         Real3 tailpos = res.atoms_[tail_index_].positions_;
@@ -40,8 +38,7 @@ void EndToEndDistance::calculate()
 
         Real r = std::sqrt(r_squared);
 
-        if (bin_->isInRange(r))
-        {
+        if (bin_->isInRange(r)){
             int index = bin_->findBin(r);
             histogram_[index] += 1;
         }

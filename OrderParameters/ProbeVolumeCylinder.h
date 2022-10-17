@@ -15,7 +15,6 @@ class ProbeVolumeCylinder : public ProbeVolume
     public:
         using Range = CommonTypes::Real2;
 
-        
         ProbeVolumeCylinder(ProbeVolumeInput& input);
 
         // The x here is already pbc corrected and shifted to the correct frame of reference 

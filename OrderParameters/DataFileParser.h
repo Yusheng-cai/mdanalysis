@@ -19,8 +19,7 @@ class DataFileParser
 };
 
 template<typename T>
-void DataFileParser::ParseFile(std::string& name, std::vector<std::vector<T>>& input)
-{
+void DataFileParser::ParseFile(std::string& name, std::vector<std::vector<T>>& input){
     std::ifstream file;
     std::stringstream ss;
 
@@ -31,19 +30,16 @@ void DataFileParser::ParseFile(std::string& name, std::vector<std::vector<T>>& i
 
     std::string sentence;
 
-    while (std::getline(file, sentence))
-    {
+    while (std::getline(file, sentence)){
         // Find the comment symbol
         int found = sentence.find_first_of("#");
 
-        if (! sentence.empty() && found == std::string::npos)
-        {
+        if (! sentence.empty() && found == std::string::npos){
             T num;
             std::vector<T> vec;
 
             ss.str(sentence);
-            while (ss >> num)
-            {
+            while (ss >> num){
                 vec.push_back(num);
             }
 
