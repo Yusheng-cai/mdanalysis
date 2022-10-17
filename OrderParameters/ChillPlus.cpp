@@ -13,7 +13,7 @@ ChillPlus::ChillPlus(const CalculationInput& input)
     solvation_shell_r_squared_ = solvation_shell_r_ * solvation_shell_r_;
 
     // create the cell grid object
-    cell_ = cellptr(new CellGrid(simstate_, solvation_shell_r_, 1));
+    cell_ = cellptr(new CellGrid(simstate_, solvation_shell_r_, 2));
 
     pack_.ReadNumber("harmonics_degree", ParameterPack::KeyType::Optional, harmonics_degree_);
     num_m_ = harmonics_degree_ * 2 + 1;
@@ -34,12 +34,17 @@ ChillPlus::ChillPlus(const CalculationInput& input)
 
     // register output function 
     registerOutputFunction("ice_types", [this](std::string name)-> void {this -> printIcetypes(name);});
+
+    // register per iter output functions
+    registerPerIterOutputFunction("total_ice_indices", [this](std::ofstream& ofs) -> void {this -> printTotalIceIndicesPerIter(ofs);});
+    registerPerIterOutputFunction("total_ice_nonClathrate", [this](std::ofstream& ofs) -> void {this -> printNonClathrateIndicesPerIter(ofs);});
+    registerPerIterOutputFunction("Hex_Cubic_ice", [this](std::ofstream& ofs) -> void {this -> printHexCubicIce(ofs);});
 }
 
 void ChillPlus::calculate()
 {
     // clear types
-    std::vector<int> ice_t(5,0);
+    std::vector<int> ice_t(6,0);
 
     // obtain the atom groups
     const auto& ag = getAtomGroup(atomgroup_name_);
@@ -79,7 +84,25 @@ void ChillPlus::calculate()
                 }
             }
         }
+
         // then calculate wrt surface atom group
+        for (int j=0;j<surface_atomgroups_.size();j++){
+            const auto& PosSurface = getAtomGroup(surface_atomgroups_[j]).getAtomPositions();
+            for (int neighbor_cell_ind : neighbor_cell_indices){
+                for (int neighbor_ind : surface_cell_indices[j][neighbor_cell_ind]){
+                    Real3 distance;
+                    Real distsq;
+                    simstate_.getSimulationBox().calculateDistance(PosSurface[neighbor_ind], pos[i], distance, distsq);
+
+                    if (distsq <= solvation_shell_r_squared_){
+                        neighbor_indices[i].push_back(neighbor_ind);
+                        neighbor_distance[i].push_back(std::sqrt(distsq));
+                        neighbor_vector_distance[i].push_back(distance);
+                    } 
+                }
+            }
+
+        }
     }
 
     #pragma omp parallel for
@@ -162,16 +185,46 @@ void ChillPlus::calculate()
             }
         }
         int type;
-
-        if (Algorithm::IsInMap(mapBondToIceType_, bond, type)){
-            ice_t[type] += 1;
-        }
-        else{
+        
+        if (neighbor_indices[i].size() < 4){
             ice_t[ChillPlusTypes::Liquid] += 1;
         }
+        else{
+            if (Algorithm::IsInMap(mapBondToIceType_, bond, type)){
+                ice_t[type] += 1;
+                Ice_Indices_[type].push_back(ag.AtomGroupIndices2GlobalIndices(i));
+            }
+            else{
+                ice_t[ChillPlusTypes::Liquid] += 1;
+            }
+        }
     }
-    std::cout << ice_t << "\n";
+
     ice_types_.push_back(ice_t);
+}
+
+void ChillPlus::printTotalIceIndicesPerIter(std::ofstream& ofs){
+    int time = simstate_.getTime();
+    ofs << time << " ";
+    for (int i=0;i<Ice_Indices_.size();i++){
+        for (int j=0;j<Ice_Indices_[i].size();j++){
+            ofs << Ice_Indices_[i][j] << " ";
+        }
+    }
+    ofs << "\n";
+}
+
+void ChillPlus::printNonClathrateIndicesPerIter(std::ofstream& ofs){
+    int time = simstate_.getTime();
+    ofs << time << " ";
+    for (int i=0;i<Ice_Indices_.size();i++){
+        if ((i != ChillPlusTypes::Interfacial_Clathrate) && (i != ChillPlusTypes::Clathrate)){
+            for (int j=0;j<Ice_Indices_[i].size();j++){
+                ofs << Ice_Indices_[i][j] << " ";
+            }
+        }
+    }
+    ofs << "\n";
 }
 
 void ChillPlus::finishCalculate()
@@ -182,6 +235,9 @@ void ChillPlus::finishCalculate()
 void ChillPlus::update()
 {
     cell_->update();
+
+    Ice_Indices_.clear();
+    Ice_Indices_.resize(5);
 }
 
 void ChillPlus::printIcetypes(std::string name)
@@ -201,4 +257,17 @@ void ChillPlus::printIcetypes(std::string name)
     }
 
     ofs.close();
+}
+
+void ChillPlus::printHexCubicIce(std::ofstream& ofs){
+    int time = simstate_.getTime();
+    ofs << time << " ";
+    for (int i=0;i<Ice_Indices_.size();i++){
+        if ((i==ChillPlusTypes::Hexagonal) || (i==ChillPlusTypes::Cubic)){
+            for (int j=0;j<Ice_Indices_[i].size();j++){
+                ofs << Ice_Indices_[i][j] << " ";
+            }
+        }
+    }
+    ofs << "\n";
 }

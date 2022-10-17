@@ -36,9 +36,12 @@ class ChillPlus : public Calculation{
         virtual void finishCalculate() override;
 
         void printIcetypes(std::string name);
+        void printTotalIceIndicesPerIter(std::ofstream& ofs);
+        void printNonClathrateIndicesPerIter(std::ofstream& ofs);
+        void printHexCubicIce(std::ofstream& ofs);
 
-        bool isEclipse(Real cij) {if (cij <= 0.25 && cij >= -0.35) {return true;} return false;}
-        bool isStaggered(Real cij) {if (cij <= -0.8) {return true;} return false;}
+        bool isEclipse(Real cij) {if (cij <= 0.18 && cij >= -0.45) {return true;} return false;}
+        bool isStaggered(Real cij) {if (cij <= -0.8 && cij >= -1) {return true;} return false;}
 
 
     private:
@@ -69,4 +72,5 @@ class ChillPlus : public Calculation{
         std::vector<INT2> Bonds_;
 
         std::vector<std::vector<int>> ice_types_;
+        std::vector<std::vector<int>> Ice_Indices_;
 };
