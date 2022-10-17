@@ -14,8 +14,7 @@ AtomGroup::AtomGroup(const AtomGroupInput& input)
     strategy_->Parse(AtomGroupGlobalIndices_);
     numAtomGroupatoms_ = AtomGroupGlobalIndices_.size();
 
-    for (int i=0;i<AtomGroupGlobalIndices_.size();i++)
-    {
+    for (int i=0;i<AtomGroupGlobalIndices_.size();i++){
         AtomGroupIndicesToGlobalIndices_.insert(std::make_pair(i, AtomGroupGlobalIndices_[i]));    
         GlobalIndicesToAtomGroupIndices_.insert(std::make_pair(AtomGroupGlobalIndices_[i],i));
     }
@@ -32,8 +31,7 @@ void AtomGroup::update(const VectorReal3& total_atoms)
     atom_positions_.clear();
     atom_positions_.resize(numAtomGroupatoms_);
 
-    for (int i=0;i < numAtomGroupatoms_;i++)
-    {
+    for (int i=0;i < numAtomGroupatoms_;i++){
         OP::Atom p;
         p.position = total_atoms[AtomGroupGlobalIndices_[i]];
         p.index = AtomGroupGlobalIndices_[i];
