@@ -4,6 +4,7 @@ namespace AtomGroupParsingRegistry
 {
     registry_<AtomIndexParsing> registerAtomIndex("atom_index");
     registry_<ResidueNumberParsing> registerResidueParsing("resnum");
+    registry_<AtomIndexFile> registerAtomIndexFile("atom_index_file");
     registry_<AtomTypeParsing> registerAtomType("atomtype");
     registry_<ResidueNameParsing> registerResidueName("resname");
     registry_<IndexFileParsing> registerIndexFile("indexfile");
@@ -88,6 +89,34 @@ void AtomIndexParsing::Parse(std::vector<int>& indices)
 
     // sort the indices vector
     SortAndCheckNoDuplicate(indices); 
+}
+
+void AtomIndexFile::Parse(std::vector<int>& indices){
+    // obtain the filename
+    fileName_ = selection_str_[1];
+
+    std::ifstream ifs;
+    ifs.open(fileName_);
+    ASSERT((ifs.is_open()), "The file with name " << selection_str_[1] << " is not opened.");
+
+    indices.clear();
+
+    std::stringstream ss;
+
+    std::string sentence;
+    while(std::getline(ifs, sentence))
+    {
+        ss.str(sentence);
+        int index;
+        while (ss >> index)
+        {
+            indices.push_back(index-1);
+        }
+        ss.clear();
+    }
+    ifs.close(); 
+
+    SortAndCheckNoDuplicate(indices);
 }
 
 void ResidueNumberParsing::Parse(std::vector<int>& indices)

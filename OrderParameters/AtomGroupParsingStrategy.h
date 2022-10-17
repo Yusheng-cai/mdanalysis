@@ -37,6 +37,19 @@ class AtomGroupParsingStrategy
         std::string type_;
 };
 
+class AtomIndexFile : public AtomGroupParsingStrategy
+{
+    public:
+        AtomIndexFile(AtomGroupParsingInput& input) : AtomGroupParsingStrategy(input){};
+        virtual ~AtomIndexFile(){};
+
+        virtual void Parse(std::vector<int>& indices);
+        virtual void update(){};
+
+    private:    
+        std::string fileName_;
+};
+
 class AtomIndexParsing:public AtomGroupParsingStrategy
 {
     public:
