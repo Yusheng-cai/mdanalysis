@@ -3,6 +3,7 @@
 #include "tools/Assert.h"
 #include "Eigen/Core"
 #include "Eigen/Dense"
+#include "tools/Constants.h"
 
 #include <cmath>
 #include <algorithm>
@@ -29,6 +30,9 @@ namespace LinAlg3x3
 
     // calculate 3uiuj - I 
     Matrix LocalQtensor(const Real3& v1);
+
+	// find azimuthal angle 
+	Real CalculateAzimuthalAngle(const Real3& v);
 
 	// Miscellaneous vector stuff
 	Real3  vec_add(const Real3&, const Real3&);

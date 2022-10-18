@@ -12,6 +12,17 @@ LinAlg3x3::Real3 LinAlg3x3::CrossProduct(const Real3& v1, const Real3& v2)
     return ret;
 }
 
+LinAlg3x3::Real LinAlg3x3::CalculateAzimuthalAngle(const Real3& v1){
+  // azimuthal angle phi (0, 2 pi)
+  // first quadrant
+  Real phi = std::atan2(v1[1],v1[0]);
+  if (phi < 0){
+      phi += 2 * Constants::PI;
+  }
+
+  return phi;
+}
+
 LinAlg3x3::Real LinAlg3x3::DotProduct(const Real3& v1, const Real3& v2)
 {
     Real ret = 0.0;

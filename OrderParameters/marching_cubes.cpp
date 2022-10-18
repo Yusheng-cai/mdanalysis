@@ -191,20 +191,18 @@ int MarchingCubes::ConvertCellGridIndex(INT3& index)
 void MarchingCubes::VerticesForGridCell(INT3& index, std::vector<Point>& initialV, std::vector<Point>& neighborV)
 {
     int intIndex = ConvertCellGridIndex(index);
-    for (auto tri : triangles_[intIndex])
-    {
-        for (auto vert : tri)
-        {
+
+    // these are the points from the self grid cell
+    for (auto tri : triangles_[intIndex]){
+        for (auto vert : tri){
             initialV.push_back(vert);
         }
     }
 
     // if we are performing with periodic boundary condition
-    for (INT3 off : offsets_)
-    {
+    for (INT3 off : offsets_){
         INT3 updated;
-        for (int m=0;m<3;m++)
-        {
+        for (int m=0;m<3;m++){
             updated[m] = index[m] + off[m];
         }
 
@@ -213,29 +211,22 @@ void MarchingCubes::VerticesForGridCell(INT3& index, std::vector<Point>& initial
 
         // * * * *(end)
         // for a system with 4 points, our grid cell only go to the 3rd one
-        if (! pbc_)
-        {
-            for (int m=0;m<3;m++)
-            {
-                if (updated[m] >= (N_[m]-1))
-                {
+        if (! pbc_){
+            for (int m=0;m<3;m++){
+                if (updated[m] >= (N_[m]-1)){
                     valid = false;
                 }
             }
         }
 
-        if (valid)
-        {
+        if (valid){
             int ind = ConvertCellGridIndex(updated);
             INT3 neighborInd = MapFromIndexToCellGridIndex_.find(ind)->second;
 
             // ind = -1 happens when we are converting cell grid with no pbc but ended up outside of grid 
-            if (ind != -1)
-            {
-                for (auto& tri : triangles_[ind])
-                {
-                    for (auto vert : tri)
-                    {
+            if (ind != -1){
+                for (auto& tri : triangles_[ind]){
+                    for (auto vert : tri){
                         neighborV.push_back(vert);
                     }
                 }
@@ -248,12 +239,9 @@ void MarchingCubes::VerticesForGridCell(INT3& index, std::vector<Point>& initial
 
 void MarchingCubes::initializeGridSearch()
 {
-    for (int i=-1;i<=1;i++)
-    {
-        for (int j=-1;j<=1;j++)
-        {
-            for (int k=-1;k<=1;k++)
-            {
+    for (int i=-1;i<=1;i++){
+        for (int j=-1;j<=1;j++){
+            for (int k=-1;k<=1;k++){
                 INT3 ind = {{i,j,k}};
                 offsets_.push_back(ind);
             }
@@ -265,8 +253,7 @@ void MarchingCubes::CorrectPBCposition(Point& p)
 {
     Real3 pos = {{p.x, p.y, p.z}};
 
-    for (int i=0;i<3;i++)
-    {
+    for (int i=0;i<3;i++){
         if (pos[i] > N_[i]) { pos[i] -= N_[i];}
         if (pos[i] < 0) { pos[i] += N_[i];}
         if (std::abs(pos[i] - N_[i]) < tol_[i]) { pos[i] = 0.0;}
@@ -368,17 +355,20 @@ void MarchingCubes::triangulate_field(Lattice<Real>& field, Mesh& mesh, Real3 sp
 
     // We go through this voxel by voxel
     std::vector<Real3> AllVertices;
-    for (auto& a : MapFromCellGridIndexToIndex_)
-    {
+    for (auto& a : MapFromCellGridIndexToIndex_){
+        // cell grid index 3d INT {{0,0,1}}
         INT3 initialIndex=a.first;
+
+        // stores neighbor vertices and self Vertices
         std::vector<Point> NeighborV;
         std::vector<Point> initialV;
+
+        // find vertices for grid cell containing neighbor vertices and self vertices
         VerticesForGridCell(initialIndex, initialV, NeighborV); 
         
         int selfnum = initialV.size();
         int num = NeighborV.size();
-        for (int m=0;m<selfnum;m++)
-        {
+        for (int m=0;m<selfnum;m++){
             Real3 mpos = {{initialV[m].x, initialV[m].y, initialV[m].z}};
             int GridIndex = initialV[m].index; 
 
@@ -387,6 +377,7 @@ void MarchingCubes::triangulate_field(Lattice<Real>& field, Mesh& mesh, Real3 sp
 
             for (int n=0;n<num;n++){
                 int indexN = NeighborV[n].index;
+                // avoid self calculation
                 if (indexN != GridIndex){
                     Real3 v2 = {{NeighborV[n].x, NeighborV[n].y, NeighborV[n].z}};
 
@@ -403,19 +394,19 @@ void MarchingCubes::triangulate_field(Lattice<Real>& field, Mesh& mesh, Real3 sp
             }
 
             // First case scenario, all neighbors have not been added to the list yet 
-            if (NeighborNumber.size() == 0)
-            {
-                if (MapFromVertexIndexToNewIndex[GridIndex] == INITIAL_)
-                {
+            if (NeighborNumber.size() == 0){
+                if (MapFromVertexIndexToNewIndex[GridIndex] == INITIAL_){
                     MapFromVertexIndexToNewIndex[GridIndex] = AllVertices.size();
                     CorrectPBCposition(initialV[m]);
 
                     Real3 mposCorrected = {{initialV[m].x * spaceX, initialV[m].y * spaceY , initialV[m].z * spaceZ}};
+                    for (int index : NeighborIndex){
+                        MapFromVertexIndexToNewIndex[index] = AllVertices.size();
+                    }
                     AllVertices.push_back(mposCorrected);
                 }
             }
-            else
-            {
+            else{
                 auto it = std::adjacent_find(NeighborNumber.begin(), NeighborNumber.end(), std::not_equal_to<>());
                 ASSERT((it == NeighborNumber.end()), "The elements in the list are not all identical.");
 
@@ -441,10 +432,10 @@ void MarchingCubes::triangulate_field(Lattice<Real>& field, Mesh& mesh, Real3 sp
         for (auto& tri : block){
             ASSERT((tri.size() == 3), "the triangle size must be 3.");
             std::vector<int> triIndex(3,0);
-            for (int i=0;i<3;i++)
-            {
+            for (int i=0;i<3;i++){
                 triIndex[i] = MapFromVertexIndexToNewIndex[tri[i].index];
             }
+
             std::sort(triIndex.begin(), triIndex.end());
             auto it = std::unique(triIndex.begin(), triIndex.end());
             bool isUnique = (it == triIndex.end());
@@ -452,8 +443,7 @@ void MarchingCubes::triangulate_field(Lattice<Real>& field, Mesh& mesh, Real3 sp
             if (isUnique)
             {
                 triangle t;
-                for (int i=0;i<3;i++)
-                {
+                for (int i=0;i<3;i++){
                     int index = MapFromVertexIndexToNewIndex[tri[i].index];
                     t.triangleindices_[i] = index;
                     t.vertices_[i] = verts[index];

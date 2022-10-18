@@ -38,7 +38,7 @@ class QtensorLattice : public Calculation{
         Real CalculateCoraseGrainFunction(Real& rsq);
 
         // calculate azimuthal qtensor
-        void CalculateAzimuthalQtensor();
+        void CalculateZenithalQtensor();
 
         // printing function
         void printDirector(std::string name);
@@ -48,6 +48,7 @@ class QtensorLattice : public Calculation{
         void printReducedDirector(std::string name);
         void printReducedOrder(std::string name);
         void printIsoSurface(std::string name);
+        void printZenithalOrder(std::string name);
         void printAzimuthalOrder(std::string name);
 
         // per iter printing function
@@ -81,6 +82,7 @@ class QtensorLattice : public Calculation{
         std::vector<INT3> lattice_offsets_;
 
 
+
         //          non coarse-graining parameters      //
         Real cutoff_sq_;
         Real min_dist_sq_;
@@ -93,15 +95,28 @@ class QtensorLattice : public Calculation{
         std::vector<int> refCOMIndices_;
         bool reference_=false;
         Real3 refCOM_;
+
+        // zenithal order
+        std::vector<std::vector<Matrix>> Zenithal_Qtensor_;
+        std::vector<std::vector<Real>> Zenithal_num_;
+        std::vector<std::vector<Real>> Zenithal_Order_;
+
+        // azimuthal order
         std::vector<std::vector<Matrix>> Azimuthal_Qtensor_;
         std::vector<std::vector<Real>> Azimuthal_num_;
         std::vector<std::vector<Real>> Azimuthal_Order_;
+
+        // R index 
+        INT3 Rindex_ = {{0,1,2}};
+
         Binptr Rbin_;
         int numrbin_;
-        Binptr Thetabin_;
+        Binptr Ztbin_;
+        Binptr Atbin_;
         int numtbin_;
         bool usePredefinedDir_=false;
         Real3 predefinedDir_;
+        Real3 rotate_vec_={{0,0,1}};
 
         // uij
         std::vector<Real3> uij_;

@@ -46,18 +46,32 @@ QtensorLattice::QtensorLattice(const CalculationInput& input)
     // initialize residue
     initializeResidueGroup(resname_);
     if (reference_){
+        // add the residue group
         addResidueGroup(refResname_);
+
         auto rbinPack = pack_.findParamPack("rbin", ParameterPack::KeyType::Required);
         pack_.ReadNumber("numtbin", ParameterPack::KeyType::Required, numtbin_);
-        Thetabin_ = Binptr(new Bin({{-1, 1}}, numtbin_));
+        Ztbin_ = Binptr(new Bin({{-1, 1}}, numtbin_));
+        Atbin_ = Binptr(new Bin({{0,2*Constants::PI}, numtbin_}));
         Rbin_   = Binptr(new Bin(const_cast<ParameterPack&>(*rbinPack)));
         numrbin_ = Rbin_->getNumbins();
+
+        // zenithal stuff
+        Zenithal_Qtensor_.clear();Zenithal_num_.clear();
+        Zenithal_Qtensor_.resize(numrbin_, std::vector<Matrix>(numtbin_,  {{}}));
+        Zenithal_num_.resize(numrbin_, std::vector<Real>(numtbin_,0.0));
+        Zenithal_Order_.resize(numrbin_, std::vector<Real>(numtbin_,0.0));
+
+        // azimuthal stuff
         Azimuthal_Qtensor_.clear();Azimuthal_num_.clear();
-        Azimuthal_Qtensor_.resize(numrbin_, std::vector<Matrix>(numtbin_,  {{}}));
         Azimuthal_num_.resize(numrbin_, std::vector<Real>(numtbin_,0.0));
+        Azimuthal_Qtensor_.resize(numrbin_, std::vector<Matrix>(numtbin_, {{}}));
         Azimuthal_Order_.resize(numrbin_, std::vector<Real>(numtbin_,0.0));
 
         usePredefinedDir_ = pack_.ReadArrayNumber("predefinedDir", ParameterPack::KeyType::Optional, predefinedDir_);
+
+        // read which vector we should rotate director towards
+        pack_.ReadArrayNumber("director_rotate_vector", ParameterPack::KeyType::Optional, rotate_vec_);
     }
 
     // resize the lattice 
@@ -74,6 +88,7 @@ QtensorLattice::QtensorLattice(const CalculationInput& input)
     registerOutputFunction("reducedOrder", [this](std::string name) -> void {this -> printReducedOrder(name);});
     registerOutputFunction("reducedDirector", [this](std::string name) -> void {this -> printReducedDirector(name);});
     registerOutputFunction("ply", [this](std::string name) -> void {this -> printIsoSurface(name);});
+    registerOutputFunction("Zenithal_order", [this](std::string name) -> void {this -> printZenithalOrder(name);});
     registerOutputFunction("Azimuthal_order", [this](std::string name) -> void {this -> printAzimuthalOrder(name);});
 
     // per iter outputs
@@ -121,11 +136,10 @@ void QtensorLattice::calculateCoraseGrain(){
     }
 }
 
-void QtensorLattice::CalculateAzimuthalQtensor(){
+void QtensorLattice::CalculateZenithalQtensor(){
     if (reference_){
         // first let's calculate per iteration order
         // first calculate the rotation matrix 
-        Real3 zvector = {0,0,1};
         Real3 dir;
         if (usePredefinedDir_){
             dir = predefinedDir_;
@@ -133,13 +147,17 @@ void QtensorLattice::CalculateAzimuthalQtensor(){
         else{
             dir = GlobalDirector_;
         }
-        Matrix rotMat = LinAlg3x3::GetRotationMatrix(dir, zvector);
+
+        // rotate director onto rotate_vec --> default (0,0,1)
+        std::cout << "Dir = " << dir << "\n";
+        Matrix rotMat = LinAlg3x3::GetRotationMatrix(dir, rotate_vec_);
 
         #pragma omp parallel
         {
-            std::vector<std::vector<Real>> localAzimuthOrder(numrbin_, std::vector<Real>(numtbin_,0.0));
-            std::vector<std::vector<Real>> localnum(numrbin_, std::vector<Real>(numtbin_, 0.0));
-            std::vector<std::vector<Matrix>> localQtensor(numrbin_, std::vector<Matrix>(numtbin_, {{}}));
+            std::vector<std::vector<Real>> localnumZ(numrbin_, std::vector<Real>(numtbin_, 0.0));
+            std::vector<std::vector<Real>> localnumA(numrbin_, std::vector<Real>(numrbin_, 0.0));
+            std::vector<std::vector<Matrix>> localQtensorZ(numrbin_, std::vector<Matrix>(numtbin_, {{}}));
+            std::vector<std::vector<Matrix>> localQtensorA(numrbin_, std::vector<Matrix>(numtbin_, {{}}));
 
             #pragma omp for
             for (int i=0;i<lattice_.getSize();i++){
@@ -147,6 +165,7 @@ void QtensorLattice::CalculateAzimuthalQtensor(){
 
                 if (lattice_num_atoms_Iter_(index3) != 0){
                     Real3 latticePos = lattice_(index3);
+
                     // calculate distance 
                     Real3 dist;
                     Real distsq;
@@ -156,12 +175,16 @@ void QtensorLattice::CalculateAzimuthalQtensor(){
                     Real3 rotatedDist = LinAlg3x3::MatrixDotVector(rotMat, dist);
                     Real d = std::sqrt(distsq);
                     if (Rbin_->isInRange(d)){
-                        int tnum = Thetabin_->findBin(rotatedDist[2]);
+                        int ztnum = Ztbin_->findBin(rotatedDist[2]);
+                        Real phi  = LinAlg3x3::CalculateAzimuthalAngle(rotatedDist);
+                        int atnum = Atbin_->findBin(phi);
                         int rnum = Rbin_->findBin(d);
 
-                        localAzimuthOrder[rnum][tnum] = localAzimuthOrder[rnum][tnum] + lattice_Order_Iter_(index3);
-                        localQtensor[rnum][tnum] = localQtensor[rnum][tnum] + lattice_Qtensor_Iter_(index3)  * 2.0 * lattice_num_atoms_Iter_(index3);
-                        localnum[rnum][tnum] += lattice_num_atoms_Iter_(index3);
+                        localQtensorZ[rnum][ztnum] = localQtensorZ[rnum][ztnum] + lattice_Qtensor_Iter_(index3)  * 2.0 * lattice_num_atoms_Iter_(index3);
+                        localQtensorA[rnum][atnum] = localQtensorA[rnum][atnum] + lattice_Qtensor_Iter_(index3)  * 2.0 * lattice_num_atoms_Iter_(index3);
+
+                        localnumZ[rnum][ztnum] += lattice_num_atoms_Iter_(index3);
+                        localnumA[rnum][atnum] += lattice_num_atoms_Iter_(index3);
                     }
                 }
             }
@@ -169,9 +192,11 @@ void QtensorLattice::CalculateAzimuthalQtensor(){
             {
                 for (int i=0;i<numrbin_;i++){
                     for (int j=0;j<numtbin_;j++){
-                        Azimuthal_Order_[i][j] = Azimuthal_Order_[i][j] + localAzimuthOrder[i][j];
-                        Azimuthal_num_[i][j] += localnum[i][j];
-                        Azimuthal_Qtensor_[i][j] = Azimuthal_Qtensor_[i][j] + localQtensor[i][j];
+                        Zenithal_num_[i][j] += localnumZ[i][j];
+                        Zenithal_Qtensor_[i][j] = Zenithal_Qtensor_[i][j] + localQtensorZ[i][j];
+
+                        Azimuthal_num_[i][j] += localnumA[i][j];
+                        Azimuthal_Qtensor_[i][j] = Azimuthal_Qtensor_[i][j] + localQtensorA[i][j];
                     }
                 }
             }
@@ -288,6 +313,7 @@ void QtensorLattice::calculate()
     if (GlobalDirector_[maxIndex] < 0){
         GlobalDirector_ = GlobalDirector_ * (-1.0);
     }
+    std::cout << "Global Director = " << GlobalDirector_ << "\n";
 
     // fill the lattice positions 
     #pragma omp parallel for 
@@ -317,7 +343,7 @@ void QtensorLattice::calculate()
         }
     }
 
-    CalculateAzimuthalQtensor();
+    CalculateZenithalQtensor();
 }
 
 void QtensorLattice::update(){
@@ -401,10 +427,17 @@ void QtensorLattice::finishCalculate(){
         mc_.triangulate_field(lattice_order_, m_, dL_, lattice_shape_, isoval_, pbc_);
     }
 
-    // azimuthal
+    // azimuthal /  zenithal order
     if (reference_){
         for (int i=0;i<numrbin_;i++){
             for (int j=0;j<numtbin_;j++){
+                if (Zenithal_num_[i][j] != 0){
+                    Zenithal_Qtensor_[i][j] = Zenithal_Qtensor_[i][j] * (0.5 / Zenithal_num_[i][j]);
+
+                    auto result = LinAlg3x3::OrderEigenSolver(Zenithal_Qtensor_[i][j]);
+                    Zenithal_Order_[i][j] = result.first[0];
+                }
+
                 if (Azimuthal_num_[i][j] != 0){
                     Azimuthal_Qtensor_[i][j] = Azimuthal_Qtensor_[i][j] * (0.5 / Azimuthal_num_[i][j]);
 
@@ -554,16 +587,30 @@ QtensorLattice::Real QtensorLattice::CalculateCoraseGrainFunction(Real& rsq){
     return prefactor_ * std::exp(-rsq * inv_factor_);
 }
 
-void QtensorLattice::printAzimuthalOrder(std::string name){
+void QtensorLattice::printZenithalOrder(std::string name){
     std::ofstream ofs;
     ofs.open(name);
     ASSERT((reference_), "wrong.");
 
     for (int i=0;i<numrbin_;i++){
         for (int j=0;j<numtbin_;j++){
+            ofs << i << " " << j << " " << Zenithal_Order_[i][j] << " " << Zenithal_num_[i][j] << "\n";
+        }
+    }
+
+    ofs.close();
+}
+
+void QtensorLattice::printAzimuthalOrder(std::string name){
+    std::ofstream ofs;
+    ofs.open(name);
+
+    for (int i=0;i<numrbin_;i++){
+        for (int j=0;j<numtbin_;j++){
             ofs << i << " " << j << " " << Azimuthal_Order_[i][j] << " " << Azimuthal_num_[i][j] << "\n";
         }
     }
+
 
     ofs.close();
 }
