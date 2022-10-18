@@ -45,7 +45,7 @@ namespace StringTools
     std::vector<std::string> split(const std::string& input);
 
     // split a sentence but skip certain comment strings 
-    std::vector<std::string> split(const std::string& input, const std::vector<std::string>& comment_str);
+    std::vector<std::string> split(const std::string& input, const std::vector<std::string>& comment_str, bool ignore_after_comment=false);
 }
 
 
