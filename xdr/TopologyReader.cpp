@@ -136,7 +136,7 @@ void TopologyReader::Parse(std::string& name)
                 break;
             }
             else{
-                std::vector<std::string> words =  StringTools::split(contents[j], comment_str_);
+                std::vector<std::string> words =  StringTools::split(contents[j], comment_str_, true);
 
                 Molecule::AtomType a;
                 if (words.size() == 8){
