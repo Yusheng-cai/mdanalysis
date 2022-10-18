@@ -51,7 +51,7 @@ std::vector<std::string> StringTools::split(const std::string& input){
     return words;
 }
 
-std::vector<std::string> StringTools::split(const std::string& input, const std::vector<std::string>& comment_str){
+std::vector<std::string> StringTools::split(const std::string& input, const std::vector<std::string>& comment_str, bool ignore_after_comment){
     std::vector<std::string> words;
     std::string word;
 
@@ -59,8 +59,15 @@ std::vector<std::string> StringTools::split(const std::string& input, const std:
     ss.str(input);
 
     while (ss >> word){
-        if ((! Algorithm::contain(comment_str, word)) && (! StringTools::CheckIfOnlyWhiteSpace(word))){
-            words.push_back(word);
+        if (!(StringTools::CheckIfOnlyWhiteSpace(word))){
+            if (! (Algorithm::contain(comment_str,word))){
+                words.push_back(word);
+            }
+            else{
+                if (ignore_after_comment){
+                    break;
+                }
+            }
         }
     }
 
