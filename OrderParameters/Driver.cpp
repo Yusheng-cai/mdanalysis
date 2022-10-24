@@ -251,8 +251,7 @@ void Driver::initializeOP()
 {
     auto OPpack = pack_.findParamPacks("orderparameter", ParameterPack::KeyType::Optional);
 
-    for (int i=0;i<OPpack.size();i++)
-    {
+    for (int i=0;i<OPpack.size();i++){
         auto pack = OPpack[i];
         std::string op_type;
 
@@ -272,14 +271,8 @@ bool Driver::readFrame(int FrameNum)
     // set the frame number in simulation state
     simstate_.setFrameNumber(FrameNum);
 
-    if (read)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    if (read){return true;}
+    else{return false;}
 }
 
 void Driver::update()
@@ -289,16 +282,14 @@ void Driver::update()
     simstate_.setTotalNumberAtoms(total_atom_positions_.size());
 
     // update atom groups
-    for (int i=0;i<VectorAgNames_.size();i++)
-    {
+    for (int i=0;i<VectorAgNames_.size();i++){
         auto& ag = simstate_.getAtomGroup(VectorAgNames_[i]);
 
         ag.update(total_atom_positions_);
     }
 
     // update residue groups
-    for (int i=0;i<VectorResNames_.size();i++)
-    {
+    for (int i=0;i<VectorResNames_.size();i++){
         auto& res = simstate_.getResidueGroup(VectorResNames_[i]);
 
         res.update(total_atom_positions_);
@@ -312,22 +303,19 @@ void Driver::update()
     simstate_.setTotalAtomPos(total_atom_positions_);
 
     // update the probe volume
-    for (int i=0;i<ProbeVolumeNames_.size();i++)
-    {
+    for (int i=0;i<ProbeVolumeNames_.size();i++){
         auto& pv = simstate_.getProbeVolume(ProbeVolumeNames_[i]);
 
         pv.update();
     }
 
     // update the Order Parameters
-    for (int i=0;i<OP_.size();i++)
-    {
+    for (int i=0;i<OP_.size();i++){
         OP_[i] -> update();
     }
 
     // update the calculation
-    for (int i=0;i<Calc_.size();i++)
-    {
+    for (int i=0;i<Calc_.size();i++){
         Calc_[i] -> update();
     }
 }
@@ -335,26 +323,22 @@ void Driver::update()
 void Driver::calculate()
 {
     // perform OP calculations
-    for (int i = 0;i<OP_.size();i++)
-    {
+    for (int i = 0;i<OP_.size();i++){
         auto& op = OP_[i];
         op ->calculate();
     }
 
     // perform calculations
-    for (int i=0;i<Calc_.size();i++)
-    {
+    for (int i=0;i<Calc_.size();i++){
         Calc_[i] -> calculate();
     }
 
     // output calculations
-    for (int i=0;i<Calc_.size();i++)
-    {
+    for (int i=0;i<Calc_.size();i++){
         Calc_[i] -> printOutputOnStep();
     }
 
-    for (int i=0; i< OutputFiles_.size();i++)
-    {
+    for (int i=0; i< OutputFiles_.size();i++){
         auto& out = OutputFiles_[i];
         out ->printIfOnStep();
     }
@@ -362,16 +346,14 @@ void Driver::calculate()
 
 void Driver::finishCalculate()
 {
-    for (int i=0;i<Calc_.size();i++)
-    {
+    for (int i=0;i<Calc_.size();i++){
         Calc_[i] ->finishCalculate();
     }
 }
 
 void Driver::printOutput()
 {
-    for (int i=0;i<Calc_.size();i++)
-    {
+    for (int i=0;i<Calc_.size();i++){
         Calc_[i] -> printOutput();
     }
 }
