@@ -19,9 +19,11 @@ QtensorLattice::QtensorLattice(const CalculationInput& input)
 
     pack_.Readbool("coarse_grain", ParameterPack::KeyType::Optional, coarse_grain_);
 
+    // choose whether or not we are calculating using coarse-grain by just neighbor search 
     if (coarse_grain_){
         pack_.ReadNumber("sigma", ParameterPack::KeyType::Required, sigma_);
         pack_.ReadNumber("n", ParameterPack::KeyType::Required, n_);
+        pack_.ReadNumber("threshold_density", ParameterPack::KeyType::Required, threshold_density_);
         sigma2_ = sigma_ * sigma_;
         prefactor_ = std::pow(2*Constants::PI*sigma2_, -1.5); 
         inv_factor_ = 1.0 / (2.0 * sigma2_);
@@ -30,10 +32,12 @@ QtensorLattice::QtensorLattice(const CalculationInput& input)
         pack_.ReadNumber("cutoff", ParameterPack::KeyType::Required, cutoff_);
         cutoff_sq_ = cutoff_ * cutoff_;
         pack_.ReadNumber("minDist", ParameterPack::KeyType::Required, min_dist_);
+        pack_.ReadNumber("threshold_number", ParameterPack::KeyType::Required, threshold_number_);
         min_dist_sq_ = min_dist_ * min_dist_;
         cell_ = cellptr(new CellGrid(simstate_, cutoff_, 1));
     }
 
+    // whether or not we are performing marching cubes 
     pack_.Readbool("performMC", ParameterPack::KeyType::Optional, performMC_);
     if (performMC_){
         pack_.ReadNumber("isoval", ParameterPack::KeyType::Required, isoval_);
@@ -45,6 +49,8 @@ QtensorLattice::QtensorLattice(const CalculationInput& input)
 
     // initialize residue
     initializeResidueGroup(resname_);
+
+    // the reference groups is used for calculating azimuthal or zenithal angle distributions 
     if (reference_){
         // add the residue group
         addResidueGroup(refResname_);
@@ -173,10 +179,15 @@ void QtensorLattice::CalculateZenithalQtensor(){
                     LinAlg3x3::normalize(dist);
 
                     Real3 rotatedDist = LinAlg3x3::MatrixDotVector(rotMat, dist);
+                    LinAlg3x3::normalize(rotatedDist);
                     Real d = std::sqrt(distsq);
                     if (Rbin_->isInRange(d)){
-                        int ztnum = Ztbin_->findBin(rotatedDist[2]);
+                        // azimuthal and zenithal angles
+                        Real theta= rotatedDist[2]; 
                         Real phi  = LinAlg3x3::CalculateAzimuthalAngle(rotatedDist);
+                        
+
+                        int ztnum = Ztbin_->findBin(theta);
                         int atnum = Atbin_->findBin(phi);
                         int rnum = Rbin_->findBin(d);
 
@@ -222,6 +233,7 @@ void QtensorLattice::calculateNeighborSearch(){
         int sum=0;
         // vector that keeps track of all the distances 
         std::vector<Real> vectorDistsq;
+        std::vector<int> resIndex_total;
         for (int j=0;j<neighborIdx.size();j++){
             // the neighbot index
             int ind = neighborIdx[j];
@@ -240,10 +252,10 @@ void QtensorLattice::calculateNeighborSearch(){
                     Qtensor = Qtensor + localQ;
                     sum += 1;
                     vectorDistsq.push_back(distsq);
+                    resIndex_total.push_back(resIndex);
                 }
             }
         }
-
 
         if (sum != 0){
             Real min = *std::min_element(vectorDistsq.begin(), vectorDistsq.end());
@@ -399,10 +411,19 @@ void QtensorLattice::finishCalculate(){
     lattice_director_.resize(lattice_shape_);
     lattice_order_.resize(lattice_shape_);
 
+    int numframes = simstate_.getTotalFrames();
+
     #pragma omp parallel for
     for (int i=0;i<lattice_Qtensor_.getSize();i++){
         INT3 index3 = lattice_Qtensor_.getIndex3(i);
-        if (lattice_num_atoms_(index3) != 0){
+        bool condition;
+        if (coarse_grain_){
+            condition = ((lattice_num_atoms_(index3) / numframes)  >= threshold_density_);
+        }
+        else{
+            condition = ((lattice_num_atoms_(index3)/numframes) >= threshold_number_);
+        }
+        if (condition){
             lattice_Qtensor_(index3) = lattice_Qtensor_(index3) * (0.5/lattice_num_atoms_(index3));
 
             auto res = LinAlg3x3::OrderEigenSolver(lattice_Qtensor_(index3));
@@ -416,7 +437,7 @@ void QtensorLattice::finishCalculate(){
             lattice_biaxiality_(index3) = biaxi;
         }
         else{
-            lattice_order_(index3)      = -100.0;
+            lattice_order_(index3)      = 100;
             lattice_director_(index3)   = {{0,0,0}};
             lattice_biaxiality_(index3) = -100.0;
 }
@@ -477,11 +498,15 @@ void QtensorLattice::printOrder(std::string name)
     std::ofstream ofs;
     ofs.open(name);
 
+    int numframes = simstate_.getTotalFrames();
+
+    ofs << "# i j k Order Biaxiality averageAtoms" << "\n";
+
     for (int i=0;i<lattice_shape_[0];i++){
         for (int j=0;j<lattice_shape_[1];j++){
             for (int k=0;k<lattice_shape_[2];k++){
                 ofs << i << " " << j << " " << k << " " << lattice_order_(i,j,k) << " " << \
-                lattice_biaxiality_(i,j,k) << "\n";
+                lattice_biaxiality_(i,j,k) << " " << lattice_num_atoms_(i,j,k)/numframes << "\n";
             }
         }
     }
@@ -563,7 +588,7 @@ void QtensorLattice::printOrderPerIter(std::ofstream& ofs){
             order(index3) = res.first[0];
         }
         else{
-            order(index3) = -100;
+            order(index3) = 100;
         }
     }
 
@@ -590,7 +615,7 @@ QtensorLattice::Real QtensorLattice::CalculateCoraseGrainFunction(Real& rsq){
 void QtensorLattice::printZenithalOrder(std::string name){
     std::ofstream ofs;
     ofs.open(name);
-    ASSERT((reference_), "wrong.");
+    ASSERT((reference_), "Reference structure must be provided to calculate Zenithal order.");
 
     for (int i=0;i<numrbin_;i++){
         for (int j=0;j<numtbin_;j++){
@@ -604,6 +629,7 @@ void QtensorLattice::printZenithalOrder(std::string name){
 void QtensorLattice::printAzimuthalOrder(std::string name){
     std::ofstream ofs;
     ofs.open(name);
+    ASSERT((reference_), "Reference structure must be provided to calculate Azimuthal order.");
 
     for (int i=0;i<numrbin_;i++){
         for (int j=0;j<numtbin_;j++){

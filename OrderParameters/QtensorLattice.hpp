@@ -82,7 +82,6 @@ class QtensorLattice : public Calculation{
         std::vector<INT3> lattice_offsets_;
 
 
-
         //          non coarse-graining parameters      //
         Real cutoff_sq_;
         Real min_dist_sq_;
@@ -117,6 +116,9 @@ class QtensorLattice : public Calculation{
         bool usePredefinedDir_=false;
         Real3 predefinedDir_;
         Real3 rotate_vec_={{0,0,1}};
+
+        Real threshold_density_;
+        Real threshold_number_;
 
         // uij
         std::vector<Real3> uij_;
