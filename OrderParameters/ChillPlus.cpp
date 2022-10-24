@@ -32,6 +32,10 @@ ChillPlus::ChillPlus(const CalculationInput& input)
         addAtomgroup(s);
     }
 
+    // initialize the probevolumes
+    initializeProbeVolumes();
+    initializeNotInProbeVolumes();
+
     // register output function 
     registerOutputFunction("ice_types", [this](std::string name)-> void {this -> printIcetypes(name);});
 
@@ -58,14 +62,32 @@ void ChillPlus::calculate()
     // obtain the atom groups
     const auto& ag = getAtomGroup(atomgroup_name_);
     const auto& pos= ag.getAtomPositions();
+    std::vector<int> PV_indices;
+
+    // for the positions --> calculate whether or not they are in the PV
+    #pragma omp parallel
+    {
+        std::vector<int> local_indices;
+        #pragma omp for
+        for (int i=0;i<pos.size();i++){
+            if (isInPV(pos[i])){
+                local_indices.push_back(i);
+            }
+        }
+
+        #pragma omp critical
+        {
+            PV_indices.insert(PV_indices.end(), local_indices.begin(), local_indices.end());
+        }
+    }
 
     // define the arrays 
     std::vector<std::vector<int>> cell_indices = cell_->calculateIndices(pos);
-    std::vector<std::vector<int>> neighbor_indices(pos.size());
-    std::vector<std::vector<Real>> neighbor_distance(pos.size());
-    std::vector<std::vector<Real3>> neighbor_vector_distance(pos.size());
-    std::vector<std::vector<std::complex<Real>>> qlm(pos.size());
-    std::vector<std::vector<Real>> cij(pos.size());
+    std::vector<std::vector<int>> neighbor_indices(PV_indices.size());
+    std::vector<std::vector<Real>> neighbor_distance(PV_indices.size());
+    std::vector<std::vector<Real3>> neighbor_vector_distance(PV_indices.size());
+    std::vector<std::vector<std::complex<Real>>> qlm(PV_indices.size());
+    std::vector<std::vector<Real>> cij(PV_indices.size());
 
     // define the cell indices fo rsurface atom groups
     std::vector<std::vector<std::vector<int>>> surface_cell_indices;
@@ -75,15 +97,17 @@ void ChillPlus::calculate()
     }
 
     #pragma omp parallel for
-    for (int i=0;i<pos.size();i++){
+    for (int i=0;i<PV_indices.size();i++){
+        int index = PV_indices[i];
+        
         // first calculate within itself 
-        std::vector<int> neighbor_cell_indices = cell_->getNeighborIndex(pos[i]);
+        std::vector<int> neighbor_cell_indices = cell_->getNeighborIndex(pos[index]);
         for (int neighbor_cell_ind : neighbor_cell_indices){
             for (int neighbor_ind : cell_indices[neighbor_cell_ind]){
-                if (neighbor_ind != i){
+                if (neighbor_ind != index){
                     Real3 distance;
                     Real distsq;
-                    simstate_.getSimulationBox().calculateDistance(pos[neighbor_ind], pos[i], distance, distsq);
+                    simstate_.getSimulationBox().calculateDistance(pos[neighbor_ind], pos[index], distance, distsq);
 
                     if (distsq <= solvation_shell_r_squared_){
                         neighbor_indices[i].push_back(neighbor_ind);
@@ -101,7 +125,7 @@ void ChillPlus::calculate()
                 for (int neighbor_ind : surface_cell_indices[j][neighbor_cell_ind]){
                     Real3 distance;
                     Real distsq;
-                    simstate_.getSimulationBox().calculateDistance(PosSurface[neighbor_ind], pos[i], distance, distsq);
+                    simstate_.getSimulationBox().calculateDistance(PosSurface[neighbor_ind], pos[index], distance, distsq);
 
                     if (distsq <= solvation_shell_r_squared_){
                         neighbor_indices[i].push_back(neighbor_ind);
@@ -110,7 +134,6 @@ void ChillPlus::calculate()
                     } 
                 }
             }
-
         }
     }
 
