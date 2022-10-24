@@ -35,6 +35,10 @@ class ChillPlus : public Calculation{
         virtual void update() override;
         virtual void finishCalculate() override;
 
+        Real getNumIceLikeAtoms() const {return num_ice_like_atoms_;}
+
+        void CorrectIceLikeAtomsBasedOnSurface();
+
         void printIcetypes(std::string name);
         void printTotalIceIndicesPerIter(std::ofstream& ofs);
         void printNonClathrateIndicesPerIter(std::ofstream& ofs);
@@ -45,6 +49,12 @@ class ChillPlus : public Calculation{
 
 
     private:
+        int num_ice_like_atoms_;
+
+        // whether we are performing surface correction or not 
+        bool surface_correction_=false;
+        std::vector<bool> IsIceLike_;
+
         cellptr cell_;
         
         Real solvation_shell_r_=0.35, solvation_shell_r_squared_;

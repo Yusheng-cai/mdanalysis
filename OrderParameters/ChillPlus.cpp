@@ -39,6 +39,15 @@ ChillPlus::ChillPlus(const CalculationInput& input)
     registerPerIterOutputFunction("total_ice_indices", [this](std::ofstream& ofs) -> void {this -> printTotalIceIndicesPerIter(ofs);});
     registerPerIterOutputFunction("total_ice_nonClathrate", [this](std::ofstream& ofs) -> void {this -> printNonClathrateIndicesPerIter(ofs);});
     registerPerIterOutputFunction("Hex_Cubic_ice", [this](std::ofstream& ofs) -> void {this -> printHexCubicIce(ofs);});
+
+    // register output file output
+    registerOutputFileOutputs("num_ice_like_atoms", [this](void) -> Real {return this -> getNumIceLikeAtoms();});
+
+    // whether we are performing surface correction for number of ice like atoms 
+    pack_.Readbool("SurfaceCorrection", ParameterPack::KeyType::Optional, surface_correction_);
+    if (surface_correction_){
+
+    }
 }
 
 void ChillPlus::calculate()
@@ -154,6 +163,10 @@ void ChillPlus::calculate()
         qlm[i] = ql_i;
     }
 
+    // update is ice like vector 
+    IsIceLike_.clear();
+    IsIceLike_.resize(ag.getAtoms().size(), false);
+
     #pragma omp parallel for 
     for (int i=0;i<neighbor_indices.size();i++){
         cij[i].resize(neighbor_indices[i].size());
@@ -191,6 +204,9 @@ void ChillPlus::calculate()
         }
         else{
             if (Algorithm::IsInMap(mapBondToIceType_, bond, type)){
+                if ((type == ChillPlusTypes::Clathrate) || (type == ChillPlusTypes::Interfacial) || (type == ChillPlusTypes::Hexagonal)){
+                    IsIceLike_[i] = true;
+                }
                 ice_t[type] += 1;
                 Ice_Indices_[type].push_back(ag.AtomGroupIndices2GlobalIndices(i));
             }
@@ -201,6 +217,13 @@ void ChillPlus::calculate()
     }
 
     ice_types_.push_back(ice_t);
+
+    // calculate the number of ice like atoms 
+    num_ice_like_atoms_ = ice_t[ChillPlusTypes::Cubic] + ice_t[ChillPlusTypes::Hexagonal] + ice_t[ChillPlusTypes::Interfacial];
+}
+
+void ChillPlus::CorrectIceLikeAtomsBasedOnSurface(){
+
 }
 
 void ChillPlus::printTotalIceIndicesPerIter(std::ofstream& ofs){
