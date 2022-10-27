@@ -7,6 +7,7 @@
 #define MARCHING_CUBES_HPP
 
 #include "tools/CommonTypes.h"
+#include "tools/CommonOperations.h"
 #include "LinAlgTools.h"
 #include "tools/Assert.h"
 #include "Lattice.hpp"
@@ -386,9 +387,6 @@ class MarchingCubes{
         /// Given `cubeIndex`, get the edge table entry and using `intersections`, make all triangles
         std::vector<std::vector<Point>> get_triangles(std::vector<Point>& intersections, int cubeIndex);
 
-        /// Utility function to print a triangle
-        void print_triangles(std::vector<std::vector<Point>> triangles);
-
         /// Get triangles of a single cell
         std::vector<std::vector<Point>> triangulate_cell(GridCell &cell, Real isovalue);
 
@@ -398,16 +396,16 @@ class MarchingCubes{
         // get pbc corrected distance
         Real3 getPBCDistance(Real3& v1, Real3& v2);
 
-        // Fix Cell Grid index 
-        void FixCellGridIndex(INT3& index);
-
         // correct pbc position
         void CorrectPBCposition(Point& p);
 
-        // Convert Cell Grid index
-        int ConvertCellGridIndex(INT3& index);
+        // Grid index to Index
+        int GridIndexToIndex(INT3& index);
 
-        // Get Vertices for a certain gridCell
+        // Index to Grid Index
+        INT3 IndexToGridIndex(int index);
+
+        // Get Vertices for a certain gridCell --> including its neighbor cells 
         void VerticesForGridCell(INT3& index, std::vector<Point>& initialV, std::vector<Point>& neighborV);
 
         // initialize offsets for grid search
@@ -421,10 +419,8 @@ class MarchingCubes{
         Real3 center_;
         Real3 spacing_;
         INT3 N_;
-        Real3 tol_;
+        Real3 tol_ = {{1e-4,1e-4,1e-4}};
         int inc_=1;
-        int inc2_=2;
-        int iinc_;
         int INITIAL_=-9999;
         bool pbc_;
         std::map<INT3, int> MapFromCellGridIndexToIndex_;
