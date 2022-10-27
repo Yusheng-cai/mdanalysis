@@ -17,8 +17,7 @@
 #include <map>
 #include <unordered_map>
 
-struct Point
-{
+struct Point{
     using Real = CommonTypes::Real;
     Real x;
     Real y;
@@ -48,15 +47,13 @@ struct Point
     }
 };
 
-struct GridCell
-{
+struct GridCell{
     using Real = CommonTypes::Real;
     Point vertex[8];
     Real value[8];
 };
 
-class MarchingCubes
-{
+class MarchingCubes{
     public:
         // YC EDIT 
         using Real3 = CommonTypes::Real3;
@@ -414,6 +411,9 @@ class MarchingCubes
 
         // initialize offsets for grid search
         void initializeGridSearch();
+
+        // do another set of marching cubes --> clear all dictionaries and stuff
+        void update();
 
     private:
         Real3 end_;

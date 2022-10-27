@@ -264,9 +264,17 @@ void MarchingCubes::CorrectPBCposition(Point& p)
     p.z = pos[2];
 }
 
+void MarchingCubes::update(){
+    triangles_.clear();
+    MapFromCellGridIndexToIndex_.clear();
+    MapFromIndexToCellGridIndex_.clear();
+    offsets_.clear();
+}
+
 void MarchingCubes::triangulate_field(Lattice<Real>& field, Mesh& mesh, Real3 spacing, INT3 N, Real isovalue, bool pbc)
 {
     // field does the following thing * * * | --> 3 lattice points and 3 segments
+    update();
 
     // whether or not we are performing periodic mesh
     pbc_ = pbc;
@@ -440,8 +448,7 @@ void MarchingCubes::triangulate_field(Lattice<Real>& field, Mesh& mesh, Real3 sp
             auto it = std::unique(triIndex.begin(), triIndex.end());
             bool isUnique = (it == triIndex.end());
 
-            if (isUnique)
-            {
+            if (isUnique){
                 triangle t;
                 for (int i=0;i<3;i++){
                     int index = MapFromVertexIndexToNewIndex[tri[i].index];
