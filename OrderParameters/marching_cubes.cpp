@@ -295,12 +295,14 @@ void MarchingCubes::triangulate_field(Lattice<Real>& field, Mesh& mesh, Real3 sp
     
 
     // Perform the marching cubes 
-    int idx=0;
+    int Size = (N_[0] - inc_) * (N_[1] - inc_) * (N_[2] - inc_);
+    triangles_.resize(Size);
+    #pragma omp for collapse(3)
     for (int i = 0; i + inc_ < N_[0]; i++){
         for (int j = 0; j + inc_ < N_[1]; j++){
             for (int k = 0; k + inc_ < N_[2]; k++){
+                // define the x y z of this particular cell grid 
                 int x = i, y = j, z = k;
-                INT3 CellGridIndex = {{x%N_[0], y%N_[1], z%N_[2]}};
                 Real xplus, yplus, zplus;
 
                 // Correct for the positions 
@@ -308,6 +310,9 @@ void MarchingCubes::triangulate_field(Lattice<Real>& field, Mesh& mesh, Real3 sp
                 yplus = (y+1) % N_[1];
                 zplus = (z+1) % N_[2];
 
+                // find the index 
+                int idx = z * N_[0] * N_[1] + y * N_[0] + i;
+                
                 // cell ordered according to convention in referenced website
                 GridCell cell = 
                 {
@@ -327,16 +332,10 @@ void MarchingCubes::triangulate_field(Lattice<Real>& field, Mesh& mesh, Real3 sp
                     }
                 };
                 std::vector<std::vector<Point>> cellTriangles = triangulate_cell(cell, isovalue);
-                triangles_.push_back(cellTriangles);
-                MapFromCellGridIndexToIndex_.insert(std::make_pair(CellGridIndex, idx));
-                MapFromIndexToCellGridIndex_.insert(std::make_pair(idx, CellGridIndex));
-                idx++;
+                triangles_[idx] = cellTriangles; 
             }
         }
     }
-
-    int Size = (N_[0] - inc_) * (N_[1] - inc_) * (N_[2] - inc_);
-    ASSERT((triangles_.size() == Size), "The size of the cell grid must be " << Size << " while it is " << triangles_.size());
 
     // index all vertices 
     std::map<int,INT3> MapVertexIndexToCellGridIndex;

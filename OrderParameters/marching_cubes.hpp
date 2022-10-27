@@ -59,6 +59,7 @@ class MarchingCubes{
         using Real3 = CommonTypes::Real3;
         using Real  = CommonTypes::Real;
         using INT3  = std::array<int,3>;
+        using Cell  = std::vector<std::vector<Point>>;
         // END YC EDIT
     
         /// edgeToVertices[i] = {a, b} => edge i joins vertices a and b
@@ -428,7 +429,7 @@ class MarchingCubes{
         bool pbc_;
         std::map<INT3, int> MapFromCellGridIndexToIndex_;
         std::map<int, INT3> MapFromIndexToCellGridIndex_;
-        std::vector<std::vector<std::vector<Point>>> triangles_;
+        std::vector<Cell> triangles_;
         std::vector<INT3> offsets_;
 };  
 #endif
