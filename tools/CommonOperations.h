@@ -65,6 +65,16 @@ inline std::array<T,dim> operator/(const std::array<T,dim>& v1, const std::array
 }
 
 template <typename T1, typename T2, std::size_t dim>
+inline std::array<T1,dim> operator/(const std::array<T1,dim>& v1, const std::array<T2,dim>& v2){
+    std::array<T1,dim> ret;
+    for (int i=0;i<dim;i++){
+        ret[i] = v1[i] / v2[i];
+    }
+
+    return ret;
+}
+
+template <typename T1, typename T2, std::size_t dim>
 inline std::array<T1,dim> operator+(const std::array<T1,dim>& v1, T2 value)
 {
     std::array<T1,dim> ret;
