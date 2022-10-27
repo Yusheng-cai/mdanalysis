@@ -57,6 +57,7 @@ target_sources(mdaOrderParameters PRIVATE
     "ChillPlus.cpp"
     "marching_cubes.cpp"
     "Mesh.cpp"
+    "DensityField.cpp"
 )
 
 set(mdaOrderParameters_HEADER
@@ -115,6 +116,7 @@ set(mdaOrderParameters_HEADER
     "ChillPlus.h"
     "marching_cubes.hpp"
     "Mesh.h"
+    "DensityField.h"
 )
 
 
