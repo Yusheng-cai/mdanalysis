@@ -10,21 +10,18 @@ ProbeVolumeIndices::ProbeVolumeIndices(const CalculationInput& input)
 {
     pack_.ReadString("mode", ParameterPack::KeyType::Optional, mode_);
 
-    if (mode_ == "residue")
-    {
+    if (mode_ == "residue"){
         pack_.ReadString("residue", ParameterPack::KeyType::Required, resName_);
         initializeResidueGroup(resName_);
 
         auto& res = getResidueGroup(resName_);
         COM_.resize(res.getResidues().size());
     }
-    else if (mode_ == "atom")
-    {
+    else if (mode_ == "atom"){
         pack_.ReadString("atomgroup", ParameterPack::KeyType::Required, agName_);
         addAtomgroup(agName_);
     }
-    else
-    {
+    else{
         ASSERT((true==false), "mode " << mode_ << " is not supported currently");
     }
 
