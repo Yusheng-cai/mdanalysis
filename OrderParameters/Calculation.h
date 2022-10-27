@@ -97,8 +97,8 @@ class Calculation{
         // obtain the indices inside a certain probe volume
         std::vector<int> InsidePVIndices(std::vector<Real3>& pos);
         std::vector<int> InsidePVIndices(std::vector<Real3>& pos, std::vector<int>& outsideIndices);
-        bool isInPV(Real3& pos);
-        bool isInPV(Real3& pos, Real& htildex);
+        bool isInPV(const Real3& pos);
+        bool isInPV(const Real3& pos, Real& htildex);
 
         /*
         Function that gets the name of this particular calculation object 

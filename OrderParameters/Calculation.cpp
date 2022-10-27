@@ -18,13 +18,11 @@ Calculation::Calculation(const CalculationInput& input)
 
     pack_.ReadString("COMmode", ParameterPack::KeyType::Optional, COM_mode_);
 
-    for (int i=0;i<perIteroutputs_.size();i++)
-    {
+    for (int i=0;i<perIteroutputs_.size();i++){
         ofsVector_.push_back(ofsptr(new std::ofstream));
     }
 
-    for (int i=0;i<perIteroutputs_.size();i++)
-    {
+    for (int i=0;i<perIteroutputs_.size();i++){
         ofsVector_[i]->open(perIteroutputNames_[i]);
     }
 }
@@ -157,7 +155,7 @@ std::vector<Real3>& COM)
     COM.resize(res.size());
 }
 
-bool Calculation::isInPV(Real3& pos)
+bool Calculation::isInPV(const Real3& pos)
 {
     // if it's in the probe volumes that it's not supposed to be in 
     // then we should return false  --> if that makes any sense
@@ -179,7 +177,7 @@ bool Calculation::isInPV(Real3& pos)
     return false;
 }
 
-bool Calculation::isInPV(Real3& pos, Real& htildex)
+bool Calculation::isInPV(const Real3& pos, Real& htildex)
 {
     htildex = 1.0;
     for (auto pv : NotInprobevolumes_){
