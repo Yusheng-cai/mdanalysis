@@ -1097,8 +1097,8 @@ bool MeshTools::IsPeriodicTriangle(const Mesh& mesh, int faceIndex){
     return false;
 }
 
-void MeshTools::ShiftPeriodicTriangle(std::vector<vertex>& Vertices, INT3& face, Real3 BoxLength, Real3& A, Real3& B, Real3& C)
-{
+void MeshTools::ShiftPeriodicTriangle(const std::vector<vertex>& Vertices, const INT3& face,\
+                                        Real3 BoxLength, Real3& A, Real3& B, Real3& C){
     // half box
     Real3 half_box = BoxLength * 0.5;
 

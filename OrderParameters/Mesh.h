@@ -18,27 +18,28 @@
 #include <unordered_map>
 #include <iomanip>
 
-struct vertex
-{
+struct vertex{
     using Real = CommonTypes::Real;
     using Real3= CommonTypes::Real3;
 
     Real3 position_ = {{0,0,0}};
     Real3 normals_ = {{0,0,0}};
+
+    Real& operator[](int i){return position_[i];}
 };
 
-struct triangle
-{
+struct triangle{
     using  INT3 = CommonTypes::index3;
 
     INT3 triangleindices_;
 
     // each triangle has 3 vertices
     std::array<vertex,3> vertices_;
+
+    int& operator[](int i){return triangleindices_[i];}
 };
 
-class Mesh
-{
+class Mesh{
     public:
         using Real3 = CommonTypes::Real3;
         using Real  = CommonTypes::Real;
@@ -215,7 +216,7 @@ namespace MeshTools
     bool IsPeriodicTriangle(const Mesh& mesh, int faceindex);
 
     // shift a triangle 
-    void ShiftPeriodicTriangle(std::vector<vertex>& Vertices, INT3& faces, Real3 BoxLength, Real3& A, Real3& B, Real3& C);
+    void ShiftPeriodicTriangle(const std::vector<vertex>& Vertices, const INT3& faces, Real3 BoxLength, Real3& A, Real3& B, Real3& C);
 
     // make an Edge, edge is simply the 2 indices of {{minIndex, maxIndex}}
     INT2 makeEdge(int i, int j);
