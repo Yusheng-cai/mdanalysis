@@ -54,6 +54,8 @@ ChillPlus::ChillPlus(const CalculationInput& input)
         pack_.ReadNumber("n", ParameterPack::KeyType::Required, n_);
         pack_.ReadArrayNumber("nL", ParameterPack::KeyType::Required, nL_);
         pack_.ReadArrayNumber("Ray", ParameterPack::KeyType::Required, Ray_);
+        pack_.ReadNumber("isoval", ParameterPack::KeyType::Required, isoval_);
+        pack_.Readbool("pbcMesh", ParameterPack::KeyType::Optional, pbcMesh_);
         LinAlg3x3::normalize(Ray_);
         DensityFieldInput input = {simstate_, nL_, sigma_, n_, isoval_, pbcMesh_};
         density_ = densityptr(new DensityField(input));
@@ -221,6 +223,7 @@ void ChillPlus::calculate()
     // vector of bool keeping track of whether an atom is ice like
     is_ice_like_.clear();
     is_ice_like_.resize(pos.size(), false);
+    ice_like_indices_.clear();
 
     // calculate whether or not an atom is ice-like or not 
     for (int i=0;i<cij.size();i++){
@@ -246,7 +249,7 @@ void ChillPlus::calculate()
             }
             else{
                 if (Algorithm::IsInMap(mapBondToIceType_, bond, type)){
-                    if ((type == ChillPlusTypes::Clathrate) || (type == ChillPlusTypes::Interfacial) || (type == ChillPlusTypes::Hexagonal)){
+                    if ((type == ChillPlusTypes::Interfacial) || (type == ChillPlusTypes::Hexagonal) || (type == ChillPlusTypes::Cubic)){
                         ice_like_indices_.push_back(i);
                         is_ice_like_[i] = true;
                     }
@@ -292,15 +295,17 @@ void ChillPlus::CorrectForTrueIce(){
     const auto& pos= ag.getAtomPositions();
 
     // get the ice positions
-    std::vector<Real3> IcePos;
+    std::vector<Real3> IcePos(ice_like_indices_.size());
     for (int i=0;i<ice_like_indices_.size();i++){
         int index = ice_like_indices_[i];
-        IcePos.push_back(pos[index]);
+        Real3 shiftedpos = simstate_.getSimulationBox().shiftIntoBox(pos[index]);
+        IcePos[i] = shiftedpos;
     }
 
     // obtain the mesh from the instantaneous interface
     Mesh mesh;
     density_->CalculateInstantaneousField(IcePos, mesh);
+    MeshTools::writePLY("test.ply", mesh);
 
     // get the triangles, vertices of the mesh
     const auto& tri = mesh.gettriangles();
@@ -316,7 +321,7 @@ void ChillPlus::CorrectForTrueIce(){
             int num_intersect=0;
             for (auto ti : tri){
                 // shift the ice position into box
-                Real3 O = simstate_.getSimulationBox().shiftIntoBox(IcePos[i]);
+                Real3 O = IcePos[i];
 
                 // declare the A B C of the triangle
                 Real3 A,B,C;
@@ -330,7 +335,9 @@ void ChillPlus::CorrectForTrueIce(){
 
                 Real t,u,v;
                 if (MeshTools::MTRayTriangleIntersection(A,B,C,O,Ray_, t,u,v)){
-                    num_intersect += 1;
+                    if (t > 0){
+                        num_intersect += 1;
+                    }
                 }
             }
             if (num_intersect != 0){
@@ -344,7 +351,8 @@ void ChillPlus::CorrectForTrueIce(){
         }
     }
 
-    ice_like_indices_ = newIceIndices;
+    ice_like_indices_.clear();
+    ice_like_indices_.insert(ice_like_indices_.end(), newIceIndices.begin(), newIceIndices.end());
 }
 
 void ChillPlus::CorrectIceLikeAtomsBasedOnSurface(){
@@ -438,12 +446,10 @@ void ChillPlus::printTotalIceIndicesPerIter(std::ofstream& ofs){
 void ChillPlus::printNonClathrateIndicesPerIter(std::ofstream& ofs){
     int time = simstate_.getTime();
     ofs << time << " ";
-    for (int i=0;i<Ice_Indices_.size();i++){
-        if ((i != ChillPlusTypes::Interfacial_Clathrate) && (i != ChillPlusTypes::Clathrate)){
-            for (int j=0;j<Ice_Indices_[i].size();j++){
-                ofs << Ice_Indices_[i][j] << " ";
-            }
-        }
+
+    const auto& ag = getAtomGroup(atomgroup_name_);
+    for (int i=0;i<ice_like_indices_.size();i++){
+            ofs << ag.AtomGroupIndices2GlobalIndices(ice_like_indices_[i]) << " ";
     }
     ofs << "\n";
 }
