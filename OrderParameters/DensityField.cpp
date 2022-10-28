@@ -81,7 +81,8 @@ void DensityField::CalculateInstantaneousField(const std::vector<Real3>& pos, Me
     if (pbcmesh_){
         mesh.setBoxLength(L_);
     }
-
+    std::cout << "dL = " << dL_ << "\n";
+    std::cout << "L = " << L_ << "\n";
 
     // start calculating InstantaneousInterface
     density_buffer_.set_master_object(density_);
@@ -91,11 +92,8 @@ void DensityField::CalculateInstantaneousField(const std::vector<Real3>& pos, Me
 
         #pragma omp for 
         for (int i=0;i<pos.size();i++){
-            // shift the position into box
-            Real3 shiftedPos   = simstate_.getSimulationBox().shiftIntoBox(pos[i]);
-
             // find the lattice point 
-            INT3 Index = CalculateLatticePoint(shiftedPos);
+            INT3 Index = CalculateLatticePoint(pos[i]);
             Index = CalculationTools::correctPBCLatticeIndex(Index, nL_);
 
             // iterate over all the indices and calculate instantaneousinterface
@@ -110,7 +108,7 @@ void DensityField::CalculateInstantaneousField(const std::vector<Real3>& pos, Me
                 // calculate the distance 
                 Real3 distance;
                 Real distsq;
-                simstate_.getSimulationBox().calculateDistance(latticepos, shiftedPos, distance, distsq);
+                simstate_.getSimulationBox().calculateDistance(latticepos, pos[i], distance, distsq);
 
                 Real val = GaussianCoarseGrainFunction(distsq);
                 localField(RealIndex) = localField(RealIndex) + val;
@@ -121,10 +119,9 @@ void DensityField::CalculateInstantaneousField(const std::vector<Real3>& pos, Me
     #pragma omp parallel for
     for (int i=0;i<density_.getSize();i++){
         for (auto it = density_buffer_.beginworker();it != density_buffer_.endworker(); it++){
-            density_[i] = it -> operator[](i);
+            density_[i] += it -> operator[](i);
         }
     }
 
-    std::cout << "pbc Mesh = " << pbcmesh_ << "\n";
     MarchingCubes_.triangulate_field(density_, mesh, dL_, nL_, isoSurfaceVal_, pbcmesh_);
 }

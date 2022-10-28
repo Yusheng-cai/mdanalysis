@@ -421,10 +421,7 @@ class MarchingCubes{
         INT3 N_;
         Real3 tol_ = {{1e-4,1e-4,1e-4}};
         int inc_=1;
-        int INITIAL_=-9999;
         bool pbc_;
-        std::map<INT3, int> MapFromCellGridIndexToIndex_;
-        std::map<int, INT3> MapFromIndexToCellGridIndex_;
         std::vector<Cell> triangles_;
         std::vector<INT3> offsets_;
 };  

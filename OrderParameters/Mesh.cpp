@@ -270,17 +270,14 @@ void Mesh::CalcVertexNormals()
     std::vector<Real3> VertNorms(getNumVertices(), {{0,0,0}});
 
     // calculate the normals of each vertices
-    for (int i=0;i<triangles_.size();i++)
-    {
+    for (int i=0;i<triangles_.size();i++){
         auto& t = triangles_[i];
         Real3 normals = facetNormals_[i];
 
-        for (int j=0;j<3;j++)
-        {
+        for (int j=0;j<3;j++){
             int index = t.triangleindices_[j];
 
-            for (int k=0;k<3;k++)
-            {
+            for (int k=0;k<3;k++){
                 VertNorms[index][k] += normals[k];
             }
         }
@@ -838,8 +835,7 @@ void MeshTools::CalculateTriangleAreasAndFaceNormals(Mesh& mesh, std::vector<Rea
 
     // calculate the area of the triangles as well as the normals of the faces of triangles
     #pragma omp parallel for
-    for (int i=0;i<triangles.size();i++)
-    {
+    for (int i=0;i<triangles.size();i++){
         auto& t = triangles[i];
 
         int index1 = t.triangleindices_[0];
