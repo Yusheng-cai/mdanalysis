@@ -6,6 +6,7 @@ target_sources(mdatools PRIVATE
     "CommandLineArguments.cpp"
     "FileSystem.cpp"
     "Algorithm.cpp"
+    "Timer.cpp"
 )
 
 set(mdaTOOLS_HEADER
@@ -18,6 +19,7 @@ set(mdaTOOLS_HEADER
     "Registry.h"
     "FileSystem.h"
     "Algorithm.h"
+    "Timer.h"
 )
 
 target_include_directories(mdatools

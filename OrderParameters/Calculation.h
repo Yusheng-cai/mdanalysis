@@ -11,6 +11,7 @@
 #include "Output_values.h"
 #include "ProbeVolume.h"
 #include "tools/CommonOperations.h"
+#include "tools/Timer.h"
 
 #include <vector>
 #include <array>
@@ -106,6 +107,9 @@ class Calculation{
         std::string getName() {return name_;}
 
     protected:
+        // timer object
+        Timer t;
+    
         // output registry 
         OutputRegistry output_;
 
