@@ -1165,6 +1165,48 @@ void MeshTools::MapEdgeToOpposingVertices(Mesh& mesh, std::map<INT2, std::vector
     }
 }
 
+void MeshTools::CutMesh(Mesh& mesh, Real3 volume){
+    const auto& verts = mesh.getvertices();
+    const auto& tri   = mesh.gettriangles();
+
+    std::vector<vertex> vertices;
+    std::vector<triangle> faces;
+
+    int index=0;
+    std::map<int,int> MapOldIndexToNew;
+    for (int i=0;i<verts.size();i++){
+        auto& v = verts[i];
+        if (v.position_[0] >= volume[0] && v.position_[1] >= volume[1] && v.position_[2] >= volume[2]){
+            int newindex = index;
+            vertices.push_back(v);
+            MapOldIndexToNew.insert(std::make_pair(i, newindex));
+            index ++;
+        }
+    }
+
+    for (auto& t : tri){
+        bool it1 = MapOldIndexToNew.find(t.triangleindices_[0]) != MapOldIndexToNew.end();
+        bool it2 = MapOldIndexToNew.find(t.triangleindices_[1]) != MapOldIndexToNew.end();
+        bool it3 = MapOldIndexToNew.find(t.triangleindices_[2]) != MapOldIndexToNew.end();
+
+        if (it1 && it2 && it3){
+            triangle newt;
+            for (int i=0;i<3;i++){
+                newt[i] = MapOldIndexToNew[t[i]];
+            }
+            faces.push_back(newt);
+        }
+    }
+
+    auto& v = mesh.accessvertices();    
+    auto& f = mesh.accesstriangles();  
+    v.clear();
+    v.insert(v.end(),vertices.begin(), vertices.end());
+    f.clear();
+    f.insert(f.end(), faces.begin(), faces.end());
+    
+}
+
 void MeshTools::CutMesh(Mesh& mesh, std::vector<INT3>& faces, std::vector<Real3>& vertices, Real3 volume)
 {
     vertices.clear();

@@ -37,6 +37,7 @@ struct triangle{
     std::array<vertex,3> vertices_;
 
     int& operator[](int i){return triangleindices_[i];}
+    int operator[](int i)const {return triangleindices_[i];}
 };
 
 class Mesh{
@@ -226,6 +227,9 @@ namespace MeshTools
 
     // cut mesh and give a new mesh 
     void CutMesh(Mesh& mesh, std::vector<INT3>& face, std::vector<Real3>& vertices, Real3 volume);
+
+    // cut mesh and give a new mesh
+    void CutMesh(Mesh& mesh, Real3 volume);
 
     // Moller Trumbore Ray-Triangle intersection method 
     bool MTRayTriangleIntersection(Real3& A, Real3& B, Real3& C, Real3& O, Real3& D, Real& t, Real& u, Real& v);
