@@ -23,6 +23,20 @@ LinAlg3x3::Real LinAlg3x3::CalculateAzimuthalAngle(const Real3& v1){
   return phi;
 }
 
+LinAlg3x3::Matrix LinAlg3x3::RodriguesRotationFormula(Real degree, const Real3& vec){
+  Real radian = degree * Constants::PI / 180.0;
+
+  Matrix W = {{{0, -vec[2], vec[1]},{vec[2], 0, -vec[1]},{-vec[1], vec[0], 0}}};
+
+  Matrix W2 = LinAlg3x3::matrix_dot(W,W);
+  Real sinphi = std::sin(radian);
+  Real sinsq  = std::pow(std::sin(radian/2),2.0);
+
+  Matrix ret = LinAlg3x3::matrix_Identity() +  W * sinphi + W2 * 2.0 * sinsq;
+
+  return ret;
+}
+
 LinAlg3x3::Real LinAlg3x3::DotProduct(const Real3& v1, const Real3& v2)
 {
     Real ret = 0.0;

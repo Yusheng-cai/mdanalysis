@@ -4,6 +4,7 @@
 #include "Eigen/Core"
 #include "Eigen/Dense"
 #include "tools/Constants.h"
+#include "tools/CommonOperations.h"
 
 #include <cmath>
 #include <algorithm>
@@ -27,6 +28,9 @@ namespace LinAlg3x3
     // This is the rotation matrix that rotates vector 1 onto vector 2
     Matrix GetRotationMatrix(const Real3& v1, const Real3& v2);
     Matrix RotationMatrix(const Real3& v1, const Real3& v2);
+
+	// Rotation matrix around a vector 
+	Matrix RodriguesRotationFormula(Real degree, const Real3& vec);
 
     // calculate 3uiuj - I 
     Matrix LocalQtensor(const Real3& v1);
