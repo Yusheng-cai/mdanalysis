@@ -10,6 +10,7 @@
 #include "DensityField.h"
 
 #include <memory>
+#include <chrono>
 #include <map>
 #include <cmath>
 #include <boost/math/special_functions/spherical_harmonic.hpp>
@@ -46,8 +47,7 @@ class ChillPlus : public Calculation{
 
         void printIcetypes(std::string name);
         void printTotalIceIndicesPerIter(std::ofstream& ofs);
-        void printNonClathrateIndicesPerIter(std::ofstream& ofs);
-        void printHexCubicIce(std::ofstream& ofs);
+        void printIceLikeAtoms(std::ofstream& ofs);
 
         bool isEclipse(Real cij) {if (cij <= 0.18 && cij >= -0.45) {return true;} return false;}
         bool isStaggered(Real cij) {if (cij <= -0.8 && cij >= -1) {return true;} return false;}
@@ -65,6 +65,8 @@ class ChillPlus : public Calculation{
         INT3 nL_;
         bool pbcMesh_=true;
         densityptr density_;
+        Real3 volume_={{0,0,0}};
+        bool cutMesh_=false;
         Real3 Ray_;
 
         // keep track of the water indices in the system 

@@ -41,8 +41,7 @@ ChillPlus::ChillPlus(const CalculationInput& input)
 
     // register per iter output functions
     registerPerIterOutputFunction("total_ice_indices", [this](std::ofstream& ofs) -> void {this -> printTotalIceIndicesPerIter(ofs);});
-    registerPerIterOutputFunction("total_ice_nonClathrate", [this](std::ofstream& ofs) -> void {this -> printNonClathrateIndicesPerIter(ofs);});
-    registerPerIterOutputFunction("Hex_Cubic_ice", [this](std::ofstream& ofs) -> void {this -> printHexCubicIce(ofs);});
+    registerPerIterOutputFunction("ice_like_atoms", [this](std::ofstream& ofs) -> void {this -> printIceLikeAtoms(ofs);});
 
     // register output file output
     registerOutputFileOutputs("num_ice_like_atoms", [this](void) -> Real {return this -> getNumIceLikeAtoms();});
@@ -56,6 +55,7 @@ ChillPlus::ChillPlus(const CalculationInput& input)
         pack_.ReadArrayNumber("Ray", ParameterPack::KeyType::Required, Ray_);
         pack_.ReadNumber("isoval", ParameterPack::KeyType::Required, isoval_);
         pack_.Readbool("pbcMesh", ParameterPack::KeyType::Optional, pbcMesh_);
+        cutMesh_ = pack_.ReadArrayNumber("volume", ParameterPack::KeyType::Optional, volume_);
         LinAlg3x3::normalize(Ray_);
         DensityFieldInput input = {simstate_, nL_, sigma_, n_, isoval_, pbcMesh_};
         density_ = densityptr(new DensityField(input));
@@ -84,13 +84,11 @@ void ChillPlus::calculate()
 
     // for the positions --> calculate whether or not they are in the PV
     IsInsideProbeVolume_.clear(); IsInsideProbeVolume_.resize(pos.size(), false);
-    #pragma omp parallel
-    {
-        #pragma omp for
-        for (int i=0;i<pos.size();i++){
-            if (isInPV(pos[i])){
-                IsInsideProbeVolume_[i] = true;
-            }
+
+    #pragma omp parallel for
+    for (int i=0;i<pos.size();i++){
+        if (isInPV(pos[i])){
+            IsInsideProbeVolume_[i] = true;
         }
     }
 
@@ -253,8 +251,13 @@ void ChillPlus::calculate()
                         ice_like_indices_.push_back(i);
                         is_ice_like_[i] = true;
                     }
+                    else{
+                        water_indices_.push_back(i);
+                        is_ice_like_[i] = false;
+                    }
+
                     ice_t[type] += 1;
-                    Ice_Indices_[type].push_back(ag.AtomGroupIndices2GlobalIndices(i));
+                    Ice_Indices_[type].push_back(ag.AtomGroupIndices2GlobalIndices(i)+1);
                 }
                 else{
                     ice_t[ChillPlusTypes::Liquid] += 1;
@@ -290,6 +293,7 @@ void ChillPlus::ShiftTriangleWithRef(Real3& A, Real3& B, Real3& C, Real3& ref){
 }
 
 void ChillPlus::CorrectForTrueIce(){
+    t.start();
     // correct for atom group
     const auto& ag = getAtomGroup(atomgroup_name_);
     const auto& pos= ag.getAtomPositions();
@@ -305,7 +309,12 @@ void ChillPlus::CorrectForTrueIce(){
     // obtain the mesh from the instantaneous interface
     Mesh mesh;
     density_->CalculateInstantaneousField(IcePos, mesh);
-    MeshTools::writePLY("test.ply", mesh);
+    t.end();
+    std::cout << "Duration of instaneousInterface = " << t.diff() << "\n";
+
+    if (cutMesh_){
+        MeshTools::CutMesh(mesh, volume_);
+    }
 
     // get the triangles, vertices of the mesh
     const auto& tri = mesh.gettriangles();
@@ -313,16 +322,16 @@ void ChillPlus::CorrectForTrueIce(){
     Real3 boxLength = simstate_.getSimulationBox().getSides();
 
     std::vector<int> newIceIndices;
+    t.start();
     #pragma omp parallel
     {
         std::vector<int> localIceIndices;
         #pragma omp for
         for (int i=0;i<IcePos.size();i++){
             int num_intersect=0;
+            // define the ice position
+            Real3 O = IcePos[i];
             for (auto ti : tri){
-                // shift the ice position into box
-                Real3 O = IcePos[i];
-
                 // declare the A B C of the triangle
                 Real3 A,B,C;
                 A = v[ti[0]].position_, B=v[ti[1]].position_, C=v[ti[2]].position_;
@@ -330,17 +339,17 @@ void ChillPlus::CorrectForTrueIce(){
                 // shift periodic triangle into whole
                 MeshTools::ShiftPeriodicTriangle(v, ti.triangleindices_, boxLength, A, B, C);
 
-                // shift triangle with respect to ref
-                ShiftTriangleWithRef(A,B,C,O);
-
                 Real t,u,v;
                 if (MeshTools::MTRayTriangleIntersection(A,B,C,O,Ray_, t,u,v)){
                     if (t > 0){
                         num_intersect += 1;
+
+                        // there only needs to be 1 intersect triangle
+                        break;
                     }
                 }
             }
-            if (num_intersect != 0){
+            if (num_intersect > 0){
                 localIceIndices.push_back(ice_like_indices_[i]);
             }
         }
@@ -350,6 +359,8 @@ void ChillPlus::CorrectForTrueIce(){
             newIceIndices.insert(newIceIndices.end(), localIceIndices.begin(), localIceIndices.end());
         }
     }
+    t.end();
+    std::cout << "Moller Trumbore took " << t.diff() << "\n";
 
     ice_like_indices_.clear();
     ice_like_indices_.insert(ice_like_indices_.end(), newIceIndices.begin(), newIceIndices.end());
@@ -378,6 +389,7 @@ void ChillPlus::CorrectIceLikeAtomsBasedOnSurface(){
             // check the ice 
             for (int neighbor_cell_ind : cell_neighbor_indices){
                 for (int neighbor_ind : water_cell_list_[neighbor_cell_ind]){
+                    // only perform calculation if it's ice like
                     if (is_ice_like_[neighbor_ind]){
                         // check the distance 
                         Real3 distance;
@@ -428,7 +440,6 @@ void ChillPlus::CorrectIceLikeAtomsBasedOnSurface(){
 
         water_indices_.clear(); 
         water_indices_.insert(water_indices_.end(), new_water_indices.begin(), new_water_indices.end());
-
     }
 }
 
@@ -443,13 +454,13 @@ void ChillPlus::printTotalIceIndicesPerIter(std::ofstream& ofs){
     ofs << "\n";
 }
 
-void ChillPlus::printNonClathrateIndicesPerIter(std::ofstream& ofs){
+void ChillPlus::printIceLikeAtoms(std::ofstream& ofs){
     int time = simstate_.getTime();
     ofs << time << " ";
 
     const auto& ag = getAtomGroup(atomgroup_name_);
     for (int i=0;i<ice_like_indices_.size();i++){
-            ofs << ag.AtomGroupIndices2GlobalIndices(ice_like_indices_[i]) << " ";
+            ofs << ag.AtomGroupIndices2GlobalIndices(ice_like_indices_[i]) + 1 << " ";
     }
     ofs << "\n";
 }
@@ -488,17 +499,4 @@ void ChillPlus::printIcetypes(std::string name)
     }
 
     ofs.close();
-}
-
-void ChillPlus::printHexCubicIce(std::ofstream& ofs){
-    int time = simstate_.getTime();
-    ofs << time << " ";
-    for (int i=0;i<Ice_Indices_.size();i++){
-        if ((i==ChillPlusTypes::Hexagonal) || (i==ChillPlusTypes::Cubic)){
-            for (int j=0;j<Ice_Indices_[i].size();j++){
-                ofs << Ice_Indices_[i][j] << " ";
-            }
-        }
-    }
-    ofs << "\n";
 }
