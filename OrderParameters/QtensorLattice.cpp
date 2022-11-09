@@ -345,16 +345,6 @@ void QtensorLattice::calculate()
         calculateNeighborSearch();
     }
 
-    #pragma omp parallel for
-    for (int i=0;i<lattice_Qtensor_Iter_.getSize();i++){
-        INT3 index3 = lattice_Qtensor_Iter_.getIndex3(i);
-        if (lattice_num_atoms_Iter_(index3) != 0){
-            lattice_Qtensor_Iter_(index3) = lattice_Qtensor_Iter_(index3) * (0.5 / lattice_num_atoms_Iter_(index3));
-            auto result = LinAlg3x3::OrderEigenSolver(lattice_Qtensor_Iter_(index3));
-            lattice_Order_Iter_(index3) = result.first[0];
-        }
-    }
-
     CalculateZenithalQtensor();
 }
 
@@ -376,7 +366,6 @@ void QtensorLattice::update(){
 
     lattice_num_atoms_Iter_.resize(lattice_shape_,0);
     lattice_Qtensor_Iter_.resize(lattice_shape_, {});
-    lattice_Order_Iter_.resize(lattice_shape_,0);
 
     GlobalQtensor_ = {};
     GlobalDirector_= {};
