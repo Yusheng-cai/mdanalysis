@@ -1,25 +1,34 @@
 #include "CellGrid.h"
 
-CellGrid::CellGrid(SimulationState& simstate, Real dL, int searchnum)
-: simstate_(simstate), dL_(dL), searchnum_(searchnum)
+CellGrid::CellGrid(SimulationState& simstate, Real dL)
+: simstate_(simstate), dL_(dL)
 {
-    for (int i=-searchnum_;i<=searchnum_;i++){
-        for (int j=-searchnum_;j<=searchnum_;j++){
-            for (int k=-searchnum_;k<=searchnum_;k++){
-                index3 ind = {{i,j,k}};
-                Offsets_.push_back(ind);
-            }
-        }
-    }
+    searchnum_.resize(3);
 }
 
 void CellGrid::update(){
     Real3 Sides = simstate_.getSimulationBox().getSides();
-    // Example like 5 / 3 --> 1 but N should be 2  -- > 0 1
+    // Example like 7 / 3 --> 2 --> last one will be merged with the first 
     for (int i=0;i<3;i++){
-        N_[i] = (int)std::ceil(Sides[i]/dL_);
+        N_[i] = (int)std::floor(Sides[i]/dL_);
+        if (N_[i] > 2){
+            searchnum_[i] = {{-1,1}};
+        }
+        else{
+            searchnum_[i] = {{0,1}};
+        }
     }
     totalIndices_ = N_[0] * N_[1] * N_[2];
+
+    // Now update updates the offsets as well 
+    Offsets_.clear();
+    for (int i=searchnum_[0][0];i<=searchnum_[0][1];i++){
+        for (int j=searchnum_[1][0];j<=searchnum_[1][1];j++){
+            for (int k=searchnum_[2][0];k<=searchnum_[2][1];k++){
+                Offsets_.push_back({{i,j,k}});
+            }
+        }
+    }
 }
 
 std::vector<std::vector<int>> CellGrid::calculateIndices(const std::vector<Real3>& pos)
@@ -64,16 +73,12 @@ CellGrid::index3 CellGrid::getCellGridIndex(const Real3& pos)
 
     for (int i=0;i<3;i++){
         // take care of edge cases when shiftedPos is exactly N[i] * dL
-        if (std::abs(shiftedPos[i] - N_[i] * dL_) < 1e-5) {
-            index[i] = N_[i] - 1;
-        }
-        else if (std::abs(shiftedPos[i] - 0) < 1e-5){
+        if (std::abs(shiftedPos[i] - 0) < 1e-5){
             index[i] = 0;
         }
         else{
-            index[i] = (int)std::floor(shiftedPos[i] / dL_ );
+            index[i] = (int)std::floor(shiftedPos[i] / dL_ ) % N_[i];
         }
-        ASSERT((index[i] < N_[i]) && (index[i] >= 0), "Index out of range, index is " << index[i] << " max is " << N_[i] << " Position = " << shiftedPos[i] << " dL = " << dL_);
     }
 
     return index;

@@ -16,9 +16,10 @@ class CellGrid{
         using Real = CommonTypes::Real;
         using Real3= CommonTypes::Real3;
         using index3= CommonTypes::index3;
+        using INT2 = CommonTypes::index2;
 
         // initialize cell grid 
-        CellGrid(SimulationState& simstate, Real dL, int searchnum);
+        CellGrid(SimulationState& simstate, Real dL);
 
         // update the cell grid dimensions every iteration
         void update();
@@ -37,7 +38,8 @@ class CellGrid{
         Real dL_, L_;
         SimulationState& simstate_;
         index3 N_;
-        int totalIndices_, searchnum_;
+        int totalIndices_;
 
         std::vector<index3> Offsets_;
+        std::vector<INT2> searchnum_;
 };
