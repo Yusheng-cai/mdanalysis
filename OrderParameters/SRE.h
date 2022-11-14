@@ -22,7 +22,7 @@ class SRE : public Calculation
         SRE(const CalculationInput& input);
 
         virtual void calculate() override;
-        virtual void finishCalculate() override {};
+        virtual void finishCalculate() override;
         virtual void update() override;
 
         void calculateWithNS();
@@ -37,7 +37,7 @@ class SRE : public Calculation
         Real getAttractiveEnergy() {return attractive_energy_;}
 
         void printEnergyPerIter(std::ofstream& ofs);
-        void printEnergyPerAtomPerIter(std::ofstream& ofs);
+        void printEnergyPerAtom(std::string name);
 
     private:
         std::string SolventName_;
@@ -56,6 +56,8 @@ class SRE : public Calculation
 
         Cellptr cell_;
 
+        bool self_interaction_=false;
+
         // indices of the solvent/solute atoms which have nonzero charges
         std::vector<int> NonZeroSolvent_;
         std::vector<int> NonZeroSolute_;
@@ -65,6 +67,7 @@ class SRE : public Calculation
 
         // per atom contribution to the SRE energy 
         std::vector<Real> PerAtomContribution_;
+        std::vector<Real> PerResidueContribution_;
 
         // solute indices per residue 
         std::vector<int> SoluteIndices_;

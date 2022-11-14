@@ -34,7 +34,7 @@ QtensorLattice::QtensorLattice(const CalculationInput& input)
         pack_.ReadNumber("minDist", ParameterPack::KeyType::Required, min_dist_);
         pack_.ReadNumber("threshold_number", ParameterPack::KeyType::Required, threshold_number_);
         min_dist_sq_ = min_dist_ * min_dist_;
-        cell_ = cellptr(new CellGrid(simstate_, cutoff_, 1));
+        cell_ = cellptr(new CellGrid(simstate_, cutoff_));
     }
 
     // whether or not we are performing marching cubes 
@@ -412,6 +412,7 @@ void QtensorLattice::finishCalculate(){
         else{
             condition = ((lattice_num_atoms_(index3)/numframes) >= threshold_number_);
         }
+
         if (condition){
             lattice_Qtensor_(index3) = lattice_Qtensor_(index3) * (0.5/lattice_num_atoms_(index3));
 
