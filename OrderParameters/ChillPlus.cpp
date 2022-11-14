@@ -13,7 +13,7 @@ ChillPlus::ChillPlus(const CalculationInput& input)
     solvation_shell_r_squared_ = solvation_shell_r_ * solvation_shell_r_;
 
     // create the cell grid object
-    cell_ = cellptr(new CellGrid(simstate_, solvation_shell_r_, 2));
+    cell_ = cellptr(new CellGrid(simstate_, solvation_shell_r_));
 
     pack_.ReadNumber("harmonics_degree", ParameterPack::KeyType::Optional, harmonics_degree_);
     num_m_ = harmonics_degree_ * 2 + 1;
