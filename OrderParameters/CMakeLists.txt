@@ -58,6 +58,7 @@ target_sources(mdaOrderParameters PRIVATE
     "marching_cubes.cpp"
     "Mesh.cpp"
     "DensityField.cpp"
+    "PerpendicularSurface.cpp"
 )
 
 set(mdaOrderParameters_HEADER
@@ -117,6 +118,7 @@ set(mdaOrderParameters_HEADER
     "marching_cubes.hpp"
     "Mesh.h"
     "DensityField.h"
+    "PerpendicularSurface.h"
 )
 
 

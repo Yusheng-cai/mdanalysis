@@ -111,5 +111,5 @@ class ChillPlus : public Calculation{
         std::vector<std::vector<int>> Ice_Indices_;
 
         // probe volume related things 
-        std::vector<bool> IsInsideProbeVolume_;
+        std::vector<int> IsInsideProbeVolume_;
 };

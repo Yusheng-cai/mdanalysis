@@ -318,6 +318,9 @@ void SRE::calculateWithNS(){
                 attractive_energy_+= attractive_sum;
             }
         }
+        energy_ = energy_ * 0.5;
+        repulsive_energy_ = repulsive_energy_ * 0.5;
+        attractive_energy_ = attractive_energy_ * 0.5;
     }
 }
 
@@ -329,6 +332,8 @@ void SRE::calculateWithoutNS()
         const auto& solvent = getResidueGroup(SolventName_).getTotalResidue().atoms_;
         #pragma omp parallel
         {
+            Real repulsive_sum = 0.0;
+            Real attractive_sum = 0.0;
             Real sum = 0.0;
             #pragma omp for
             for (int i=0;i<NonZeroSolvent_.size();i++){
@@ -338,18 +343,27 @@ void SRE::calculateWithoutNS()
 
                 Real localSum = 0.0;
 
-                for (int j=0;j<NonZeroSolute_.size();j++)
-                {
+                for (int j=0;j<NonZeroSolute_.size();j++){
                     int soluIndex = NonZeroSolute_[j];
                     Real3 possl = solute[soluIndex].positions_;
                     Real qj     = solute[soluIndex].charge_;
+                    Real qiqj   = qi * qj;
                     Real3 dist;
                     Real distsq;
 
                     simstate_.getSimulationBox().calculateDistance(possv, possl, dist, distsq);
 
                     Real r = std::sqrt(distsq);
-                    Real value = factor_ * qi * qj * std::erfc(r * alpha_)  / r; 
+                    Real value = factor_ * qiqj * std::erfc(r * alpha_)  / r; 
+
+                    // we always write to repulsive sum
+                    if (qiqj > 0){
+                        repulsive_sum += value;
+                    }
+
+                    if (qiqj < 0){
+                        attractive_sum += value;
+                    }
 
                     sum += value;
                     localSum += value;
@@ -360,7 +374,9 @@ void SRE::calculateWithoutNS()
 
             #pragma omp critical
             {
+                repulsive_energy_ += repulsive_sum;
                 energy_ += sum;
+                attractive_energy_ += attractive_sum;
             }
         }
     }
@@ -369,6 +385,8 @@ void SRE::calculateWithoutNS()
         #pragma omp parallel
         {
             Real sum = 0.0;
+            Real repulsive_sum = 0.0;
+            Real attractive_sum = 0.0;
             #pragma omp for
             for (int i=0;i<NonZeroSolute_.size();i++){
                 int solIndex = NonZeroSolute_[i];
@@ -384,6 +402,7 @@ void SRE::calculateWithoutNS()
                         Real qj     = solute[soluIndex].charge_;
                         Real3 dist;
                         Real distsq;
+                        Real qiqj   = qi * qj;
 
                         simstate_.getSimulationBox().calculateDistance(possv, possl, dist, distsq);
 
@@ -391,6 +410,15 @@ void SRE::calculateWithoutNS()
                         if (r < cutoff_){
                             Real value = factor_ * qi * qj * std::erfc(r * alpha_)  / r; 
                             sum += value;
+
+                            // we always write to repulsive sum
+                            if (qiqj > 0){
+                                repulsive_sum += value;
+                            }
+
+                            if (qiqj < 0){
+                                attractive_sum += value;
+                            }
                             localSum += value;
                         }
                     }
@@ -402,8 +430,13 @@ void SRE::calculateWithoutNS()
             #pragma omp critical
             {
                 energy_ += sum;
+                attractive_energy_ += attractive_sum;
+                repulsive_energy_  += repulsive_sum;
             }
         }
+        energy_ = 0.5 * energy_;
+        attractive_energy_ = 0.5 * attractive_energy_;
+        repulsive_energy_ = 0.5 * repulsive_energy_;
     }
 }
 

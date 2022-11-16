@@ -83,12 +83,13 @@ void ChillPlus::calculate()
     const auto& pos= ag.getAtomPositions();
 
     // for the positions --> calculate whether or not they are in the PV
-    IsInsideProbeVolume_.clear(); IsInsideProbeVolume_.resize(pos.size(), false);
+    IsInsideProbeVolume_.clear(); 
+    IsInsideProbeVolume_.resize(pos.size(), 0);
 
     #pragma omp parallel for
     for (int i=0;i<pos.size();i++){
         if (isInPV(pos[i])){
-            IsInsideProbeVolume_[i] = true;
+            IsInsideProbeVolume_[i] = 1;
         }
     }
 
@@ -272,6 +273,7 @@ void ChillPlus::calculate()
 
     // calculate the number of ice like atoms 
     num_ice_like_atoms_ = ice_t[ChillPlusTypes::Cubic] + ice_t[ChillPlusTypes::Hexagonal] + ice_t[ChillPlusTypes::Interfacial];
+    std::cout << "num ice like atoms = " << num_ice_like_atoms_ << "\n";
 
     // correct ice like if necessary
     if (surface_correction_){
