@@ -966,7 +966,9 @@ void MeshTools::MapEdgeToFace(Mesh& mesh, std::map<INT2, std::vector<int>>& mapE
     return;
 }
 
-void MeshTools::CalculateBoundaryVertices(Mesh& mesh, std::map<INT2, std::vector<int>>& mapEdgeToFace, std::vector<bool>& boundaryIndicator)
+
+
+void MeshTools::CalculateBoundaryVertices(Mesh& mesh, const std::map<INT2, std::vector<int>>& mapEdgeToFace, std::vector<bool>& boundaryIndicator)
 {
     const auto& vertices = mesh.getvertices();
 

@@ -204,7 +204,7 @@ namespace MeshTools
     void MapEdgeToOpposingVertices(Mesh& mesh, std::map<INT2, std::vector<int>>& mapEdgeToFace,std::map<INT2, std::vector<int>>& MapEdgeToOppoVertices);
 
     // find boundary vertices 
-    void CalculateBoundaryVertices(Mesh& mesh, std::map<INT2, std::vector<int>>& mapEdgeToFace, std::vector<bool>& boundaryIndicator);
+    void CalculateBoundaryVertices(Mesh& mesh, const std::map<INT2, std::vector<int>>& mapEdgeToFace, std::vector<bool>& boundaryIndicator);
 
     // check if point is on boundary
     bool IsBoundary(int Index, const std::vector<bool>& boundaryIndicator);

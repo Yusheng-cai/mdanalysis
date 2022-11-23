@@ -10,12 +10,10 @@ int main(int argc, char** argv)
     std::string fname="";
 
     CommandLineArguments cmd(argc, argv);
-    if (cmd.has_key("f"))
-    {
+    if (cmd.has_key("f")){
         cmd.readString("f", CommandLineArguments::Keys::Required,fname);
     }
-    else
-    {
+    else{
         ASSERT((argc > 1), "There must be an input file.");
         fname = argv[1];
     }
