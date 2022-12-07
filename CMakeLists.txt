@@ -46,12 +46,17 @@ add_subdirectory(xdr)
 add_subdirectory(tools)
 add_subdirectory(OrderParameters)
 add_subdirectory(parallel)
+add_subdirectory(Actions)
 add_subdirectory(test)
 
 add_executable(mdanalysis main.cpp)
+add_executable(mda_cmd mda_cmd.cpp)
 
 target_include_directories(mdanalysis PUBLIC ${CMAKE_SOURCE_DIR})
+target_include_directories(mda_cmd PUBLIC ${CMAKE_SOURCE_DIR})
 
 target_link_libraries(mdanalysis PUBLIC mdaOrderParameters mdaxdr mdatools mdaparallel)
+target_link_libraries(mda_cmd PUBLIC mdaActions mdaOrderParameters mdaxdr mdatools mdaparallel)
 
 install(TARGETS mdanalysis DESTINATION bin)
+install(TARGETS mda_cmd DESTINATION bin)
