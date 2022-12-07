@@ -30,13 +30,12 @@ void mda_actions::generateNP(CommandLineArguments& cmd){
     NanoparticleGeneration NPgen(pos);
     NPgen.Generate();
     NPgen.writeGroFile(outputfname);
+}
 
-    // const auto& sulfur_pos = NPgen.getSulfurPositions();
-    // std::ofstream ofs;
-    // ofs.open(outputfname);
-    // for (int i=0;i<sulfur_pos.size();i++){
-    //     ofs << sulfur_pos[i] << "\n";
-    // }
+void mda_actions::FindSurfaceSiO2(CommandLineArguments& cmd){
+    std::string inputfname, outputfname="index.out";
 
-    // ofs.close();
+    cmd.readString("i", CommandLineArguments::Keys::Required, inputfname);
+    std::string ext = StringTools::ReadFileExtension(inputfname);
+    ASSERT((ext == "gro"), "Input must be a gro file.");
 }

@@ -15,4 +15,6 @@ namespace mda_actions{
     using Real3= CommonTypes::Real3;
 
     void generateNP(CommandLineArguments& cmd);
+
+    void FindSurfaceSiO2(CommandLineArguments& cmd);
 }

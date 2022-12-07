@@ -73,8 +73,7 @@ ChillPlus::ChillPlus(const CalculationInput& input)
     }
 }
 
-void ChillPlus::calculate()
-{
+void ChillPlus::calculate(){
     // clear types
     std::vector<int> ice_t(6,0);
 
@@ -86,7 +85,6 @@ void ChillPlus::calculate()
     IsInsideProbeVolume_.clear(); 
     IsInsideProbeVolume_.resize(pos.size(), 0);
 
-    #pragma omp parallel for
     for (int i=0;i<pos.size();i++){
         if (isInPV(pos[i])){
             IsInsideProbeVolume_[i] = 1;
