@@ -51,10 +51,10 @@ void GroFile::Open(std::string filename)
 void GroFile::ParseFile()
 { 
     atomsinfo_.clear();
+    position_.clear();
     std::set<int> ResidueSet;
 
-    for (int i=0; i< lines_.size() ;i++)
-    {
+    for (int i=0; i< lines_.size() ;i++){
         std::string sentence = lines_[i];
         ASSERT((! sentence.empty()), "The sentence read is empty.");
 
@@ -71,16 +71,27 @@ void GroFile::ParseFile()
         atomName    = sentence.substr(10,5);
         // atom Number is 5 characters long
         std::string atomNumberstr  = sentence.substr(15, 5);
+        // pos1
+        std::string pos1 = sentence.substr(20, 8);
+        std::string pos2 = sentence.substr(28, 8);
+        std::string pos3 = sentence.substr(36, 8);
 
         // remove the blank spaces from the string of atomName and ResidueName
         StringTools::RemoveBlankInString(residueName);
         StringTools::RemoveBlankInString(atomName);
         StringTools::RemoveBlankInString(atomName);
         StringTools::RemoveBlankInString(atomNumberstr);
+        StringTools::RemoveBlankInString(pos1); StringTools::RemoveBlankInString(pos2); StringTools::RemoveBlankInString(pos3);
 
         // convert the Numbers to int from string
         residueNumber = StringTools::StringToType<int>(residueNumberstr);
         atomNumber  = StringTools::StringToType<int>(atomNumberstr);
+        Real x,y,z;
+        x = StringTools::StringToType<Real>(pos1); y = StringTools::StringToType<Real>(pos2);
+        z = StringTools::StringToType<Real>(pos3);
+
+        Real3 p = {{x,y,z}};
+        position_.push_back(p);
 
         // instantiate the Atom object and append it to atomsinfo 
         Molecule::atom a;

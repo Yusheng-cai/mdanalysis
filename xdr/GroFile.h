@@ -16,6 +16,9 @@
 class GroFile
 {
     public:
+        using Real3 = CommonTypes::Real3;
+        using Real  = CommonTypes::Real;
+
         GroFile(){};
         ~GroFile(){};
 
@@ -33,6 +36,7 @@ class GroFile
         int getNumAtoms() const {return num_atoms_;}
         int getNumResidues() const {return numResidues_;}
         int getNumUniqueResidues() const {return numUniqueResidues_;}
+        const std::vector<Real3> getPosition() const {return position_;}
         const std::set<std::string> getAtomTypes() const {return AtomTypes_;}
         const std::set<std::string> getResidueNames() const {return ResidueNames_;}
         const std::vector<Molecule::residue>& getResidues() const {return ResidueGroup_;}
@@ -74,4 +78,7 @@ class GroFile
 
         // residue name map to index
         std::map<std::string, int> MapResidueNameToIndex_;
+
+        // read the positions in gro file
+        std::vector<Real3> position_;
 };

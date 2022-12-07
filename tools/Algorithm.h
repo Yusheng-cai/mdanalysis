@@ -24,10 +24,10 @@ namespace Algorithm
     int argmax(std::array<T,dim>& arr);
 
     template <typename T>
-    int argmin(std::vector<T>& vec);
+    int argmin(const std::vector<T>& vec);
 
     template <typename T>
-    int argmax(std::vector<T>& vec);
+    int argmax(const std::vector<T>& vec);
 
     template <typename T> 
     std::vector<T> arange(T min, T max, T step);
@@ -95,17 +95,17 @@ int Algorithm::argmax(std::array<T,dim>& arr)
 }
 
 template <typename T>
-int Algorithm::argmax(std::vector<T>& vec)
+int Algorithm::argmax(const std::vector<T>& vec)
 {
-    typename std::vector<T>::iterator it = std::max_element(vec.begin(), vec.end());
+    typename std::vector<T>::const_iterator it = std::max_element(vec.begin(), vec.end());
 
     return it - vec.begin();
 }
 
 template <typename T>
-int Algorithm::argmin(std::vector<T>& vec)
+int Algorithm::argmin(const std::vector<T>& vec)
 {
-    typename std::vector<T>::iterator it = std::min_element(vec.begin(), vec.end());
+    typename std::vector<T>::const_iterator it = std::min_element(vec.begin(), vec.end());
 
     return it - vec.begin();
 }

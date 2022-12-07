@@ -540,3 +540,11 @@ bool StringTools::CheckIfOnlyWhiteSpace(std::string& str)
     //return str.find_first_not_of(' ') == std::string::npos;
     return std::all_of(str.begin(), str.end(), [](unsigned char c)->bool {return std::isspace(c);});
 }
+
+std::string StringTools::ReadFileExtension(std::string name){
+    std::size_t it = name.find_first_of(".");
+    std::string extension = name.substr(it+1);
+    ASSERT((extension.find_first_of(".") == std::string::npos), "The file name " << name << " is not valid.");
+
+    return extension;
+}

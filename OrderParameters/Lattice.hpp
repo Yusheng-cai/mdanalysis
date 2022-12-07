@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <array>
+#include <cmath>
 
 template <typename T>
 class Lattice
@@ -33,17 +34,26 @@ class Lattice
         int getIndex(int a, int b, int c);
         INT3 getShape() const {return shape_;}
         int getSize() const {return total_size_;}
+        const std::vector<T> getData() {return lattice_;}
 
         Lattice operator* (T x);
         Lattice operator+ (T x);
         Lattice& operator+=(const Lattice<T>& other);
         Lattice& operator-=(const Lattice<T>& other);
 
+        INT3 idx_to_ijk(int idx);
+        int ijk_to_idx(const INT3& ijk);
+
         T& operator[] (int num);
         T operator[] (int num) const;
 
         // reduction 
         std::vector<std::vector<T>> reduce(int reduce_dim);
+
+        // iterators 
+        typename std::vector<T>::iterator begin() {return lattice_.begin();}
+        typename std::vector<T>::iterator end() {return lattice_.end();}
+
 
     private:
         std::vector<T> lattice_;
@@ -215,4 +225,22 @@ Lattice<T>& Lattice<T>::operator-=(const Lattice<T>& other){
     }
 
     return *this;
+}
+
+template <typename T>
+typename Lattice<T>::INT3 Lattice<T>::idx_to_ijk(int idx){
+    INT3 ret;
+
+    ret[2] = std::floor(idx / (nx_ * ny_));
+    ret[1] = std::floor((idx - ret[2] * nx_ * ny_) / nx_);
+    ret[0] = idx - ret[2] * nx_ * ny_ - ret[1] * nx_;
+
+    return ret;
+}
+
+template <typename T>
+int Lattice<T>::ijk_to_idx(const INT3& ijk){
+    int ret = ijk[0] + ijk[1] * nx_ + ijk[2] * nx_ * ny_;
+
+    return ret;
 }
