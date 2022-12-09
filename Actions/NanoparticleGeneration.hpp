@@ -39,9 +39,10 @@ class NanoparticleGeneration
 
         void CreateOffset();
 
-        void addSulfur();
+        // function that adds a sulfur onto the grid, updates the energies in terms of LJ
+        void addSulfur(int idx);
 
-        void FindMinIndexNearSulfur();
+        int find_low_energy_site_nearmin();
 
         // getters
         const std::vector<Real3>& getSulfurPositions() const {return sulfur_positions_;}

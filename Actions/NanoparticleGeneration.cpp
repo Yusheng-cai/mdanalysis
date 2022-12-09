@@ -162,17 +162,17 @@ void NanoparticleGeneration::GeneratePotentialGrid()
     }
 }
 
-void NanoparticleGeneration::addSulfur(){
-    INT3 min_ijk  = potential_grid_.idx_to_ijk(min_index_);
-    Real3 particle_pos = GridPositionFromIJK(min_ijk);
+void NanoparticleGeneration::addSulfur(int idx){
+    INT3 ijk  = potential_grid_.idx_to_ijk(idx);
+    Real3 particle_pos = GridPositionFromIJK(ijk);
     sulfur_positions_.push_back(particle_pos);
 
     for (INT3 off : offsets_){
-        INT3 off_ijk = off + min_ijk;
+        INT3 off_ijk = off + ijk;
         FixIndex(off_ijk);
 
-        if (off_ijk == min_ijk){
-            potential_grid_(min_ijk) = std::numeric_limits<Real>::max();
+        if (off_ijk == ijk){
+            potential_grid_(ijk) = std::numeric_limits<Real>::max();
         }
         else{
             Real3 lattice_pos = GridPositionFromIJK(off_ijk);
@@ -186,24 +186,18 @@ void NanoparticleGeneration::addSulfur(){
             }
         }
     }
-
-    min_index_ = Algorithm::argmin(potential_grid_.getData());
-    min_energy_ = potential_grid_[min_index_];
-
-    // FindMinIndexNearSulfur();
 }
 
-void NanoparticleGeneration::FindMinIndexNearSulfur(){
+int NanoparticleGeneration::find_low_energy_site_nearmin(){
     // curr min index
-    int curr_min_idx = min_index_;
-    INT3 curr_min_ijk = potential_grid_.idx_to_ijk(curr_min_idx);
+    INT3 min_ijk = potential_grid_.idx_to_ijk(min_index_);
 
     std::vector<int> indices;
     std::vector<Real> energies;
 
     // find the energies of the grids near the current min index 
     for (INT3 off : offsets_){
-        INT3 ijk = curr_min_ijk + off;
+        INT3 ijk = min_ijk + off;
         FixIndex(ijk);
         int idx = potential_grid_.ijk_to_idx(ijk);
         Real energy = potential_grid_(ijk);
@@ -212,26 +206,52 @@ void NanoparticleGeneration::FindMinIndexNearSulfur(){
         indices.push_back(idx);
     }
 
+    // find the min of the energyies nearby
     int mini = Algorithm::argmin(energies);
-    min_index_ = indices[mini];
-    min_energy_ = energies[mini];
+
+    // check if the energy is less than threshold
+    if (energies[mini] < e_thresh_){
+        return indices[mini];
+    }
+    else{return -1;}
 }
 
 void NanoparticleGeneration::Generate()
 {
     GeneratePotentialGrid();
     
-    // find the minimum energy as well as minimum index in the first iteration
-    min_index_ = Algorithm::argmin(potential_grid_.getData());
-    min_energy_ = potential_grid_[min_index_];
+    // initialize sulfur iterator
+    int sulfur_iterator=0; 
 
+    // start the loop
     while (true){
+        // find the global minimum energy as well as minimum index in the first iteration
+        min_index_ = Algorithm::argmin(potential_grid_.getData());
+        min_energy_ = potential_grid_[min_index_];
+
         std::cout << "minimum energy = " << min_energy_ << '\n';
-        if (min_energy_ > e_thresh_ ){
+
+        if (min_energy_ > e_thresh_){
             break;
         }
 
-        addSulfur();
+        // add sulfur to wherever the minimum energy site is 
+        addSulfur(min_index_);
+
+        while (true){
+            int local_min_index = find_low_energy_site_nearmin();
+
+            if (local_min_index != -1){
+                addSulfur(local_min_index);
+            }
+            else{
+                if (++sulfur_iterator == sulfur_positions_.size()){break;}
+                
+                INT3 min_ijk = FindIJKOnGrid(sulfur_positions_[sulfur_iterator]);
+                min_index_ = potential_grid_.ijk_to_idx(min_ijk);
+            }
+        }
+
     }
 
     MinimizeEnergy();
@@ -360,7 +380,7 @@ void NanoparticleGeneration::writeGroFile(std::string name){
         sulfur_positions_[i-1][0], sulfur_positions_[i-1][1], sulfur_positions_[i-1][2]);
     }
 
-    fprintf(fp, "\t%d %d %d", box_size_[0], box_size_[1], box_size_[2]);
+    fprintf(fp, "\t%f %f %f", box_size_[0], box_size_[1], box_size_[2]);
 
     fclose(fp);
 }
