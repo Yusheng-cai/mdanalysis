@@ -1,3 +1,5 @@
+#pragma once
+
 #include "tools/CommonTypes.h"
 #include "tools/CommonOperations.h"
 

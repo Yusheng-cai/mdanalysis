@@ -5,6 +5,8 @@ target_sources(mdaActions PRIVATE
     "mda_actions.cpp"
     "NanoparticleGeneration.cpp"
     "LennardJones.cpp"
+    "Crystal.cpp"
+    "mda_tools.cpp"
 )
 
 set(mdaActions_HEADER
@@ -12,6 +14,8 @@ set(mdaActions_HEADER
     "mda_actions.hpp"
     "NanoparticleGeneration.hpp"
     "LennardJones.hpp"
+    "Crystal.hpp"
+    "mda_tools.hpp"
 )
 
 

@@ -39,3 +39,12 @@ void mda_actions::FindSurfaceSiO2(CommandLineArguments& cmd){
     std::string ext = StringTools::ReadFileExtension(inputfname);
     ASSERT((ext == "gro"), "Input must be a gro file.");
 }
+
+void mda_actions::TileCrystals(CommandLineArguments& cmd){
+    std::string inputfname;
+    cmd.readString("i", CommandLineArguments::Keys::Required, inputfname);
+
+    Crystal c(inputfname);
+    c.calculate();
+    c.writeOutput("test.gro");
+}
