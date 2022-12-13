@@ -56,7 +56,7 @@ void AtomIndexParsing::Parse(std::vector<int>& indices)
 
                 if(! grofile_.isEmpty())
                 {
-                    ASSERT((begin_index > 0 && end_index <= grofile_.getNumAtoms()), "Either the begin index is less than 1 or the end_index is larger than allowed.");
+                    ASSERT((begin_index > 0 && end_index <= grofile_.getNumAtoms()), "Either the begin index is less than 1 or the end_index is larger than allowed. The total atoms = " << grofile_.getNumAtoms());
                 }
 
                 skip_       = StringTools::StringToType<int>(skip);
@@ -70,7 +70,7 @@ void AtomIndexParsing::Parse(std::vector<int>& indices)
                 end_index   = StringTools::StringToType<int>(end_index_str);
                 if(! grofile_.isEmpty())
                 {
-                    ASSERT((begin_index > 0 && end_index <= grofile_.getNumAtoms()), "Either the begin index is less than 1 or the end_index is larger than allowed.");
+                    ASSERT((begin_index > 0 && end_index <= grofile_.getNumAtoms()), "Either the begin index is less than 1 or the end_index is larger than allowed. The total atoms = " << grofile_.getNumAtoms());
                 }
 
                 skip_ = 1;

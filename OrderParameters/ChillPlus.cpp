@@ -101,6 +101,7 @@ void ChillPlus::calculate(){
 
 
     // define the cell indices fo rsurface atom groups
+    surface_cell_list_.clear();
     for (auto s : surface_atomgroups_){
         const auto& posA = getAtomGroup(s).getAtomPositions();
         surface_cell_list_.push_back(cell_->calculateIndices(posA));
@@ -271,7 +272,6 @@ void ChillPlus::calculate(){
 
     // calculate the number of ice like atoms 
     num_ice_like_atoms_ = ice_t[ChillPlusTypes::Cubic] + ice_t[ChillPlusTypes::Hexagonal] + ice_t[ChillPlusTypes::Interfacial];
-    std::cout << "num ice like atoms = " << num_ice_like_atoms_ << "\n";
 
     // correct ice like if necessary
     if (surface_correction_){
@@ -281,6 +281,7 @@ void ChillPlus::calculate(){
     if (findtrueice_){
         CorrectForTrueIce();
     }
+
 }
 
 void ChillPlus::ShiftTriangleWithRef(Real3& A, Real3& B, Real3& C, Real3& ref){
@@ -395,7 +396,7 @@ void ChillPlus::CorrectIceLikeAtomsBasedOnSurface(){
                         Real3 distance;
                         Real distsq;
                         simstate_.getSimulationBox().calculateDistance(pos[index], pos[neighbor_ind], distance, distsq);
-                        if (distsq < ice_cutoff_){
+                        if (distsq <= ice_cutoff_){
                             ice_neighbor += 1;
                         }
                     }
@@ -410,7 +411,7 @@ void ChillPlus::CorrectIceLikeAtomsBasedOnSurface(){
                         Real3 distance;
                         Real distsq;
                         simstate_.getSimulationBox().calculateDistance(pos[index], surface_pos[neighbor_ind], distance, distsq);
-                        if (distsq < surface_cutoff_){
+                        if (distsq <= surface_cutoff_){
                             surface_neighbor += 1;
                         }
                     }
@@ -425,7 +426,7 @@ void ChillPlus::CorrectIceLikeAtomsBasedOnSurface(){
         std::vector<int> new_water_indices;
         for (int i=0;i<water_indices_.size();i++){
             int index = water_indices_[i];
-            if ((surface_neighbors[i] > surface_threshold_) && (ice_neighbors[i] > ice_threshold_)){
+            if ((surface_neighbors[i] >= surface_threshold_) && (ice_neighbors[i] >= ice_threshold_)){
                 is_ice_like_[index] = true;
                 ice_like_indices_.push_back(index);
             }
