@@ -74,4 +74,7 @@ void RegisterAllActions(mapFunction& mapF, mapUsage& mapU)
     RegisterAction("NPgen", "-i input.out", \
                             [](CommandLineArguments& cmd) -> void {mda_actions::generateNP(cmd);}, 
                             mapF, mapU);
+    RegisterAction("TileCrystal", "-i input.cif", \
+                            [](CommandLineArguments& cmd) -> void {mda_actions::TileCrystals(cmd);}, \
+                            mapF, mapU);
 }
