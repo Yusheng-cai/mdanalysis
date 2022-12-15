@@ -9,14 +9,12 @@ IdentifyIceNearSubstrate::IdentifyIceNearSubstrate(const CalculationInput& input
 : Calculation(input)
 {
     pack_.ReadString("Substrate", ParameterPack::KeyType::Required, substrate_name_);
-    pack_.ReadString("water", ParameterPack::KeyType::Required, atom_name_);
     pack_.ReadString("index_file", ParameterPack::KeyType::Required, index_file_);
     pack_.ReadNumber("radius", ParameterPack::KeyType::Optional, radius_);
     radius_sq_ = radius_ * radius_;
 
     // add the atom groups
     addAtomgroup(substrate_name_);
-    addAtomgroup(atom_name_);
 
     readFile(index_file_);
 
@@ -32,8 +30,8 @@ IdentifyIceNearSubstrate::IdentifyIceNearSubstrate(const CalculationInput& input
 }
 
 void IdentifyIceNearSubstrate::calculate(){
+    std::vector<Real3> total_pos = simstate_.getTotalAtomPos();
     const auto& substrate_pos = getAtomGroup(substrate_name_).getAtomPositions();
-    const auto& water_pos     = getAtomGroup(atom_name_).getAtomPositions();
     std::vector<std::vector<int>> substrate_cell_indices = cell_->calculateIndices(substrate_pos);
     int step = simstate_.getFrameNumber();
 
@@ -68,14 +66,14 @@ void IdentifyIceNearSubstrate::calculate(){
         #pragma omp for
         for (int i=0;i<indices_[step].size();i++){
             int water_ind = indices_[step][i];
-            int water_intind = cell_->getCellGridIntIndex(water_pos[water_ind]);
-            std::vector<int> neighbor_index = cell_->getNeighborIndex(water_pos[water_ind]);
+            int water_intind = cell_->getCellGridIntIndex(total_pos[water_ind]);
+            std::vector<int> neighbor_index = cell_->getNeighborIndex(total_pos[water_ind]);
 
             for (auto& vec_neigh : substrate_cell_indices){
                 for (int ind : vec_neigh){
                     Real3 dist;
                     Real dist_sq;
-                    simstate_.getSimulationBox().calculateDistance(water_pos[water_ind], substrate_pos[ind], dist, dist_sq);
+                    simstate_.getSimulationBox().calculateDistance(total_pos[water_ind], substrate_pos[ind], dist, dist_sq);
 
                     if (dist_sq <= radius_sq_){
                         local_vec[ind] += 1;

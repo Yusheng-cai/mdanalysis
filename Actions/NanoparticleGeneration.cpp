@@ -1,13 +1,25 @@
 #include "NanoparticleGeneration.hpp"
 
-NanoparticleGeneration::NanoparticleGeneration(const std::vector<Real3> &particle_pos, Real De, Real alpha,
+NanoparticleGeneration::NanoparticleGeneration(const std::vector<Real3> &particle_pos, const std::string& ligand_gro, const std::string& ligand_top, Real De, Real alpha,
                                                Real re, Real sigma, Real epsilon)
-    : particle_pos_(particle_pos), De_(De), alpha_(alpha), re_(re), sigma_(sigma), epsilon_(epsilon)
+    : particle_pos_(particle_pos), ligand_gro_(ligand_gro), ligand_top_(ligand_top_), De_(De), alpha_(alpha), re_(re), sigma_(sigma), epsilon_(epsilon)
 {
     Morse_ = Mptr(new MorsePotential(De_, re_, alpha_));
     LJ_ = LJptr(new LennardJones(sigma_, epsilon_));
 
     ProcessParticlePositions();
+
+    initializeLigandInformation();
+}
+
+void NanoparticleGeneration::initializeLigandInformation(){
+    mda_tools::readGroFile(ligand_gro_, ligand_positions_, ligand_names_, ligand_resnames_);
+
+    // normalize positions against sulfur
+    Real3 ref = ligand_positions_[0];
+    for (int i=0;i<ligand_positions_.size();i++){
+        ligand_positions_[i] = ligand_positions_[i] - ref;
+    }
 }
 
 void NanoparticleGeneration::ProcessParticlePositions()
@@ -88,11 +100,9 @@ NanoparticleGeneration::Real3 NanoparticleGeneration::GridPositionFromIJK(const 
 
 void NanoparticleGeneration::FixIndex(INT3 &ijk)
 {
-    for (int i = 0; i < 3; i++)
-    {
+    for (int i = 0; i < 3; i++){
         ijk[i] %= box_N_[i];
-        if (ijk[i] < 0)
-        {
+        if (ijk[i] < 0){
             ijk[i] += box_N_[i];
         }
     }
@@ -102,8 +112,7 @@ void NanoparticleGeneration::CalculateDistance(const Real3 &v1, const Real3 &v2,
 {
     dist = v1 - v2;
     distsq = 0.0;
-    for (int i = 0; i < 3; i++)
-    {
+    for (int i = 0; i < 3; i++){
         if (dist[i] > (box_size_[i] * 0.5)){
             dist[i] -= box_size_[i];
         }
@@ -186,6 +195,11 @@ void NanoparticleGeneration::addSulfur(int idx){
             }
         }
     }
+}
+
+void NanoparticleGeneration::addLigandInformation()
+{
+
 }
 
 int NanoparticleGeneration::find_low_energy_site_nearmin(){

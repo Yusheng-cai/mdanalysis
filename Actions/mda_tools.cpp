@@ -20,3 +20,74 @@ const Real3& box_size){
     fprintf(fp, "\t%f %f %f", box_size[0], box_size[1], box_size[2]);
     fclose(fp);
 }
+
+void mda_tools::readFileLines(const std::string& filename, std::vector<std::string>& lines){
+    std::ifstream ifs;
+    ifs.open(filename);
+
+    ASSERT((ifs.is_open()), "The file with name " << filename << " is not opened.");
+
+    lines.clear();
+
+    std::string sentence;
+    // Read the main meet of the .gro file
+    while ( ! ifs.eof() ){
+        std::string sentence;
+        std::getline(ifs, sentence);
+
+        if (! sentence.empty()){
+            lines.push_back(sentence); 
+        }
+    };
+}
+
+void mda_tools::readGroFile(const std::string& filename, std::vector<Real3>& vecpos, std::vector<std::string>& atomnames, std::vector<std::string>& resname){
+    std::vector<std::string> lines;
+    readFileLines(filename, lines);
+
+    // the first 2 lines are comments and number of atoms 
+    for (int i=2; i< lines.size() ;i++){
+        if (i != lines.size() - 1){
+            std::string sentence = lines[i];
+            ASSERT((! sentence.empty()), "The sentence read is empty.");
+
+            int residueNumber;
+            std::string residueName;
+            std::string atomName;
+            int atomNumber;
+
+            // residue Number is 5 characters long
+            std::string residueNumberstr = sentence.substr(0,5);
+            // residue Name is 5 characters long
+            residueName = sentence.substr(5,5);
+            // atomName is 5 characters long
+            atomName    = sentence.substr(10,5);
+            // atom Number is 5 characters long
+            std::string atomNumberstr  = sentence.substr(15, 5);
+            // pos1
+            std::string pos1 = sentence.substr(20, 8);
+            std::string pos2 = sentence.substr(28, 8);
+            std::string pos3 = sentence.substr(36, 8);
+
+            // remove the blank spaces from the string of atomName and ResidueName
+            StringTools::RemoveBlankInString(residueName);
+            StringTools::RemoveBlankInString(atomName);
+            StringTools::RemoveBlankInString(atomNumberstr);
+            StringTools::RemoveBlankInString(pos1); StringTools::RemoveBlankInString(pos2); StringTools::RemoveBlankInString(pos3);
+
+            // convert the Numbers to int from string
+            residueNumber = StringTools::StringToType<int>(residueNumberstr);
+            atomNumber  = StringTools::StringToType<int>(atomNumberstr);
+            Real x,y,z;
+            x = StringTools::StringToType<Real>(pos1); y = StringTools::StringToType<Real>(pos2);
+            z = StringTools::StringToType<Real>(pos3);
+            Real3 p = {{x,y,z}};
+
+            // instantiate the Atom object and append it to atomsinfo 
+            vecpos.push_back(p);
+            atomnames.push_back(atomName);
+            resname.push_back(residueName);
+        }
+    }
+
+}

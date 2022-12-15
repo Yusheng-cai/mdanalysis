@@ -2,9 +2,12 @@
 
 void mda_actions::generateNP(CommandLineArguments& cmd){
     std::string inputfname, outputfname="sulfur.out";
+    std::string ligand_gro, ligand_top;
 
     cmd.readString("i", CommandLineArguments::Keys::Required, inputfname);
     cmd.readString("o", CommandLineArguments::Keys::Optional, outputfname);
+    cmd.readString("lig_gro", CommandLineArguments::Keys::Required, ligand_gro);
+    cmd.readString("lig_top", CommandLineArguments::Keys::Required, ligand_top);
     std::string ext = StringTools::ReadFileExtension(inputfname);
     std::vector<Real3> pos;
 
@@ -27,7 +30,7 @@ void mda_actions::generateNP(CommandLineArguments& cmd){
         }
     }
 
-    NanoparticleGeneration NPgen(pos);
+    NanoparticleGeneration NPgen(pos,ligand_gro, ligand_top);
     NPgen.Generate();
     NPgen.writeGroFile(outputfname);
 }

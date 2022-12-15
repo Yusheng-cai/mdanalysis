@@ -19,4 +19,7 @@ namespace mda_tools{
 
     void WriteGroFile(const std::string& filename, const std::vector<Real3>& vecpos, const std::vector<std::string>& aname, const std::vector<std::string>& resname, \
                       const Real3& boxsize);
+    void readGroFile(const std::string& filename, std::vector<Real3>& vecpos, std::vector<std::string>& aname, std::vector<std::string>& resname);
+
+    void readFileLines(const std::string& filename, std::vector<std::string>& lines);
 }
