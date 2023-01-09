@@ -60,6 +60,8 @@ target_sources(mdaOrderParameters PRIVATE
     "DensityField.cpp"
     "PerpendicularSurface.cpp"
     "IdentifyIceNearSubstrate.cpp"
+    "SlabVsr.cpp"
+    "IdentifySolventNearSubstrate.cpp"
 )
 
 set(mdaOrderParameters_HEADER
@@ -121,6 +123,8 @@ set(mdaOrderParameters_HEADER
     "DensityField.h"
     "PerpendicularSurface.h"
     "IdentifyIceNearSubstrate.hpp"
+    "SlabVsr.hpp"
+    "IdentifySolventNearSubstrate.hpp"
 )
 
 

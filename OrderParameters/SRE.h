@@ -32,6 +32,8 @@ class SRE : public Calculation
 
         void getInsidePVIndices();
 
+        const std::vector<Real> getPerAtomContributionIter() const {return PerAtomContributionIter_;}
+
         Real getEnergy() {return energy_;}
         Real getRepulsiveEnergy() {return repulsive_energy_;}
         Real getAttractiveEnergy() {return attractive_energy_;}
@@ -67,6 +69,7 @@ class SRE : public Calculation
 
         // per atom contribution to the SRE energy 
         std::vector<Real> PerAtomContribution_;
+        std::vector<Real> PerAtomContributionIter_;
         std::vector<Real> PerResidueContribution_;
 
         // solute indices per residue 

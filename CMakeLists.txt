@@ -8,6 +8,9 @@ LIST( APPEND CMAKE_MODULE_PATH
 # create the new project
 project(mdanalysis)
 
+#find_package(Torch REQUIRED)
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+
 # Require C++11
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -39,6 +42,7 @@ find_package(FFTW3)
 if (FFTW3_FOUND)
   message(STATUS "FFTW3 library: ${FFTW3_LIBRARIES}")
 endif()
+
 
 enable_testing()
 

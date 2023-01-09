@@ -10,6 +10,7 @@ SRE::SRE(const CalculationInput& input)
 {
     // This could be LC or water
     pack_.ReadString("solvent", ParameterPack::KeyType::Required, SolventName_);
+
     // This is usually SAM 
     pack_.ReadString("solute", ParameterPack::KeyType::Required, SoluteName_);
     if (SoluteName_ == SolventName_){
@@ -75,6 +76,7 @@ void SRE::initializeSoluteSolventIndices()
 
         const auto& totalSolvent = getResidueGroup(SolventName_).getTotalResidue().atoms_;
         PerAtomContribution_.resize(totalSolvent.size(),0.0);
+        PerAtomContributionIter_.resize(totalSolvent.size(),0.0);
     }
     else{
         const auto& solute = getResidueGroup(SoluteName_).getResidues();
@@ -88,6 +90,7 @@ void SRE::initializeSoluteSolventIndices()
         const auto& totalsolute = getResidueGroup(SoluteName_).getTotalResidue().atoms_;
         PerAtomContribution_.clear();
         PerAtomContribution_.resize(totalsolute.size(),0.0);
+        PerAtomContributionIter_.resize(totalsolute.size(),0.0);
     }
 }
 
@@ -179,6 +182,8 @@ void SRE::update()
     cell_ -> update();
 
     getInsidePVIndices();
+
+    std::fill(PerAtomContributionIter_.begin(), PerAtomContributionIter_.end(),0.0);
 }
 
 void SRE::calculateWithNS(){
@@ -250,6 +255,7 @@ void SRE::calculateWithNS(){
                 }
 
                 PerAtomContribution_[solventInd] += localsum;
+                PerAtomContributionIter_[solventInd] += localsum;
             }
 
             #pragma omp critical
@@ -309,6 +315,7 @@ void SRE::calculateWithNS(){
                 }
 
                 PerAtomContribution_[soluteInd] += localsum;
+                PerAtomContributionIter_[soluteInd] += localsum;
             }
 
             #pragma omp critical
@@ -370,6 +377,7 @@ void SRE::calculateWithoutNS()
                 }
 
                 PerAtomContribution_[solvIndex] = localSum;
+                PerAtomContributionIter_[solvIndex] = localSum;
             }
 
             #pragma omp critical
@@ -425,6 +433,7 @@ void SRE::calculateWithoutNS()
                 }
 
                 PerAtomContribution_[solIndex] += localSum;
+                PerAtomContributionIter_[solIndex] += localSum;
             }
 
             #pragma omp critical

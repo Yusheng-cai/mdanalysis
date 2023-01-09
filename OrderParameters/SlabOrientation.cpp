@@ -190,20 +190,19 @@ void SlabOrientation::finishCalculate()
     std::vector<std::vector<Real>> PcostZ(numzbins_, std::vector<Real>(numtbins_,0.0));
     BWcostZ_.resize(numzbins_, std::vector<Real>(numtbins_,0.0));
     Real sum = 0.0;
-    for (int i=0;i<histogram2d_.size();i++)
-    {
-        for (int j=0;j<histogram2d_[0].size();j++)
-        {
+    for (int i=0;i<histogram2d_.size();i++){
+        for (int j=0;j<histogram2d_[0].size();j++){
             sum += histogram2d_[i][j];
         }
     }
 
-    for (int i=0;i<PcostZ.size();i++)
-    {
-        for (int j=0;j<PcostZ[i].size();j++)
-        {
+    for (int i=0;i<PcostZ.size();i++){
+        for (int j=0;j<PcostZ[i].size();j++){
             PcostZ[i][j] = histogram2d_[i][j] / sum;
-            BWcostZ_[i][j] = -std::log(PcostZ[i][j])/AreaXY * numResiduePerBin_[i];
+            BWcostZ_[i][j] = 0;
+            if (PcostZ[i][j] != 0){
+                BWcostZ_[i][j] = -std::log(PcostZ[i][j])/AreaXY * numResiduePerBin_[i];
+            }
         }
     }
 

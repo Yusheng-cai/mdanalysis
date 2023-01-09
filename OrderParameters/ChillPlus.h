@@ -45,8 +45,6 @@ class ChillPlus : public Calculation{
 
         void ShiftTriangleWithRef(Real3& A, Real3& B, Real3& C, Real3& ref);
 
-        void printIcetypes(std::string name);
-        void printTotalIceIndicesPerIter(std::ofstream& ofs);
         void printIceLikeAtoms(std::ofstream& ofs);
 
         bool isEclipse(Real cij) {if (cij <= 0.18 && cij >= -0.45) {return true;} return false;}
@@ -74,7 +72,9 @@ class ChillPlus : public Calculation{
         std::vector<int> ice_like_indices_;
         std::vector<bool> is_ice_like_;
         Real surface_cutoff_=0.6;
+        Real surface_cutoff_sq_;
         Real ice_cutoff_=0.55;
+        Real ice_cutoff_sq_;
         int surface_threshold_=1;
         int ice_threshold_=8;
 
@@ -107,7 +107,6 @@ class ChillPlus : public Calculation{
 
         std::vector<INT2> Bonds_;
 
-        std::vector<std::vector<int>> ice_types_;
         std::vector<std::vector<int>> Ice_Indices_;
 
         // probe volume related things 

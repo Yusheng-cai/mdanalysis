@@ -49,6 +49,7 @@ class QtensorLattice : public Calculation{
         void printReducedOrder(std::string name);
         void printIsoSurface(std::string name);
         void printZenithalOrder(std::string name);
+        void printDensity(std::string name);
         void printAzimuthalOrder(std::string name);
 
         // per iter printing function

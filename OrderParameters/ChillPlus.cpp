@@ -36,13 +36,8 @@ ChillPlus::ChillPlus(const CalculationInput& input)
     initializeProbeVolumes();
     initializeNotInProbeVolumes();
 
-    // register output function 
-    registerOutputFunction("ice_types", [this](std::string name)-> void {this -> printIcetypes(name);});
-
     // register per iter output functions
-    registerPerIterOutputFunction("total_ice_indices", [this](std::ofstream& ofs) -> void {this -> printTotalIceIndicesPerIter(ofs);});
     registerPerIterOutputFunction("ice_like_atoms", [this](std::ofstream& ofs) -> void {this -> printIceLikeAtoms(ofs);});
-
     // register output file output
     registerOutputFileOutputs("num_ice_like_atoms", [this](void) -> Real {return this -> getNumIceLikeAtoms();});
 
@@ -68,39 +63,37 @@ ChillPlus::ChillPlus(const CalculationInput& input)
         pack_.ReadNumber("ice_cutoff", ParameterPack::KeyType::Optional, ice_cutoff_);
         pack_.ReadNumber("surface_threshold", ParameterPack::KeyType::Optional, surface_threshold_);
         pack_.ReadNumber("ice_threshold", ParameterPack::KeyType::Optional, ice_threshold_);
-        ice_cutoff_ = ice_cutoff_ * ice_cutoff_;
-        surface_cutoff_ = surface_cutoff_ * surface_cutoff_;
+        ice_cutoff_sq_ = ice_cutoff_ * ice_cutoff_;
+        surface_cutoff_sq_ = surface_cutoff_ * surface_cutoff_;
     }
 }
 
 void ChillPlus::calculate(){
-    // clear types
-    std::vector<int> ice_t(6,0);
 
     // obtain the atom groups
-    const auto& ag = getAtomGroup(atomgroup_name_);
-    const auto& pos= ag.getAtomPositions();
+    const auto& pos = getAtomGroup(atomgroup_name_).getAtomPositions();
+    const auto& ag  = getAtomGroup(atomgroup_name_);
 
     // for the positions --> calculate whether or not they are in the PV
     IsInsideProbeVolume_.clear(); 
     IsInsideProbeVolume_.resize(pos.size(), 0);
-
     for (int i=0;i<pos.size();i++){
         if (isInPV(pos[i])){
             IsInsideProbeVolume_[i] = 1;
         }
     }
 
-    // define the arrays 
+    // make cell list for all the water atoms 
     water_cell_list_ = cell_->calculateIndices(pos);
+
+    // define all the necessary arrays
     std::vector<std::vector<int>> neighbor_indices(pos.size());
     std::vector<std::vector<Real>> neighbor_distance(pos.size());
     std::vector<std::vector<Real3>> neighbor_vector_distance(pos.size());
     std::vector<std::vector<std::complex<Real>>> qlm(pos.size());
     std::vector<std::vector<Real>> cij(pos.size());
 
-
-    // define the cell indices fo rsurface atom groups
+    // define the cell indices for surface atom groups
     surface_cell_list_.clear();
     for (auto s : surface_atomgroups_){
         const auto& posA = getAtomGroup(s).getAtomPositions();
@@ -149,7 +142,7 @@ void ChillPlus::calculate(){
     #pragma omp parallel for
     for (int i=0;i<neighbor_indices.size();i++){
         // if larger than 4, then we sort and reassign the neighbor indices with the 4 of the closest distances
-        if (neighbor_indices[i].size() > 4){
+        if (neighbor_distance[i].size() > 4){
             std::vector<int> argsortIndices = Algorithm::argsort(neighbor_distance[i], true);
             std::vector<int> ind(4);
             std::vector<Real> dist(4);
@@ -199,7 +192,7 @@ void ChillPlus::calculate(){
     }
 
     #pragma omp parallel for 
-    for (int i=0;i<neighbor_indices.size();i++){
+    for (int i=0;i<pos.size();i++){
         cij[i].resize(neighbor_indices[i].size());
         for (int j=0;j<neighbor_indices[i].size();j++){
             int neighborIdx = neighbor_indices[i][j];
@@ -218,11 +211,10 @@ void ChillPlus::calculate(){
     }
 
 
-    // vector of bool keeping track of whether an atom is ice like
-    is_ice_like_.clear();
-    is_ice_like_.resize(pos.size(), false);
-    ice_like_indices_.clear();
 
+
+    std::vector<int> ice_t(6,0);
+    std::vector<INT2> bonds(cij.size(), {0,0});
     // calculate whether or not an atom is ice-like or not 
     for (int i=0;i<cij.size();i++){
         // only check if it's ice if it's inside the probe volume
@@ -238,40 +230,46 @@ void ChillPlus::calculate(){
                     bond[BondTypes::eclipse] += 1;
                 }
             }
-
-            // define type based on the number of bonds
-            int type;
-            // if there are less than 4 neighbors, then we call it water immediately
-            if (neighbor_indices[i].size() < 4){
-                ice_t[ChillPlusTypes::Liquid] += 1;
-            }
-            else{
-                if (Algorithm::IsInMap(mapBondToIceType_, bond, type)){
-                    if ((type == ChillPlusTypes::Interfacial) || (type == ChillPlusTypes::Hexagonal) || (type == ChillPlusTypes::Cubic)){
-                        ice_like_indices_.push_back(i);
-                        is_ice_like_[i] = true;
-                    }
-                    else{
-                        water_indices_.push_back(i);
-                        is_ice_like_[i] = false;
-                    }
-
-                    ice_t[type] += 1;
-                    Ice_Indices_[type].push_back(ag.AtomGroupIndices2GlobalIndices(i)+1);
-                }
-                else{
-                    ice_t[ChillPlusTypes::Liquid] += 1;
-                    water_indices_.push_back(i);
-                }
-            }
+            // assign the bond counts
+            bonds[i] = bond;
         }
     }
 
-    // obtain ice types --> number 
-    ice_types_.push_back(ice_t);
+    // vector of bool keeping track of whether an atom is ice like
+    is_ice_like_.clear();
+    is_ice_like_.resize(pos.size(), false);
+    ice_like_indices_.clear();
+    // now we perform the chill plus algorithm for identifying ice
+    for (int i=0;i<cij.size();i++){
+        auto bond = bonds[i];
+        
+        // define type based on the number of bonds
+        int type  = ChillPlusTypes::Liquid;
 
-    // calculate the number of ice like atoms 
-    num_ice_like_atoms_ = ice_t[ChillPlusTypes::Cubic] + ice_t[ChillPlusTypes::Hexagonal] + ice_t[ChillPlusTypes::Interfacial];
+        // chill plus identification
+        if (neighbor_indices[i].size() == 4){
+            // if it's in the map but does not belong to interfacial, hexagonal or cubic --> water
+            if (Algorithm::IsInMap(mapBondToIceType_, bond, type)){
+                if ((type == ChillPlusTypes::Interfacial) || (type == ChillPlusTypes::Hexagonal) || (type == ChillPlusTypes::Cubic)){
+                    // identify i to ice like indices --> local index
+                    ice_like_indices_.push_back(i);
+                    is_ice_like_[i] = true;
+                }
+                else{
+                    water_indices_.push_back(i);
+                    is_ice_like_[i] = false;
+                }
+            }
+            else{
+                water_indices_.push_back(i);
+                is_ice_like_[i] = false;
+            }
+        }
+        else{
+            water_indices_.push_back(i);
+            is_ice_like_[i] = false;
+        }
+    }
 
     // correct ice like if necessary
     if (surface_correction_){
@@ -282,6 +280,14 @@ void ChillPlus::calculate(){
         CorrectForTrueIce();
     }
 
+    // calculate number of ice like atoms
+    num_ice_like_atoms_=0;
+    for (int i=0;i<is_ice_like_.size();i++){
+        if (is_ice_like_[i]){
+            num_ice_like_atoms_ += 1;
+        }
+    }
+    std::cout << "num ice like atoms = " << num_ice_like_atoms_ << '\n';
 }
 
 void ChillPlus::ShiftTriangleWithRef(Real3& A, Real3& B, Real3& C, Real3& ref){
@@ -371,6 +377,7 @@ void ChillPlus::CorrectIceLikeAtomsBasedOnSurface(){
     // get all atom positions
     const auto& ag = getAtomGroup(atomgroup_name_);
     const auto& pos= ag.getAtomPositions();
+    std::cout << "before correction ice indices = " << ice_like_indices_.size() << "\n";
 
     while (true){ 
         // obtain water indices  --> find how many ice like indices are around it 
@@ -396,7 +403,7 @@ void ChillPlus::CorrectIceLikeAtomsBasedOnSurface(){
                         Real3 distance;
                         Real distsq;
                         simstate_.getSimulationBox().calculateDistance(pos[index], pos[neighbor_ind], distance, distsq);
-                        if (distsq <= ice_cutoff_){
+                        if (distsq <= ice_cutoff_sq_){
                             ice_neighbor += 1;
                         }
                     }
@@ -411,7 +418,7 @@ void ChillPlus::CorrectIceLikeAtomsBasedOnSurface(){
                         Real3 distance;
                         Real distsq;
                         simstate_.getSimulationBox().calculateDistance(pos[index], surface_pos[neighbor_ind], distance, distsq);
-                        if (distsq <= surface_cutoff_){
+                        if (distsq <= surface_cutoff_sq_){
                             surface_neighbor += 1;
                         }
                     }
@@ -422,11 +429,13 @@ void ChillPlus::CorrectIceLikeAtomsBasedOnSurface(){
             ice_neighbors[i] = ice_neighbor;
         }
 
-        // set up the new water indices 
+        // set up the new water indices --> iterate over existing water indices as no ice should turn into water 
         std::vector<int> new_water_indices;
         for (int i=0;i<water_indices_.size();i++){
             int index = water_indices_[i];
+            // if the water atom meets the criteria
             if ((surface_neighbors[i] >= surface_threshold_) && (ice_neighbors[i] >= ice_threshold_)){
+                // change this atom to be ice like
                 is_ice_like_[index] = true;
                 ice_like_indices_.push_back(index);
             }
@@ -435,6 +444,7 @@ void ChillPlus::CorrectIceLikeAtomsBasedOnSurface(){
             }
         }
 
+        // break if no new water indices has been added
         if (water_indices_.size() == new_water_indices.size()){
             break;
         }
@@ -442,17 +452,7 @@ void ChillPlus::CorrectIceLikeAtomsBasedOnSurface(){
         water_indices_.clear(); 
         water_indices_.insert(water_indices_.end(), new_water_indices.begin(), new_water_indices.end());
     }
-}
-
-void ChillPlus::printTotalIceIndicesPerIter(std::ofstream& ofs){
-    int time = simstate_.getTime();
-    ofs << time << " ";
-    for (int i=0;i<Ice_Indices_.size();i++){
-        for (int j=0;j<Ice_Indices_[i].size();j++){
-            ofs << Ice_Indices_[i][j] << " ";
-        }
-    }
-    ofs << "\n";
+    std::cout << "After correction = " << ice_like_indices_.size() << "\n";
 }
 
 void ChillPlus::printIceLikeAtoms(std::ofstream& ofs){
@@ -461,7 +461,7 @@ void ChillPlus::printIceLikeAtoms(std::ofstream& ofs){
 
     const auto& ag = getAtomGroup(atomgroup_name_);
     for (int i=0;i<ice_like_indices_.size();i++){
-            ofs << ag.AtomGroupIndices2GlobalIndices(ice_like_indices_[i]) + 1 << " ";
+        ofs << ag.AtomGroupIndices2GlobalIndices(ice_like_indices_[i]) + 1 << " ";
     }
     ofs << "\n";
 }
@@ -481,23 +481,4 @@ void ChillPlus::update()
     // clear water and ice_like_indices
     water_indices_.clear();
     ice_like_indices_.clear();
-}
-
-void ChillPlus::printIcetypes(std::string name)
-{
-    std::ofstream ofs;
-    ofs.open(name);
-
-    ofs << "# Cubic Hexagonal Interfacial Clathrate Interfacial_Clathrate Liquid\n";
-
-    for (int i=0;i<ice_types_.size();i++)
-    {
-        for (int j=0;j<ice_types_[i].size();j++)
-        {
-            ofs << ice_types_[i][j] << " ";
-        }
-        ofs << "\n";
-    }
-
-    ofs.close();
 }

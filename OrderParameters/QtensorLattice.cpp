@@ -90,6 +90,7 @@ QtensorLattice::QtensorLattice(const CalculationInput& input)
     registerOutputFunction("Director", [this](std::string name) -> void {this -> printDirector(name);});
     registerOutputFunction("Order", [this](std::string name) -> void {this -> printOrder(name);});
     registerOutputFunction("Qtensor",[this](std::string name) -> void {this -> printQtensor(name);});
+    registerOutputFunction("density", [this](std::string name) -> void {this -> printDensity(name);});
     registerOutputFunction("velocity", [this](std::string name) -> void {this -> printVelocity(name);});
     registerOutputFunction("reducedOrder", [this](std::string name) -> void {this -> printReducedOrder(name);});
     registerOutputFunction("reducedDirector", [this](std::string name) -> void {this -> printReducedDirector(name);});
@@ -155,7 +156,6 @@ void QtensorLattice::CalculateZenithalQtensor(){
         }
 
         // rotate director onto rotate_vec --> default (0,0,1)
-        std::cout << "Dir = " << dir << "\n";
         Matrix rotMat = LinAlg3x3::GetRotationMatrix(dir, rotate_vec_);
 
         #pragma omp parallel
@@ -480,6 +480,19 @@ void QtensorLattice::printDirector(std::string name){
         }
     }
 
+    ofs.close();
+}
+
+void QtensorLattice::printDensity(std::string name){
+    std::ofstream ofs;
+
+    for (int i=0;i<lattice_shape_[0];i++){
+        for (int j=0;j<lattice_shape_[1];j++){
+            for (int k=0;k<lattice_shape_[2];k++){
+                ofs << i << " " << j << " " << k << " " << lattice_num_atoms_(i,j,k) << "\n";
+            }
+        }
+    }
     ofs.close();
 }
 
