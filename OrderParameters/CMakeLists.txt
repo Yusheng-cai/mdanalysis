@@ -62,6 +62,7 @@ target_sources(mdaOrderParameters PRIVATE
     "IdentifyIceNearSubstrate.cpp"
     "SlabVsr.cpp"
     "IdentifySolventNearSubstrate.cpp"
+    "QtensorVoxel.cpp"
 )
 
 set(mdaOrderParameters_HEADER
@@ -125,6 +126,7 @@ set(mdaOrderParameters_HEADER
     "IdentifyIceNearSubstrate.hpp"
     "SlabVsr.hpp"
     "IdentifySolventNearSubstrate.hpp"
+    "QtensorVoxel.hpp"
 )
 
 

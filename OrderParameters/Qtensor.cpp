@@ -37,6 +37,7 @@ Qtensor::Qtensor(const CalculationInput& input)
     registerOutputFileOutputs("v1x", [this](void) -> Real {return this -> getv1x();});
     registerOutputFileOutputs("v1y", [this](void) -> Real {return this -> getv1y();});
     registerOutputFileOutputs("v1z", [this](void) -> Real {return this -> getv1z();});
+    registerOutputFileOutputs("order", [this](void) -> Real{return this -> getOrder();});
 
     // initialize the probe volumes
     initializeProbeVolumes();
@@ -112,6 +113,7 @@ void Qtensor::calculate()
 
     // calculate the eigenvector and eigenvalues 
     auto result = LinAlg3x3::OrderEigenSolver(Qtensor_);
+    eigenval_=result.first;
     eigenvector_= result.second;
     p2_ = result.first[0];
 

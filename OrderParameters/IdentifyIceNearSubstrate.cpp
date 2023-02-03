@@ -130,5 +130,5 @@ void IdentifyIceNearSubstrate::readFile(const std::string& filename){
     }
     ifs.close(); 
 
-    ASSERT((simstate_.getTotalFrames() == indices_.size()), "The index file has less frames than the simulation.");
+    ASSERT((simstate_.getTotalFrames() <= indices_.size()), "The index file has less frames than the simulation.");
 }

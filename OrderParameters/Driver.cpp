@@ -120,8 +120,7 @@ void Driver::initializeDriverPack()
 
     int frames = startingFrame_;
     int numframes = 0;
-    while (frames <= nframes)
-    {
+    while (frames <= nframes){
         numframes ++;
         frames += skip_ + 1;
     }

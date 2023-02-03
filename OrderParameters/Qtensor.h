@@ -41,6 +41,7 @@ class Qtensor : public Calculation
         Real getv1x() const {return eigenvector_[0][0];}
         Real getv1y() const {return eigenvector_[1][0];}
         Real getv1z() const {return eigenvector_[2][0];}
+        Real getOrder() const {return eigenval_[1] * -2;}
     
     private:
         Matrix Qtensor_;

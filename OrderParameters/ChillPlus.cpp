@@ -271,13 +271,13 @@ void ChillPlus::calculate(){
         }
     }
 
+    if (findtrueice_){
+        CorrectForTrueIce();
+    }
+
     // correct ice like if necessary
     if (surface_correction_){
         CorrectIceLikeAtomsBasedOnSurface();
-    }
-
-    if (findtrueice_){
-        CorrectForTrueIce();
     }
 
     // calculate number of ice like atoms
