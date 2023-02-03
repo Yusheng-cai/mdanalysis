@@ -27,8 +27,8 @@ void TopologyReader::ReadFile(std::string& name, std::vector<std::string>& conte
 
                 // read the file --> always search from the provided path
                 std::vector<std::string> content_include;
-                std::string path = FileSystem::joinPath(absolute_path_, words[1]);
-                ReadFile(path, content_include);
+                //std::string path = FileSystem::joinPath(absolute_path_, words[1]);
+                ReadFile(words[1], content_include);
 
                 contents.insert(contents.end(), content_include.begin(), content_include.end());
             }
