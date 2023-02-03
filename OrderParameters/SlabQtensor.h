@@ -34,6 +34,8 @@ class SlabQtensor : public Calculation
         void printP2zbeta(std::string name);
         void printevBeta(std::string name);
 
+        void printQtensorZPerIter(std::ofstream& ofs);
+
         std::vector<Real>& getP2() {return P2_;}
 
     private:
@@ -68,6 +70,10 @@ class SlabQtensor : public Calculation
 
         std::vector<Real> P2_;
         std::vector<Real> P2avg_;
+
+        std::vector<Real> ResiduePerBin_perIter_;
+        std::vector<Real> P2_perIter_;
+        std::vector<Real3> eigvec_perIter_;
 
         int precision_ = 3;
 

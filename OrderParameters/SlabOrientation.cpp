@@ -16,8 +16,7 @@ SlabOrientation::SlabOrientation(const CalculationInput& input)
     costBin_ = Binptr(new Bin({{-1,1}}, numtbins_));
     costsquaredBin_ = Binptr(new Bin({{0,1}}, numtbins_));
 
-    if(zbinPack != nullptr)
-    {
+    if(zbinPack != nullptr){
         zBin_    = Binptr(new Bin(*zbinPack));
         numzbins_= zBin_->getNumbins();
     }
@@ -125,12 +124,10 @@ void SlabOrientation::binUsingMinMax()
     Real slight_shift=1e-3;
     std::vector<Real> ZdirectionNum;
 
-    for (int i=0;i<COM_.size();i++)
-    {
+    for (int i=0;i<COM_.size();i++){
         Real val = COM_[i][directionIndex_];
 
-        if (val > above_)
-        {
+        if (val > above_){
             ZdirectionNum.push_back(val);
         }
     }
