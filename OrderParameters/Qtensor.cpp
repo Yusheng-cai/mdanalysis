@@ -38,6 +38,16 @@ Qtensor::Qtensor(const CalculationInput& input)
     registerOutputFileOutputs("v1y", [this](void) -> Real {return this -> getv1y();});
     registerOutputFileOutputs("v1z", [this](void) -> Real {return this -> getv1z();});
     registerOutputFileOutputs("order", [this](void) -> Real{return this -> getOrder();});
+    registerOutputFileOutputs("eig2", [this](void) -> Real{return this->geteig2();});
+    registerOutputFileOutputs("eig3", [this](void) -> Real{return this -> geteig3();});
+    registerOutputFileOutputs("explicit_thetaz", [this](void) -> Real {return this->getExplicitThetaz();});
+    registerOutputFileOutputs("explicit_thetax", [this](void) -> Real {return this->getExplicitThetax();});
+    registerOutputFileOutputs("explicit_thetay", [this](void) -> Real {return this->getExplicitThetay();});
+    registerOutputFileOutputs("order_cos1", [this](void) -> Real {return this -> getOrderCos1();});
+    registerOutputFileOutputs("order_cos2", [this](void) -> Real {return this -> getOrderCos2();});
+    registerOutputFileOutputs("order_cos3", [this](void) -> Real {return this -> getOrderCos3();});
+
+
 
     // initialize the probe volumes
     initializeProbeVolumes();
@@ -60,6 +70,7 @@ void Qtensor::calculate()
 {
     // zero out Qtensor 
     Qtensor_.fill({});
+    explicit_theta={{0,0,0}};
 
     // obtain the residues 
     auto& res = getResidueGroup(residue_name_).getResidues();
@@ -83,6 +94,7 @@ void Qtensor::calculate()
     {
         Matrix Qlocal;
         Qlocal.fill({});
+        Real3 local_explicit_theta={{0,0,0}};
         #pragma omp for
         for (int i=0;i<InsideIndices.size();i++)
         { 
@@ -98,6 +110,7 @@ void Qtensor::calculate()
             uij_[i] = distance;
 
             Matrix singleQ = LinAlg3x3::LocalQtensor(uij_[i]);
+            local_explicit_theta = local_explicit_theta + (distance * distance);
 
             LinAlg3x3::matrix_accum_inplace(Qlocal, singleQ);
         }
@@ -105,6 +118,7 @@ void Qtensor::calculate()
         #pragma omp critical
         {
             LinAlg3x3::matrix_accum_inplace(Qtensor_, Qlocal);
+            explicit_theta = explicit_theta + local_explicit_theta;
         }
     }
 
@@ -114,8 +128,27 @@ void Qtensor::calculate()
     // calculate the eigenvector and eigenvalues 
     auto result = LinAlg3x3::OrderEigenSolver(Qtensor_);
     eigenval_=result.first;
+    // eigenvector are the columns
     eigenvector_= result.second;
     p2_ = result.first[0];
+
+    Real3 eigv1, eigv2, eigv3;
+
+    order_cos1=0.0; order_cos2=0.0; order_cos3=0.0;
+    for (int i=0;i<3;i++){
+        eigv1[i] = eigenvector_[i][0];
+        eigv2[i] = eigenvector_[i][1];
+        eigv3[i] = eigenvector_[i][2];
+    }
+
+    for (int i=0;i<InsideIndices.size();i++){
+        int index = InsideIndices[i];
+        order_cos1 += (1.5 * std::pow(LinAlg3x3::DotProduct(uij_[i], eigv1),2) - 0.5);
+        order_cos2 += (1.5 * std::pow(LinAlg3x3::DotProduct(uij_[i], eigv2),2) - 0.5);
+        order_cos3 += (1.5 * std::pow(LinAlg3x3::DotProduct(uij_[i], eigv3),2) - 0.5);
+    }
+
+    order_cos1 /= InsideIndices.size(); order_cos2 /= InsideIndices.size(); order_cos3 /= InsideIndices.size();
 
     // Add the current Qtensor to Qtensortot
     LinAlg3x3::matrix_accum_inplace(QtensorTot_, Qtensor_);

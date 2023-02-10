@@ -26,6 +26,7 @@ class grcost : public Calculation
         virtual void finishCalculate() override;
 
         void printgrcost(std::string name);
+        void printhistogram(std::string name);
 
     private:
         std::vector<Real3> COM_;
@@ -55,6 +56,7 @@ class grcost : public Calculation
 
 
         std::vector<std::vector<Real>> histogramDotProduct_;
+        std::vector<std::vector<Real>> histogram_;
 
         int numtbins_;
         int numrbins_;

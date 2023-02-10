@@ -16,7 +16,7 @@ gcost::gcost(const CalculationInput& input)
     ASSERT((probevolumes_.size() > 0 || NotInprobevolumes_.size() > 0), "No probe volume passed in");
 
     // intialize the bins 
-    auto binPack = input.pack_.findParamPack("bin", ParameterPack::KeyType::Required);
+    auto binPack = input.pack_.findParamPack("rbin", ParameterPack::KeyType::Required);
     bin_ = binptr(new Bin(*binPack));
     numbins_ = bin_ ->getNumbins();
 
@@ -51,7 +51,7 @@ gcost::gcost(const CalculationInput& input)
     tbin_ = binptr(new Bin(trange_, numtbins_));
 
     // read in the index for calculation
-    input.pack_.ReadString("name", ParameterPack::KeyType::Optional, CalcFuncName_);
+    input.pack_.ReadString("funcname", ParameterPack::KeyType::Optional, CalcFuncName_);
 
     // register the calculation function --> either g1 or g2 
     registerCalcFunc("g1", [this](Real3& ui, Real3& uj) -> Real {return this -> Calculateg1(ui,uj);});
@@ -69,8 +69,7 @@ gcost::gcost(const CalculationInput& input)
     registerOutputFunction("numneighbors", [this](std::string name) -> void {this->printnumneighbors(name);});
 
     volume_.resize(bin_->getNumbins(),0.0);
-    for (int i=0;i<bin_->getNumbins();i++)
-    {
+    for (int i=0;i<bin_->getNumbins();i++){
         volume_[i] = 4 * Constants::PI * std::pow(bin_ ->getLeftLocationOfBin(i),2) * bin_ ->getStep();
     }
 }
@@ -80,22 +79,15 @@ void gcost::initializeDistanceCOM()
     distanceCOMIndices1_.resize(numatoms1_,0);
     std::iota(distanceCOMIndices1_.begin(), distanceCOMIndices1_.end(), 1);
     pack_.ReadVectorNumber("distanceCOM1", ParameterPack::KeyType::Optional, distanceCOMIndices1_);
-    for (int i=0;i<distanceCOMIndices1_.size();i++)
-    {
-        distanceCOMIndices1_[i] -= 1;
-    }
+    distanceCOM1_ = distanceCOM1_ - 1;
 
     distanceCOMIndices2_.resize(numatoms2_,0);
     std::iota(distanceCOMIndices2_.begin(), distanceCOMIndices2_.end(), 1);
     pack_.ReadVectorNumber("distanceCOM2", ParameterPack::KeyType::Optional, distanceCOMIndices2_);
-    for (int i=0;i<distanceCOMIndices2_.size();i++)
-    {
-        distanceCOMIndices2_[i] -= 1;
-    }
+    distanceCOM2_ = distanceCOM2_ - 1;
 }
 
-void gcost::printnumneighbors(std::string name)
-{
+void gcost::printnumneighbors(std::string name){
     std::ofstream ofs;
     ofs.open(name);
 
@@ -117,18 +109,14 @@ void gcost::printrdfhist2d(std::string name)
     ofs.open(name);
     std::vector<std::vector<Real>> rdf2d(numbins_, std::vector<Real>(numtbins_,0.0));
 
-    for (int i=1;i<numbins_;i++)
-    {
-        for (int j=0;j<numtbins_;j++)
-        {
+    for (int i=1;i<numbins_;i++){
+        for (int j=0;j<numtbins_;j++){
             rdf2d[i][j] = histogramDotProduct2drdf_[i][j]/volume_[i];
         }
     }
 
-    for (int i=0;i<numbins_;i++)
-    {
-        for (int j=0;j<numtbins_;j++)
-        {
+    for (int i=0;i<numbins_;i++){
+        for (int j=0;j<numtbins_;j++){
             ofs << i << "\t" << j << "\t" << bin_ -> getCenterLocationOfBin(i) << "\t" << tbin_ -> getCenterLocationOfBin(j) << "\t" \
             << rdf2d[i][j] << "\n";
         }
@@ -233,21 +221,16 @@ void gcost::calculate()
 
         // find distances inside PV
         #pragma omp for
-        for (int i=0;i<numresidues1_;i++)
-        {
-            if (isInPV(COM1_[i]))
-            {
+        for (int i=0;i<numresidues1_;i++){
+            if (isInPV(COM1_[i])){
                 insideNumLocal += 1;
-                for (int j=0;j<numresidues2_;j++)
-                {
+                for (int j=0;j<numresidues2_;j++){
                     // find the distance between ith and jth COM 
                     Real3 distance;
                     Real val;
 
-                    if (selfinteraction_)
-                    {
-                        if (i ==j)
-                        {
+                    if (selfinteraction_){
+                        if (i ==j){
                             continue;
                         }
                     }
@@ -261,14 +244,12 @@ void gcost::calculate()
                     val = std::sqrt(val);
 
                     // 0 distance doesn't make sense --> probably means self interaction
-                    if (bin_ -> isInRange(val))
-                    {
+                    if (bin_ -> isInRange(val)){
                         int binnum = bin_ -> findBin(val);
                         histogramdotproductLocal[binnum] += dotproduct;
                         histogramLocal[binnum] += 1;
 
-                        if (tbin_ -> isInRange(dotproduct))
-                        {
+                        if (tbin_ -> isInRange(dotproduct)){
                             int tbinnum = tbin_ -> findBin(dotproduct);
                             hist2dLocal[binnum][tbinnum] += 1;
                         }
@@ -278,12 +259,10 @@ void gcost::calculate()
         }
 
         #pragma omp critical
-        for (int i=0;i<numbins_;i++)
-        {
+        for (int i=0;i<numbins_;i++){
             histogram_[i] += histogramLocal[i];
             histogramDotProduct_[i] += histogramdotproductLocal[i];
-            for (int j=0;j<numtbins_;j++)
-            {
+            for (int j=0;j<numtbins_;j++){
                 histogramDotProduct2dPerIter_[i][j] += hist2dLocal[i][j];
                 histogramDotProduct2d_[i][j] += hist2dLocal[i][j];
             }
@@ -294,10 +273,8 @@ void gcost::calculate()
     }
 
     // add to the hist2drdf
-    for (int i=0;i<numbins_;i++)
-    {
-        for (int j=0;j<numtbins_;j++)
-        {
+    for (int i=0;i<numbins_;i++){
+        for (int j=0;j<numtbins_;j++){
             histogramDotProduct2drdf_[i][j] += histogramDotProduct2dPerIter_[i][j] / insideNum;
         }
     }
@@ -312,10 +289,8 @@ void gcost::printHistogram2d(std::string name)
     Real dr   = bin_ -> getStep();
     Real sum  = 0.0;
 
-    for (int i=0;i<numbins_;i++)
-    {
-        for (int j=0;j<numtbins_;j++)
-        {
+    for (int i=0;i<numbins_;i++){
+        for (int j=0;j<numtbins_;j++){
             sum += histogramDotProduct2d_[i][j] * dcos * dr;
         }
     }
@@ -334,7 +309,7 @@ void gcost::printHistogram2d(std::string name)
         for (int j=0;j<numtbins_;j++)
         {
             ofs << i << "\t" << j << "\t" << bin_ -> getCenterLocationOfBin(i) << "\t" << tbin_ -> getCenterLocationOfBin(j) \
-            << "\t" << temp[i][j] << "\n";
+            << "\t" << histogramDotProduct2d_[i][j] << "\n";
         }
     }
 
@@ -360,19 +335,15 @@ void gcost::finishCalculate()
     std::cout << "num frames = " << numframes << std::endl;
 
     // Total cosine theta divided by total histogram
-    for (int i=0;i<histogramDotProduct_.size();i++)
-    {
-        if (histogram_[i] != 0)
-        {
+    for (int i=0;i<histogramDotProduct_.size();i++){
+        if (histogram_[i] != 0){
             histogramDotProduct_[i] /= histogram_[i];
         }
     }
 
     // take care of histogram2d --> we can normalize over columns (costheta) , no need to time average 
-    for (int i=0;i<numbins_;i++)
-    {
-        for (int j=0;j<numtbins_;j++)
-        {
+    for (int i=0;i<numbins_;i++){
+        for (int j=0;j<numtbins_;j++){
             histogramDotProduct2d_[i][j] /= numframes;
 
             // time averaged number of neighbors 

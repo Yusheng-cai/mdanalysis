@@ -27,10 +27,7 @@ grcost::grcost(const CalculationInput& input)
     distanceCOMIndices_.resize(numatoms_,0);
     std::iota(distanceCOMIndices_.begin(), distanceCOMIndices_.end(),1);
     input.pack_.ReadVectorNumber("distanceCOM", ParameterPack::KeyType::Optional, distanceCOMIndices_);
-    for (int i=0;i<distanceCOMIndices_.size();i++)
-    {
-        distanceCOMIndices_[i] -= 1;
-    }
+    distanceCOMIndices_ = distanceCOMIndices_ - 1;
 
     input.pack_.ReadNumber("headindex", ParameterPack::KeyType::Optional, headindex_);
     input.pack_.ReadNumber("tailindex", ParameterPack::KeyType::Optional, tailindex_);
@@ -41,12 +38,15 @@ grcost::grcost(const CalculationInput& input)
     numrbins_ = rbin_ -> getNumbins();
 
     histogramDotProduct_.resize(numrbins_, std::vector<Real>(numtbins_,0.0));
+    histogram_.resize(numrbins_, std::vector<Real>(numtbins_, 0.0));
 
     // read in the array 
     arrayRead_ = input.pack_.ReadArrayNumber("array", ParameterPack::KeyType::Optional, arr_);
 
-    registerOutputFunction("histogram", [this](std::string name) -> void {this -> printgrcost(name);});
+    registerOutputFunction("grcost", [this](std::string name) -> void {this -> printgrcost(name);});
+    registerOutputFunction("histogram", [this](std::string name) -> void {this -> printhistogram(name);});
 }
+
 
 void grcost::calculate()
 {
@@ -89,8 +89,7 @@ void grcost::calculate()
     {
         Matrix localQ={};
         #pragma omp for
-        for (int i=0;i<InsideIndices_.size();i++)
-        {
+        for (int i=0;i<InsideIndices_.size();i++){
             int index = InsideIndices_[i];
 
             Matrix singleQ = LinAlg3x3::LocalQtensor(uij_[index]);
@@ -108,20 +107,12 @@ void grcost::calculate()
     auto result = LinAlg3x3::OrderEigenSolver(Qtensor_);
 
     // get the director out of the result
-    if (! arrayRead_)
-    {
-        for (int i=0;i<3;i++)
-        {
+    if (! arrayRead_){
+        for (int i=0;i<3;i++){
             director_[i] = result.second[i][0];
         }
     }
-    else
-    {
-        for (int i=0;i<3;i++)
-        {
-            director_[i] = arr_[i];
-        }
-    }
+    else{director_ = arr_;}
 
     histogramDPPerIterBuffer_.set_master_object(histogramDotProductPerIter_);
     histogramPerIterBuffer_.set_master_object(histogramPerIter_);
@@ -137,10 +128,8 @@ void grcost::calculate()
         histPerIter.resize(numrbins_, std::vector<int>(numtbins_,0.0));
 
         #pragma omp for
-        for (int i=0;i<N;i++)
-        {
-            for (int j=i+1;j<N;j++)
-            {
+        for (int i=0;i<N;i++){
+            for (int j=i+1;j<N;j++){
                 Real3 distance;
                 Real distance_sq;
 
@@ -155,8 +144,7 @@ void grcost::calculate()
 
                 Real dotproduct = LinAlg3x3::DotProduct(uij_[index1], uij_[index2]);
 
-                if (tbin_->isInRange(rdotd) && rbin_->isInRange(dist))
-                {
+                if (tbin_->isInRange(rdotd) && rbin_->isInRange(dist)){
                     int i1 = rbin_->findBin(dist);
                     int i2 = tbin_->findBin(rdotd);
 
@@ -167,10 +155,8 @@ void grcost::calculate()
         }
 
         #pragma omp for
-        for (int i=0;i<N;i++)
-        {
-            for (int j=0;j<OutsideIndices_.size();j++)
-            {
+        for (int i=0;i<N;i++){
+            for (int j=0;j<OutsideIndices_.size();j++){
                 Real3 distance;
                 Real distance_sq;
 
@@ -185,8 +171,7 @@ void grcost::calculate()
 
                 Real dotproduct = LinAlg3x3::DotProduct(uij_[index1], uij_[index2]);
 
-                if (tbin_->isInRange(rdotd) && rbin_->isInRange(dist))
-                {
+                if (tbin_->isInRange(rdotd) && rbin_->isInRange(dist)){
                     int i1 = rbin_->findBin(dist);
                     int i2 = tbin_->findBin(rdotd);
 
@@ -198,27 +183,12 @@ void grcost::calculate()
 
         #pragma omp critical
         {
-            for (int i=0;i<numrbins_;i++)
-            {
-                for (int j=0;j<numtbins_;j++)
-                {
-                    histogramDotProductPerIter_[i][j] += DPPerIter[i][j];
-                    histogramPerIter_[i][j] += histPerIter[i][j];
+            for (int i=0;i<numrbins_;i++){
+                for (int j=0;j<numtbins_;j++){
+                    histogram_[i][j] += histPerIter[i][j];
+                    histogramDotProduct_[i][j] += DPPerIter[i][j];
                 }
             }
-        }
-    }
-
-    for (int i=0;i<numrbins_;i++)
-    {
-        for (int j=0;j<numtbins_;j++)
-        {
-            if (histogramPerIter_[i][j] != 0)
-            {
-                histogramDotProductPerIter_[i][j] /= histogramPerIter_[i][j];
-            }
-
-            histogramDotProduct_[i][j] += histogramDotProductPerIter_[i][j];
         }
     }
 }
@@ -227,11 +197,12 @@ void grcost::finishCalculate()
 {
     int numframes = simstate_.getTotalFrames();
 
-    for (int i=0;i<numrbins_;i++)
-    {
-        for (int j=0;j<numtbins_;j++)
-        {
-            histogramDotProduct_[i][j] /= numframes;
+    for (int i=0;i<numrbins_;i++){
+        for (int j=0;j<numtbins_;j++){
+            if (histogram_[i][j] != 0){
+                histogramDotProduct_[i][j] /= histogram_[i][j];
+            }
+            histogram_[i][j] /= numframes;
         }
     }
 }
@@ -243,13 +214,24 @@ void grcost::printgrcost(std::string name)
 
     ofs << "# index1 index2 value\n";
 
-    for (int i=0;i<numrbins_;i++)
-    {
-        for (int j=0;j<numtbins_;j++)
-        {
+    for (int i=0;i<numrbins_;i++){
+        for (int j=0;j<numtbins_;j++){
             ofs << i << " " << j << " " << histogramDotProduct_[i][j] << "\n";
         }
     }
 
+    ofs.close();
+}
+
+void grcost::printhistogram(std::string name){
+    std::ofstream ofs;
+    ofs.open(name);
+
+    ofs << "# index1 index2 value\n";
+    for (int i=0;i<numrbins_;i++){
+        for (int j=0;j<numtbins_;j++){
+            ofs << i << " " << j << " " << histogram_[i][j] << "\n";
+        }
+    }
     ofs.close();
 }

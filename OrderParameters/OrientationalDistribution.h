@@ -35,6 +35,8 @@ class OrientationalDistribution : public Calculation
         // printing functions
         void PrintDistribution(std::string name);
         void PrintCosthetasquared_betafactors(std::ofstream& ofs);
+        void PrintCostheta_betafactors(std::ofstream& ofs);
+        void PrintCosthetaPerIter(std::ofstream& ofs);
 
         // per iterations printing functions
         void printResidueAngles(std::ofstream& ofs);
@@ -46,6 +48,7 @@ class OrientationalDistribution : public Calculation
     private:
         std::vector<Real> PCosTheta_;
         std::vector<Real> PCosThetaSquared_;
+        std::vector<Real> PCosTheta_PerIter_;
 
         // head and tail index used for identifying orientation of an LC molecule 
         int HeadIndex_=1;
@@ -71,10 +74,11 @@ class OrientationalDistribution : public Calculation
 
         // array that we want to calculate cos theta on
         Real3 arr_={{0,0,1}};
-        bool useDirector_=true;
+        bool useDirector_=false;
 
         // these are the costhetasquared of each of the atom for the residues in question
         std::vector<Real> costhetasquared_betafactor_;
+        std::vector<Real> costheta_betafactor_;
 
         std::vector<int> AtomIndices_;
 

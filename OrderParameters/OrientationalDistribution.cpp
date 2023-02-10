@@ -31,24 +31,25 @@ OrientationalDistribution::OrientationalDistribution(const CalculationInput& inp
     CosThetaSquaredBin_ = Binptr(new Bin(CosThetaSquaredRange_, NumBins_));
     PCosTheta_.resize(NumBins_,0.0);
     PCosThetaSquared_.resize(NumBins_,0.0);
+    PCosTheta_PerIter_.resize(NumBins_, 0.0);
 
     // register the output functions 
     registerOutputs();
     registerOutputfile();
 }
 
-void OrientationalDistribution::registerOutputfile()
-{
+void OrientationalDistribution::registerOutputfile(){
     registerOutputFileOutputs("costheta", [this](void)-> Real {return this -> getAvgCostheta();});
     registerOutputFileOutputs("costhetasquared", [this](void)-> Real {return this -> getAvgCosthetasquared();});
 }
 
 
-void OrientationalDistribution::registerOutputs()
-{
+void OrientationalDistribution::registerOutputs(){
     registerOutputFunction("Distribution", [this](std::string name) -> void {this -> PrintDistribution(name);});
     registerPerIterOutputFunction("costhetasquared_betafactor", [this](std::ofstream& ofs) -> void {this -> PrintCosthetasquared_betafactors(ofs);});
+    registerPerIterOutputFunction("costheta_betafactor", [this](std::ofstream& ofs) -> void {this -> PrintCostheta_betafactors(ofs);});
     registerPerIterOutputFunction("ResidueAngles", [this](std::ofstream& ofs)-> void {this -> printResidueAngles(ofs);});
+    registerPerIterOutputFunction("costheta", [this](std::ofstream& ofs)-> void{this -> PrintCosthetaPerIter(ofs);});
 }
 
 void OrientationalDistribution::finishCalculate()
@@ -74,8 +75,7 @@ void OrientationalDistribution::PrintDistribution(std::string name)
 
     ofs << "# Bin\tcostheta\tcos2theta\tP(costheta)\tP(cos2theta)\n";
 
-    for (int i=0;i<NumBins_;i++)
-    {
+    for (int i=0;i<NumBins_;i++){
         ofs <<CosThetaBin_->getCenterLocationOfBin(i) << " " << CosThetaSquaredBin_->getCenterLocationOfBin(i) << " " \
         << PCosTheta_[i] << " " << PCosThetaSquared_[i] << "\n";
     }
@@ -93,8 +93,7 @@ void OrientationalDistribution::update()
     Real3 BoxSides = simstate_.getSimulationBox().getSides();
 
     #pragma omp parallel for 
-    for (int i=0;i<res.size();i++)
-    {
+    for (int i=0;i<res.size();i++){
         COM_[i] = calcCOM(res[i]);
 
         Real3 HeadPos = res[i].atoms_[HeadIndex_].positions_;
@@ -112,14 +111,12 @@ void OrientationalDistribution::update()
     AtomIndices_ = InsidePVIndices(COM_);
 
     // if we are using director to calculate p(cos(theta)), then we must first calculate the Q tensor
-    if (useDirector_)
-    {
+    if (useDirector_){
         Matrix Qtensor = {};
         #pragma omp parallel
         {
             Matrix Qlocal = {};
-            for (int i=0;i<AtomIndices_.size();i++)
-            {
+            for (int i=0;i<AtomIndices_.size();i++){
                 int index = AtomIndices_[i];
                 Matrix Q  = LinAlg3x3::LocalQtensor(uij_[index]);
                 LinAlg3x3::matrix_accum_inplace(Qlocal, Q);
@@ -133,11 +130,13 @@ void OrientationalDistribution::update()
         LinAlg3x3::matrix_mult_inplace(Qtensor, 1.0/(2.0 * (Real)AtomIndices_.size()));
         auto res = LinAlg3x3::OrderEigenSolver(Qtensor);
 
-        for (int i=0;i<3;i++)
-        {
+        for (int i=0;i<3;i++){
             arr_[i] = res.second[i][0];
         }
     }
+
+    // fill the per iter items with 0
+    std::fill(PCosTheta_PerIter_.begin(), PCosTheta_PerIter_.end(), 0.0);
 }
 
 void OrientationalDistribution::calculate()
@@ -146,6 +145,8 @@ void OrientationalDistribution::calculate()
     int AtomSize = simstate_.getTotalNumberAtoms();
     costhetasquared_betafactor_.clear();
     costhetasquared_betafactor_.resize(AtomSize,0.0);
+    costheta_betafactor_.clear();
+    costheta_betafactor_.resize(AtomSize, 0.0);
     MapIndexToAngle_.clear();
     AvgCostheta_ = 0.0;
     AvgCosthetasquared_= 0.0;
@@ -162,8 +163,7 @@ void OrientationalDistribution::calculate()
         std::map<int, Real> localMap;
 
         #pragma omp for
-        for (int i=0;i<AtomIndices_.size();i++)
-        {
+        for (int i=0;i<AtomIndices_.size();i++){
             int k = AtomIndices_[i];
             Real cost = LinAlg3x3::DotProduct(uij_[k], arr_);
             Real costsq = cost * cost;
@@ -180,19 +180,20 @@ void OrientationalDistribution::calculate()
             localcostheta[CosThetaBinNum] += 1;
             localcosthetasquared[CosThetaSquaredBinNum] += 1;
 
-            for (int j=0;j<res[k].atoms_.size();j++)
-            {
+            for (int j=0;j<res[k].atoms_.size();j++){
                 int index = res[k].atoms_[j].atomNumber_-1;
                 costhetasquared_betafactor_[index] = costsq;
+                costheta_betafactor_[index] = cost;
             }
         }
 
         #pragma omp critical
         {
-            for (int i=0;i<NumBins_;i++)
-            {
+            for (int i=0;i<NumBins_;i++){
                 PCosTheta_[i] = PCosTheta_[i] + localcostheta[i];
                 PCosThetaSquared_[i] = PCosThetaSquared_[i] + localcosthetasquared[i];
+
+                PCosTheta_PerIter_[i] +=  localcostheta[i];
             }
 
             AvgCosthetasquared_ = AvgCosthetasquared_ + localavgcosthetasquared;
@@ -206,15 +207,35 @@ void OrientationalDistribution::calculate()
     AvgCostheta_ = AvgCostheta_ * 1.0/AtomIndices_.size();
 }
 
+void OrientationalDistribution::PrintCosthetaPerIter(std::ofstream& ofs){
+    int framenum   = simstate_.getFrameNumber();
+
+    ofs << framenum << " ";
+    for (int i=0;i<PCosTheta_PerIter_.size();i++){
+        ofs << PCosTheta_PerIter_[i] << " ";
+    }
+    ofs << "\n";
+}
+
 void OrientationalDistribution::PrintCosthetasquared_betafactors(std::ofstream& ofs)
 {
     int totalatoms = simstate_.getTotalNumberAtoms();
     int framenum   = simstate_.getFrameNumber();
 
     ofs << framenum << " ";
-    for (int i=0;i<totalatoms;i++)
-    {
+    for (int i=0;i<totalatoms;i++){
         ofs << costhetasquared_betafactor_[i] << " ";
+    }
+    ofs << "\n";
+}
+
+void OrientationalDistribution::PrintCostheta_betafactors(std::ofstream& ofs){
+    int totalatoms = simstate_.getTotalNumberAtoms();
+    int framenum   = simstate_.getFrameNumber();
+
+    ofs << framenum << " ";
+    for (int i=0;i<totalatoms;i++){
+        ofs << costheta_betafactor_[i] << " ";
     }
     ofs << "\n";
 }
