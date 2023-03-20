@@ -19,7 +19,7 @@
 #include <complex>
 
 enum ChillPlusTypes{
-    Cubic, Hexagonal, Interfacial, Clathrate, Interfacial_Clathrate, Liquid
+    Cubic, Hexagonal, Interfacial, Clathrate, Interfacial_Clathrate, Surface, Liquid
 };
 
 enum BondTypes{
@@ -39,6 +39,7 @@ class ChillPlus : public Calculation{
         virtual void finishCalculate() override;
 
         Real getNumIceLikeAtoms() const {return num_ice_like_atoms_;}
+        Real getNumIceLikeChillPlus() const {return num_ice_like_atoms_before_correction_;}
 
         void CorrectIceLikeAtomsBasedOnSurface();
         void CorrectForTrueIce();
@@ -46,6 +47,7 @@ class ChillPlus : public Calculation{
         void ShiftTriangleWithRef(Real3& A, Real3& B, Real3& C, Real3& ref);
 
         void printIceLikeAtoms(std::ofstream& ofs);
+        void printIceTypeNum(std::ofstream& ofs);
 
         bool isEclipse(Real cij) {if (cij <= 0.18 && cij >= -0.45) {return true;} return false;}
         bool isStaggered(Real cij) {if (cij <= -0.8 && cij >= -1) {return true;} return false;}
@@ -53,6 +55,7 @@ class ChillPlus : public Calculation{
 
     private:
         int num_ice_like_atoms_;
+        int num_ice_like_atoms_before_correction_;
 
         // whether we are performing surface correction or not 
         bool surface_correction_=false;
@@ -70,7 +73,7 @@ class ChillPlus : public Calculation{
         // keep track of the water indices in the system 
         std::vector<int> water_indices_;
         std::vector<int> ice_like_indices_;
-        std::vector<bool> is_ice_like_;
+        std::vector<int> is_ice_like_;
         Real surface_cutoff_=0.6;
         Real surface_cutoff_sq_;
         Real ice_cutoff_=0.55;
@@ -80,10 +83,14 @@ class ChillPlus : public Calculation{
 
         // cell list related things 
         cellptr cell_;
+        cellptr cell_surface_;
+        cellptr cell_ice_corr_;
+        cellptr cell_surface_corr_;
         std::vector<std::vector<int>> water_cell_list_;
         std::vector<std::vector<std::vector<int>>> surface_cell_list_;
         
         Real solvation_shell_r_=0.35, solvation_shell_r_squared_;
+        Real surface_shell_r_=0.45, surface_shell_r_squared_;
 
         int harmonics_degree_=3, num_m_;
         std::vector<int> m_vec_;
@@ -111,4 +118,8 @@ class ChillPlus : public Calculation{
 
         // probe volume related things 
         std::vector<int> IsInsideProbeVolume_;
+
+        // types 
+        std::vector<int> types_;
+        std::array<int, 7> type_nums_;
 };
