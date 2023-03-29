@@ -56,7 +56,7 @@ void ProbeVolumeIndices::calculateRes()
         {
             for (int j=0;j<res[i].atoms_.size();j++)
             {
-                AtomIndices_.push_back(res[i].atoms_[j].atomNumber_-1);
+                AtomIndices_.push_back(res[i].atoms_[j].atomNumber_);
             }
         }
     }
