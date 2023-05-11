@@ -48,6 +48,7 @@ class ChillPlus : public Calculation{
 
         void printIceLikeAtoms(std::ofstream& ofs);
         void printIceTypeNum(std::ofstream& ofs);
+        void printAddedIce(std::ofstream& ofs);
 
         bool isEclipse(Real cij) {if (cij <= 0.18 && cij >= -0.45) {return true;} return false;}
         bool isStaggered(Real cij) {if (cij <= -0.8 && cij >= -1) {return true;} return false;}
@@ -118,6 +119,9 @@ class ChillPlus : public Calculation{
 
         // probe volume related things 
         std::vector<int> IsInsideProbeVolume_;
+
+        // added ice index
+        std::vector<int> addedIce_;
 
         // types 
         std::vector<int> types_;
