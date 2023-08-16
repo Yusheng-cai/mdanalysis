@@ -35,6 +35,7 @@ class SlabQtensor : public Calculation
         void printevBeta(std::string name);
 
         void printQtensorZPerIter(std::ofstream& ofs);
+        void printp2zPerIter(std::ofstream& ofs);
 
         std::vector<Real>& getP2() {return P2_;}
 
@@ -90,4 +91,5 @@ class SlabQtensor : public Calculation
 
         // we only bin the COM above this count
         Real above_=-100000;
+        Real below_=100000;
 };

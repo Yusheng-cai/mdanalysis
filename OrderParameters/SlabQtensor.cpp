@@ -32,6 +32,7 @@ SlabQtensor::SlabQtensor(const CalculationInput& input)
     else{
         input.pack_.ReadNumber("numzbins", ParameterPack::KeyType::Required, numbins_);
         input.pack_.ReadNumber("above", ParameterPack::KeyType::Optional, above_);
+        input.pack_.ReadNumber("below", ParameterPack::KeyType::Optional, below_);
         bin_ = Binptr(new Bin());
         usingMinMaxBins_ = true;
         BinLocation_.resize(numbins_, 0.0);
@@ -117,7 +118,7 @@ void SlabQtensor::binUsingMinMax()
 
     std::vector<Real> zdir;
     for (int i=0;i<COM_.size();i++){
-        if (COM_[i][index_] > above_){
+        if ((COM_[i][index_] > above_) && (COM_[i][index_] < below_)){
             zdir.push_back(COM_[i][index_]);
         }
     }
@@ -252,6 +253,18 @@ void SlabQtensor::printQtensorZPerIter(std::ofstream& ofs){
         for (int j=0;j<3;j++){
             ofs << eigvec_perIter_[i][j] << " ";
         }
+    }
+
+    ofs << "\n";
+}
+
+void SlabQtensor::printp2zPerIter(std::ofstream& ofs){
+    for (int i=0;i<ResiduePerBin_perIter_.size();i++){
+        ofs << ResiduePerBin_perIter_[i] << " ";
+    }
+
+    for (int i=0;i<P2_perIter_.size();i++){
+        ofs << P2_perIter_[i] << " ";
     }
 
     ofs << "\n";
