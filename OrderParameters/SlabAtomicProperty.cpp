@@ -103,12 +103,10 @@ void SlabAtomicProperty::binUsingMinMax(const std::vector<Real3>& positions)
     Real slight_shift=1e-3;
     std::vector<Real> ZdirectionNum;
 
-    for (int i=0;i<positions.size();i++)
-    {
+    for (int i=0;i<positions.size();i++){
         Real val = positions[i][direction_];
 
-        if (val > above_)
-        {
+        if (val > above_){
             ZdirectionNum.push_back(val);
         }
     }
@@ -125,8 +123,7 @@ void SlabAtomicProperty::binUsingMinMax(const std::vector<Real3>& positions)
     bin_ -> update(range, numbins_);
     dz_ = bin_->getStep();
 
-    for (int i=0;i<numbins_;i++)
-    {
+    for (int i=0;i<numbins_;i++){
         ResidueLocationPerBin_[i] += bin_->getCenterLocationOfBin(i);
     }
 }
@@ -138,25 +135,20 @@ std::vector<SlabAtomicProperty::Real> SlabAtomicProperty::CalculateDensity()
     std::vector<Real> Density(numbins_, 0.0);
     auto box = simstate_.getSimulationBox().getBox();
     Real area = 1.0;
-    for (int i=0;i<3;i++)
-    {
-        if (i != direction_)
-        {
+    for (int i=0;i<3;i++){
+        if (i != direction_){
             area *= box[i][i];
         }
     }
 
     std::vector<Real3> positions;
-    for (int i=0;i<Res.size();i++)
-    {
-        for (int j=0;j<Res[i].atoms_.size();j++)
-        {
+    for (int i=0;i<Res.size();i++){
+        for (int j=0;j<Res[i].atoms_.size();j++){
             positions.push_back(Res[i].atoms_[j].positions_);
         }
     }
 
-    if (usingMinMax_)
-    {
+    if (usingMinMax_){
         binUsingMinMax(positions);
     }
 
@@ -165,10 +157,8 @@ std::vector<SlabAtomicProperty::Real> SlabAtomicProperty::CalculateDensity()
         std::vector<Real> localDensity(numbins_, 0.0);
 
         #pragma omp for
-        for (int i=0;i<positions.size();i++)
-        {
-            if (bin_->isInRange(positions[i][direction_]))
-            {
+        for (int i=0;i<positions.size();i++){
+            if (bin_->isInRange(positions[i][direction_])){
                 int binIndex = bin_->findBin(positions[i][direction_]);
                 localDensity[binIndex] += 1;
             }
@@ -176,15 +166,13 @@ std::vector<SlabAtomicProperty::Real> SlabAtomicProperty::CalculateDensity()
 
         #pragma omp critical
         {
-            for (int i =0;i<numbins_;i++)
-            {
+            for (int i =0;i<numbins_;i++){
                 Density[i] += localDensity[i];
             }
         }
     }
 
-    for (int i=0;i<Density.size();i++)
-    {
+    for (int i=0;i<Density.size();i++){
         Density[i] = Density[i] / (area * dz_);
     }
 
