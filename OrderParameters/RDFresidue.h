@@ -20,6 +20,7 @@ class RDFresidue : public Calculation
 {
     public:
         using Binptr = std::unique_ptr<Bin>;
+
         RDFresidue(const CalculationInput& input);
     
         virtual void calculate() override;

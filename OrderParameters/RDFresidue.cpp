@@ -58,18 +58,14 @@ void RDFresidue::calculate()
     #pragma omp parallel
     {
         #pragma omp for
-        for (int i=0;i<COM1_.size();i++)
-        {
+        for (int i=0;i<COM1_.size();i++){
             Real3 C1 = CalculationTools::getCOM(res1[i], simstate_, COMIndices1_);
-
             COM1_[i] = C1;
         }
 
         #pragma omp for
-        for (int i=0;i<COM2_.size();i++)
-        {
+        for (int i=0;i<COM2_.size();i++){
             Real3 C2 = CalculationTools::getCOM(res2[i], simstate_, COMIndices2_);
-
             COM2_[i] = C2;
         }
     }
@@ -80,20 +76,16 @@ void RDFresidue::calculate()
     {
         std::vector<int> NumCountPerBinLocal(bins_ -> getNumbins(),0);
         #pragma omp for
-        for (int i=0;i<COM1_.size();i++)
-        {
-            for (int j=0;j<COM2_.size();j++)
-            {
+        for (int i=0;i<COM1_.size();i++){
+            for (int j=0;j<COM2_.size();j++){
                 Real3 distance;
                 Real sq_dist;
                 simstate_.getSimulationBox().calculateDistance(COM1_[i], COM2_[j],distance, sq_dist);
 
                 Real dist = std::sqrt(sq_dist);
 
-                if (dist != 0)
-                {
-                    if (bins_-> isInRange(dist))
-                    {
+                if (dist != 0){
+                    if (bins_-> isInRange(dist)){
                         int binnum = bins_ -> findBin(dist);
                         NumCountPerBinLocal[binnum] += 1;
                     }
@@ -102,14 +94,12 @@ void RDFresidue::calculate()
         }
 
         #pragma omp critical 
-        for (int i=0;i<NumCountsPerBin.size();i++)
-        {
+        for (int i=0;i<NumCountsPerBin.size();i++){
             NumCountsPerBin[i] += NumCountPerBinLocal[i];
         }
     }
 
-    for (int i=0;i<rdf_.size();i++)
-    {
+    for (int i=0;i<rdf_.size();i++){
         rdf_[i] = rdf_[i] + NumCountsPerBin[i];
     }
 
@@ -124,8 +114,7 @@ void RDFresidue::finishCalculate()
     // normalize the numCountsPerBin By the number of frames first
     int numFrames_ = simstate_.getTotalFrames();
 
-    for (int i=0;i<rdf_.size();i++)
-    {
+    for (int i=0;i<rdf_.size();i++){
         rdf_[i] = rdf_[i]/numFrames_;
     }
 
@@ -141,13 +130,11 @@ void RDFresidue::printNumNeighbors(std::string name)
     const auto& res1 = getResidueGroup(resname1_).getResidues();
     int N = res1.size();
 
-    for (int i=0;i<rdf_.size();i++)
-    {
+    for (int i=0;i<rdf_.size();i++){
         temp[i] = rdf_[i]/N; 
     }
 
-    for (int i=0;i<rdf_.size();i++)
-    {
+    for (int i=0;i<rdf_.size();i++){
         ofs << bins_->getLeftLocationOfBin(i) << "\t" << temp[i] << "\n";
     }
 
@@ -163,13 +150,11 @@ void RDFresidue::printRDFUnnormalized(std::string name)
     const auto& res1 = getResidueGroup(resname1_);
     int N = res1.size();
 
-    for (int i=1;i<rdf_.size();i++)
-    {
+    for (int i=1;i<rdf_.size();i++){
         rdftemp[i] = rdf_[i] / (volume_[i] * N); 
     }
 
-    for (int i=0;i<rdftemp.size();i++)
-    {
+    for (int i=0;i<rdftemp.size();i++){
         ofs << bins_->getCenterLocationOfBin(i) << "\t" << rdftemp[i] << "\n";
     }
 
@@ -185,13 +170,11 @@ void RDFresidue::printRDF(std::string name)
     const auto& res1 = getResidueGroup(resname1_);
     int N = res1.size();
 
-    for (int i=1;i<rdf_.size();i++)
-    {
+    for (int i=1;i<rdf_.size();i++){
         rdftemp[i] = rdf_[i] / (volume_[i] * N * rho_);
     }
 
-    for (int i=0;i<rdftemp.size();i++)
-    {
+    for (int i=0;i<rdftemp.size();i++){
         ofs << bins_ -> getCenterLocationOfBin(i) << "\t" << rdftemp[i] << "\n";
     }
 
