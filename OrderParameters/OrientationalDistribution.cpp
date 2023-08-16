@@ -28,8 +28,10 @@ OrientationalDistribution::OrientationalDistribution(const CalculationInput& inp
 
     // initialize the bins 
     CosThetaBin_ = Binptr(new Bin(CosThetaRange_, NumBins_));
+    azi_bin_ = Binptr(new Bin({{-Constants::PI, Constants::PI}}, NumBins_));
     CosThetaSquaredBin_ = Binptr(new Bin(CosThetaSquaredRange_, NumBins_));
     PCosTheta_.resize(NumBins_,0.0);
+    PCosTheta_azimuthal_.resize(NumBins_,0.0);
     PCosThetaSquared_.resize(NumBins_,0.0);
     PCosTheta_PerIter_.resize(NumBins_, 0.0);
 
@@ -58,26 +60,25 @@ void OrientationalDistribution::finishCalculate()
     Real CosThetaTot = 0.0;
     Real CosSquaredThetaTot = 0.0;
 
-    for (int i=0;i<NumBins_;i++)
-    {
+    for (int i=0;i<NumBins_;i++){
         PCosTheta_[i] = PCosTheta_[i]/numFrames;
         PCosThetaSquared_[i] = PCosThetaSquared_[i] / numFrames;
+        PCosTheta_azimuthal_[i] = PCosTheta_azimuthal_[i] / numFrames;
 
         CosThetaTot += PCosTheta_[i];
         CosSquaredThetaTot += PCosThetaSquared_[i];
     }
 }
 
-void OrientationalDistribution::PrintDistribution(std::string name)
-{
+void OrientationalDistribution::PrintDistribution(std::string name){
     std::ofstream ofs;
     ofs.open(name);
 
-    ofs << "# Bin\tcostheta\tcos2theta\tP(costheta)\tP(cos2theta)\n";
+    ofs << "# Bin\tcostheta\tcos2theta\tP(costheta)\tP(cos2theta)\tP(cos_azimuthal)\n";
 
     for (int i=0;i<NumBins_;i++){
         ofs <<CosThetaBin_->getCenterLocationOfBin(i) << " " << CosThetaSquaredBin_->getCenterLocationOfBin(i) << " " \
-        << PCosTheta_[i] << " " << PCosThetaSquared_[i] << "\n";
+        << PCosTheta_[i] << " " << PCosThetaSquared_[i] << " " << PCosTheta_azimuthal_[i] << "\n";
     }
     ofs.close();
 }
@@ -155,6 +156,7 @@ void OrientationalDistribution::calculate()
     #pragma omp parallel
     {
         std::vector<Real> localcostheta(NumBins_, 0.0);
+        std::vector<Real> localcostheta_azimuthal(NumBins_,0.0);
         std::vector<Real> localcosthetasquared(NumBins_, 0.0);
         Real localavgcostheta = 0.0;
         Real localavgcosthetasquared = 0.0;
@@ -165,8 +167,13 @@ void OrientationalDistribution::calculate()
         #pragma omp for
         for (int i=0;i<AtomIndices_.size();i++){
             int k = AtomIndices_[i];
+
+            // find the zenithal angle 
             Real cost = LinAlg3x3::DotProduct(uij_[k], arr_);
             Real costsq = cost * cost;
+
+            // find the azimuthal angle 
+            Real azimuthal = std::atan2(uij_[k][1], uij_[k][0]);
 
             // map index to the cos theta of the angle 
             localMap.insert(std::make_pair(k, cost));
@@ -177,8 +184,11 @@ void OrientationalDistribution::calculate()
             int CosThetaBinNum = CosThetaBin_->findBin(cost);
             int CosThetaSquaredBinNum = CosThetaSquaredBin_->findBin(costsq);
 
+            int azi_BinNum = azi_bin_->findBin(azimuthal);
+
             localcostheta[CosThetaBinNum] += 1;
             localcosthetasquared[CosThetaSquaredBinNum] += 1;
+            localcostheta_azimuthal[azi_BinNum] += 1;
 
             for (int j=0;j<res[k].atoms_.size();j++){
                 int index = res[k].atoms_[j].atomNumber_-1;
@@ -194,6 +204,8 @@ void OrientationalDistribution::calculate()
                 PCosThetaSquared_[i] = PCosThetaSquared_[i] + localcosthetasquared[i];
 
                 PCosTheta_PerIter_[i] +=  localcostheta[i];
+
+                PCosTheta_azimuthal_[i] = PCosTheta_azimuthal_[i] + localcostheta_azimuthal[i];
             }
 
             AvgCosthetasquared_ = AvgCosthetasquared_ + localavgcosthetasquared;

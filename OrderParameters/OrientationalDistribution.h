@@ -47,6 +47,7 @@ class OrientationalDistribution : public Calculation
 
     private:
         std::vector<Real> PCosTheta_;
+        std::vector<Real> PCosTheta_azimuthal_;
         std::vector<Real> PCosThetaSquared_;
         std::vector<Real> PCosTheta_PerIter_;
 
@@ -67,6 +68,7 @@ class OrientationalDistribution : public Calculation
         Binptr CosThetaBin_;
         Range  CosThetaRange_ = {{-1.0,1.0}};
         Binptr CosThetaSquaredBin_;
+        Binptr azi_bin_;
         Range CosThetaSquaredRange_ = {{0.0,1.0}};
 
         // director of each of the molecules
