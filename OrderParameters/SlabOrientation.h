@@ -51,6 +51,7 @@ class SlabOrientation : public Calculation
     private:
         Binptr costBin_;
         Binptr costsquaredBin_;
+        Binptr azi_bin_;
         Binptr zBin_;
 
         std::string direction_ = "z";
@@ -67,6 +68,9 @@ class SlabOrientation : public Calculation
         // This is 2d histogram for P(cos(theta), z)
         std::vector<std::vector<Real>> histogram2d_;
         std::vector<std::vector<Real>> BWcostZ_;
+
+        // This is 2d histogram for P(cos(phi), z)
+        std::vector<std::vector<Real>> histogram2d_azi_;
 
         // This is 2d histogram for P(cos2(theta),z)
         std::vector<std::vector<Real>> histogram2d_squared_;

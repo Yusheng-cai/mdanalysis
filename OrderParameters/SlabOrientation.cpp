@@ -15,6 +15,7 @@ SlabOrientation::SlabOrientation(const CalculationInput& input)
     pack_.ReadNumber("numtbins", ParameterPack::KeyType::Optional, numtbins_);
     costBin_ = Binptr(new Bin({{-1,1}}, numtbins_));
     costsquaredBin_ = Binptr(new Bin({{0,1}}, numtbins_));
+    azi_bin_ = Binptr(new Bin({{-Constants::PI, Constants::PI}}, numtbins_));
 
     if(zbinPack != nullptr){
         zBin_    = Binptr(new Bin(*zbinPack));
@@ -41,6 +42,7 @@ SlabOrientation::SlabOrientation(const CalculationInput& input)
     // size histogram 2d      
     histogram2d_.resize(numzbins_, std::vector<Real>(numtbins_,0.0));
     histogram2d_squared_.resize(numzbins_, std::vector<Real>(numtbins_,0.0));
+    histogram2d_azi_.resize(numzbins_, std::vector<Real>(numtbins_, 0.0));
 
     // resize the molecular director size
     uij_.resize(res.size());
@@ -81,8 +83,7 @@ void SlabOrientation::calculate()
 
     // find all the COM of the residues in the system
     #pragma omp parallel for 
-    for (int i=0;i<res.size();i++)
-    {
+    for (int i=0;i<res.size();i++){
         COM_[i] = CalculationTools::getCOM(res[i], simstate_, COMIndices_);
 
         Real3 distance;
@@ -95,14 +96,12 @@ void SlabOrientation::calculate()
     }
 
     // bin using min max of the molecules if needed 
-    if (usingMinMax_)
-    {
+    if (usingMinMax_){
         binUsingMinMax();
     }
 
     // find the distances between all pairs of residues
-    for (int i=0;i<res.size();i++)
-    {
+    for (int i=0;i<res.size();i++){
         Real dist = COM_[i][directionIndex_];
         Real cost = LinAlg3x3::DotProduct(uij_[i], arr_);
         if (zBin_->isInRange(dist) && costBin_->isInRange(cost))
@@ -115,6 +114,13 @@ void SlabOrientation::calculate()
             numResiduePerBin_[zbinNum] += 1;
 
             histogram2d_squared_[zbinNum][tsquaredbinNum] += 1;
+        }
+
+        Real a = std::atan2(uij_[i][1], uij_[i][0]);
+        if (zBin_->isInRange(dist) && azi_bin_->isInRange(a)){
+            int zbinNum = zBin_->findBin(dist);
+            int tbinNUm = azi_bin_->findBin(a);
+            histogram2d_azi_[zbinNum][tbinNUm] += 1;
         }
     }
 }
@@ -162,14 +168,19 @@ void SlabOrientation::finishCalculate()
 
     // normalize the entire histogram such as \sum \sum P(z, cos(\beta)) = 1
     // first divide P(z, cos(\beta)) by numframes
-    for (int i=0;i<histogram2d_.size();i++)
-    {
-        for (int j=0;j<histogram2d_[0].size();j++)
-        {
+    for (int i=0;i<histogram2d_.size();i++){
+        for (int j=0;j<histogram2d_[0].size();j++){
             histogram2d_[i][j] /= Numframes;
             histogram2d_squared_[i][j] /= Numframes;
         }
     }
+
+    for (int i=0;i<histogram2d_azi_.size();i++){
+        for (int j=0;j<histogram2d_azi_[0].size();j++){
+            histogram2d_azi_[i][j] /= Numframes;
+        }
+    }
+
 
 
     // calculate anchoring energy 
@@ -203,11 +214,9 @@ void SlabOrientation::finishCalculate()
         }
     }
 
-    for (int i=0;i<BWcostZ_.size();i++)
-    {
+    for (int i=0;i<BWcostZ_.size();i++){
         Real mini= *std::min_element(BWcostZ_[i].begin(), BWcostZ_[i].end());
-        for (int j=0;j<BWcostZ_[i].size();j++)
-        {
+        for (int j=0;j<BWcostZ_[i].size();j++){
             BWcostZ_[i][j] = BWcostZ_[i][j] - mini;
         }
     }
@@ -220,11 +229,10 @@ void SlabOrientation::printHistogram(std::string name)
 
     ofs << std::fixed << std::setprecision(precision_);
 
-    for (int i=0;i<histogram2d_.size();i++)
-    {
-        for (int j=0;j<histogram2d_[i].size();j++)
-        {
-            ofs << i << "\t" << j << "\t" << histogram2d_[i][j] << "\t" << BWcostZ_[i][j] << "\n";
+    for (int i=0;i<histogram2d_.size();i++){
+        for (int j=0;j<histogram2d_[i].size();j++){
+            ofs << i << "\t" << j << "\t" << histogram2d_[i][j] << "\t" << histogram2d_azi_[i][j] << "\t" \
+            << BWcostZ_[i][j] << "\n";
         }
     }
     ofs.close();
