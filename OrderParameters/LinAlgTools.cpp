@@ -102,6 +102,8 @@ void LinAlg3x3::normalize(Real3& v1)
 {
     Real norm_ = norm(v1);
 
+    ASSERT((norm !=0), "Norma cannot be 0");
+
     for (int i=0;i<3;i++)
     {
         v1[i] = v1[i]/norm_;
