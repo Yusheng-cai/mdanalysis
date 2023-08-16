@@ -63,6 +63,9 @@ target_sources(mdaOrderParameters PRIVATE
     "SlabVsr.cpp"
     "IdentifySolventNearSubstrate.cpp"
     "QtensorVoxel.cpp"
+    "DipoleMoment.cpp"
+    "SlabResidueProperty.cpp"
+    "SlabRDF.cpp"
 )
 
 set(mdaOrderParameters_HEADER
@@ -127,6 +130,9 @@ set(mdaOrderParameters_HEADER
     "SlabVsr.hpp"
     "IdentifySolventNearSubstrate.hpp"
     "QtensorVoxel.hpp"
+    "DipoleMoment.hpp"
+    "SlabResidueProperty.h"
+    "SlabRDF.h"
 )
 
 
