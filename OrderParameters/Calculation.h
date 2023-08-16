@@ -12,6 +12,7 @@
 #include "ProbeVolume.h"
 #include "tools/CommonOperations.h"
 #include "tools/Timer.h"
+#include "LinAlgTools.h"
 
 #include <vector>
 #include <array>
@@ -201,4 +202,7 @@ namespace CalculationTools
 
     // correct for pbc lattice index
     INT3 correctPBCLatticeIndex(const INT3& latticeIndex, const INT3& lattice_shape);
+
+    // shift position of a residue
+    Real3 CalculateResidueDipole(const Molecule::residue& res,SimulationState& simstate, const std::vector<int>& res_index);
 };

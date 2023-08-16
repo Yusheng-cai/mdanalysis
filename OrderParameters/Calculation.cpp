@@ -542,3 +542,29 @@ CalculationTools::INT3 CalculationTools::correctPBCLatticeIndex(const INT3& latt
 
     return pbcIndex;
 }
+
+
+CalculationTools::Real3 CalculationTools::CalculateResidueDipole(const Molecule::residue& res, SimulationState& simstate, const std::vector<int>& dipole_index){
+    auto& simbox = simstate.getSimulationBox();
+
+    // For COM calculation, for each residue, we shift the atoms with respect to the first atom
+    // obtain the position of the first atom in the residue group
+    int index0 = dipole_index[0];
+    auto& pos1 = res.atoms_[index0].positions_;
+
+    Real3 dipole_dir = {{0,0,0}};
+
+    // iterate over the indices of interest
+    for (int j=0;j<dipole_index.size();j++){
+        int ind = dipole_index[j];
+        Real3 shiftWRTatom1;
+        Real distsq;
+        simbox.calculateDistance(res.atoms_[ind].positions_, pos1, shiftWRTatom1, distsq);
+
+        dipole_dir = dipole_dir + shiftWRTatom1 * (-res.atoms_[ind].charge_);
+    }
+
+    LinAlg3x3::normalize(dipole_dir);
+
+    return dipole_dir;
+}
