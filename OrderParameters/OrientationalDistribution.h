@@ -36,6 +36,7 @@ class OrientationalDistribution : public Calculation
         void PrintDistribution(std::string name);
         void PrintCosthetasquared_betafactors(std::ofstream& ofs);
         void PrintCostheta_betafactors(std::ofstream& ofs);
+        void PrintCosthetaAbs_betafactors(std::ofstream& ofs);
         void PrintCosthetaPerIter(std::ofstream& ofs);
 
         // per iterations printing functions

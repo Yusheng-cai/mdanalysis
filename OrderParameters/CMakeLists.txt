@@ -66,6 +66,10 @@ target_sources(mdaOrderParameters PRIVATE
     "DipoleMoment.cpp"
     "SlabResidueProperty.cpp"
     "SlabRDF.cpp"
+    "NematicMolecules.cpp"
+    "SlabNematicMolecules.cpp"
+    "CageFinderAlgorithm.cpp"
+    "CageFinder.cpp"
 )
 
 set(mdaOrderParameters_HEADER
@@ -133,6 +137,10 @@ set(mdaOrderParameters_HEADER
     "DipoleMoment.hpp"
     "SlabResidueProperty.h"
     "SlabRDF.h"
+    "NematicMolecules.hpp"
+    "SlabNematicMolecules.hpp"
+    "CageFinderAlgorithm.hpp"
+    "CageFinder.h"
 )
 
 

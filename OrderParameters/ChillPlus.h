@@ -43,10 +43,12 @@ class ChillPlus : public Calculation{
 
         void CorrectIceLikeAtomsBasedOnSurface();
         void CorrectForTrueIce();
+        void CorrectForTrueClathrate();
 
         void ShiftTriangleWithRef(Real3& A, Real3& B, Real3& C, Real3& ref);
 
         void printIceLikeAtoms(std::ofstream& ofs);
+        void printClathrateLikeAtoms(std::ofstream& ofs);
         void printIceTypeNum(std::ofstream& ofs);
         void printAddedIce(std::ofstream& ofs);
 
@@ -63,6 +65,7 @@ class ChillPlus : public Calculation{
 
         // whether or not we are finding true ice using the InstantaneousInterface algorithm
         bool findtrueice_=false;
+        bool findtrueclathrate_=false;
         Real n_, sigma_, isoval_;
         INT3 nL_;
         bool pbcMesh_=true;
@@ -75,6 +78,8 @@ class ChillPlus : public Calculation{
         std::vector<int> water_indices_;
         std::vector<int> ice_like_indices_;
         std::vector<int> is_ice_like_;
+        std::vector<int> is_clathrate_like_;
+        std::vector<int> clathrate_like_indices_;
         Real surface_cutoff_=0.6;
         Real surface_cutoff_sq_;
         Real ice_cutoff_=0.55;

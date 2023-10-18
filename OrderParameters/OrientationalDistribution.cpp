@@ -52,6 +52,7 @@ void OrientationalDistribution::registerOutputs(){
     registerPerIterOutputFunction("costheta_betafactor", [this](std::ofstream& ofs) -> void {this -> PrintCostheta_betafactors(ofs);});
     registerPerIterOutputFunction("ResidueAngles", [this](std::ofstream& ofs)-> void {this -> printResidueAngles(ofs);});
     registerPerIterOutputFunction("costheta", [this](std::ofstream& ofs)-> void{this -> PrintCosthetaPerIter(ofs);});
+    registerPerIterOutputFunction("costheta_abs", [this](std::ofstream& ofs) -> void{this -> PrintCosthetaAbs_betafactors(ofs);});
 }
 
 void OrientationalDistribution::finishCalculate()
@@ -248,6 +249,17 @@ void OrientationalDistribution::PrintCostheta_betafactors(std::ofstream& ofs){
     ofs << framenum << " ";
     for (int i=0;i<totalatoms;i++){
         ofs << costheta_betafactor_[i] << " ";
+    }
+    ofs << "\n";
+}
+
+void OrientationalDistribution::PrintCosthetaAbs_betafactors(std::ofstream& ofs){
+    int totalatoms = simstate_.getTotalNumberAtoms();
+    int framenum = simstate_.getFrameNumber();
+
+    ofs << framenum << " ";
+    for (int i=0;i<totalatoms;i++){
+        ofs << std::abs(costheta_betafactor_[i]) << " ";
     }
     ofs << "\n";
 }

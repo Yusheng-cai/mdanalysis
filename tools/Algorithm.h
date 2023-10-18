@@ -67,11 +67,19 @@ namespace Algorithm
     template <typename key, typename value>
     bool InsertInMap(std::map<key,value>& map, const key& k, const value& v);
 
+    template <typename key, typename value>
+    bool InsertInVectorMap(std::map<key,std::vector<value>>& map, const key& k, const value& v);
+
     template <typename key, typename val>
     bool IsInMap(std::map<key, val>& map, key& k, val& v);
 
     template <typename T, typename TIter=decltype(std::begin(std::declval<T>())), typename = decltype(std::end(std::declval<T>()))>
     constexpr auto enumerate(T && iterable);
+
+    void find_all_cycles(const std::vector<std::vector<int>>& Neighbor_list, int cycle_length, std::vector<std::vector<int>>& all_cycles);
+    void find_cycle(int start, std::vector<int>& path, 
+                    const std::vector<std::vector<int>>& neighbor_list, 
+                    int cycle_length, std::vector<std::vector<int>>& all_cylcles);
 };
 
 template<typename T>
@@ -212,6 +220,15 @@ bool Algorithm::InsertInMap(std::map<key,value>& map, const key& k, const value&
     typename std::map<key,value>::iterator it = map.find(k);  
     if (it == map.end()){map.insert(std::make_pair(k,v));}
     else{return false;}
+
+    return true;
+}
+
+
+template <typename key, typename value>
+bool Algorithm::InsertInVectorMap(std::map<key,std::vector<value>>& map, const key& k, const value& v){
+    typename std::map<key,std::vector<value>>::iterator it = map.find(k);  
+    it->second.push_back(v);
 
     return true;
 }

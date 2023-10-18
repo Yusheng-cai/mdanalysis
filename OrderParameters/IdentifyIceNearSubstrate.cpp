@@ -1,4 +1,5 @@
 #include "IdentifyIceNearSubstrate.hpp"
+#include "SimulationState.h"
 
 namespace CalculationRegistry
 {
@@ -11,6 +12,7 @@ IdentifyIceNearSubstrate::IdentifyIceNearSubstrate(const CalculationInput& input
     pack_.ReadString("Substrate", ParameterPack::KeyType::Required, substrate_name_);
     pack_.ReadString("index_file", ParameterPack::KeyType::Required, index_file_);
     pack_.ReadNumber("radius", ParameterPack::KeyType::Optional, radius_);
+    pack_.ReadNumber("threshold", ParameterPack::KeyType::Optional, threshold_);
     radius_sq_ = radius_ * radius_;
 
     // add the atom groups
@@ -24,15 +26,22 @@ IdentifyIceNearSubstrate::IdentifyIceNearSubstrate(const CalculationInput& input
     // resize neighbor waters
     const auto& substrate_pos = getAtomGroup(substrate_name_);
     neighbor_water_.resize(substrate_pos.getNumAtoms(), 0);
+    neighbor_water_iter_.resize(substrate_pos.getNumAtoms(),0);
+
 
     // register outputs
     registerOutputFunction("NumberOfNeighborWater", [this](std::string fname) -> void {this -> printNumNeighborWater(fname);});
+    registerPerIterOutputFunction("NumberOfNeighborWater", [this](std::ofstream& ofs) -> void {this -> printNumNeighborWaterPerIter(ofs);});
+    registerPerIterOutputFunction("CrossThresholdIndex", [this](std::ofstream& ofs) -> void {this -> printAtomsCrossThreshold(ofs);});
 }
 
 void IdentifyIceNearSubstrate::calculate(){
     std::vector<Real3> total_pos = simstate_.getTotalAtomPos();
-    const auto& substrate_pos = getAtomGroup(substrate_name_).getAtomPositions();
+    const auto& substrate = getAtomGroup(substrate_name_);
+    const auto& substrate_pos = substrate.getAtomPositions();
     std::vector<std::vector<int>> substrate_cell_indices = cell_->calculateIndices(substrate_pos);
+    neighbor_water_iter_.clear();
+    neighbor_water_iter_.resize(substrate_pos.size(),0.0);
     int step = simstate_.getFrameNumber();
 
     // #pragma omp parallel
@@ -85,8 +94,27 @@ void IdentifyIceNearSubstrate::calculate(){
         #pragma omp critical
         {
             neighbor_water_ = neighbor_water_ + local_vec;
+            neighbor_water_iter_ = neighbor_water_iter_ + local_vec;
         }
     }
+
+    cross_threshold_index_.clear();
+    const auto& substrate_atoms = substrate.getAtoms();
+    for (int i=0;i<substrate_atoms.size();i++){
+        if (neighbor_water_iter_[i] >= threshold_){
+            cross_threshold_index_.push_back(substrate_atoms[i].index + 1);
+        }
+    }
+}
+
+void IdentifyIceNearSubstrate::printAtomsCrossThreshold(std::ofstream& ofs){
+    int time = simstate_.getTime();
+
+    ofs << time << " ";
+    for (int i=0;i<cross_threshold_index_.size();i++){
+        ofs << cross_threshold_index_[i] << " ";
+    }
+    ofs << "\n";
 }
 
 void IdentifyIceNearSubstrate::update(){
@@ -107,6 +135,13 @@ void IdentifyIceNearSubstrate::printNumNeighborWater(std::string fname){
     }
 
     ofs.close();
+}
+
+void IdentifyIceNearSubstrate::printNumNeighborWaterPerIter(std::ofstream& ofs){
+    for (int i=0;i<neighbor_water_iter_.size();i++){
+        ofs << neighbor_water_iter_[i] << " ";
+    }
+    ofs << "\n";
 }
 
 void IdentifyIceNearSubstrate::readFile(const std::string& filename){

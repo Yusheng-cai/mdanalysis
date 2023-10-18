@@ -124,10 +124,8 @@ void ResidueNumberParsing::Parse(std::vector<int>& indices)
     ASSERT((grofile_.isEmpty() == false), "The residue Parsing method requires input of a gro file. However, either the gro file \
     is empty or no gro file was provided.");
 
-    for (int i =1; i<selection_str_.size();i++)
-    {
-        if(selection_str_[i] != ",")
-        {
+    for (int i =1; i<selection_str_.size();i++){
+        if(selection_str_[i] != ","){
             index_str_.push_back(selection_str_[i]);
         }
     }
@@ -256,32 +254,27 @@ void ResidueNameParsing::Parse(std::vector<int>& indices)
     is empty or no gro file was provided.");
     const auto& ResidueNameSet = grofile_.getResidueNames();
 
-    for (int i =1; i<selection_str_.size();i++)
-    {
-        if(selection_str_[i] != ",")
-        {
+    for (int i =1; i<selection_str_.size();i++){
+        if(selection_str_[i] != ","){
             index_str_.push_back(selection_str_[i]);
         }
     }
 
     std::vector<std::string> ResidueNames;
 
-    for (int i=0;i<index_str_.size();i++)
-    {
+    for (int i=0;i<index_str_.size();i++){
         auto it = ResidueNameSet.find(index_str_[i]);
         ASSERT((it != ResidueNameSet.end()), "The residue type " << index_str_[i] << " is not found"); 
 
         ResidueNames.push_back(index_str_[i]);
     }
  
-    for (int i=0;i<grofile_.getNumAtoms();i++)
-    {
+    for (int i=0;i<grofile_.getNumAtoms();i++){
         std::string resname = grofile_.getResidueName(i);
 
         bool found = ! (std::find(ResidueNames.begin(), ResidueNames.end(), resname) == ResidueNames.end());
 
-        if (found)
-        {
+        if (found){
             // atom number is 1 based, while indices here are 0 based
             indices.push_back(grofile_.getAtomNumber(i) - 1);
 

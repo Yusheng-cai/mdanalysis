@@ -334,6 +334,10 @@ void SRE::calculateWithNS(){
 void SRE::calculateWithoutNS()
 {
     const auto& solute  = getResidueGroup(SoluteName_).getTotalResidue().atoms_;
+    for (int i=0;i<solute.size();i++)
+    {
+        std::cout << i << " " << solute[i].charge_ << std::endl;
+    }
 
     if (! self_interaction_){
         const auto& solvent = getResidueGroup(SolventName_).getTotalResidue().atoms_;

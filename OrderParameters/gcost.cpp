@@ -79,22 +79,20 @@ void gcost::initializeDistanceCOM()
     distanceCOMIndices1_.resize(numatoms1_,0);
     std::iota(distanceCOMIndices1_.begin(), distanceCOMIndices1_.end(), 1);
     pack_.ReadVectorNumber("distanceCOM1", ParameterPack::KeyType::Optional, distanceCOMIndices1_);
-    distanceCOM1_ = distanceCOM1_ - 1;
+    distanceCOMIndices1_ = distanceCOMIndices1_ - 1;
 
     distanceCOMIndices2_.resize(numatoms2_,0);
     std::iota(distanceCOMIndices2_.begin(), distanceCOMIndices2_.end(), 1);
     pack_.ReadVectorNumber("distanceCOM2", ParameterPack::KeyType::Optional, distanceCOMIndices2_);
-    distanceCOM2_ = distanceCOM2_ - 1;
+    distanceCOMIndices2_ = distanceCOMIndices2_ - 1;
 }
 
 void gcost::printnumneighbors(std::string name){
     std::ofstream ofs;
     ofs.open(name);
 
-    for (int i=0;i<numbins_;i++)
-    {
-        for (int j=0;j<numtbins_;j++)
-        {
+    for (int i=0;i<numbins_;i++){
+        for (int j=0;j<numtbins_;j++){
             ofs << i << "\t" << j << "\t" << bin_->getLeftLocationOfBin(i) << "\t" << bin_->getLeftLocationOfBin(j) << "\t" << \
             histogramDotProduct2drdf_[i][j] << "\n";
         }
@@ -258,6 +256,7 @@ void gcost::calculate()
             }
         }
 
+
         #pragma omp critical
         for (int i=0;i<numbins_;i++){
             histogram_[i] += histogramLocal[i];
@@ -271,6 +270,7 @@ void gcost::calculate()
         #pragma omp critical
         insideNum += insideNumLocal;
     }
+
 
     // add to the hist2drdf
     for (int i=0;i<numbins_;i++){

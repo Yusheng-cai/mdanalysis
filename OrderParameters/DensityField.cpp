@@ -1,4 +1,5 @@
 #include "DensityField.h"
+#include "SimulationState.h"
 
 DensityField::DensityField(const DensityFieldInput& input)
 :simstate_(input.simstate), nL_(input.nL), n_(input.n), sigma_(input.sigma), isoSurfaceVal_(input.isoval), pbcmesh_(input.pbc)

@@ -227,6 +227,7 @@ void TopologyReader::Parse(std::string& name)
 
 void TopologyReader::MapIndicesToAtom(){
     int numatoms = 1;
+    std::cout << resnames_ << std::endl;
     for (int i=0;i<resnames_.size();i++){
         std::string name = resnames_[i];
 
@@ -248,6 +249,8 @@ void TopologyReader::MapIndicesToAtom(){
             a.atomNumber_ = numatoms;  
             numatoms++;
             a.charge_   = atype.charge_;
+
+            std::cout << j << " " << a.charge_ << std::endl;
             a.mass_     = atype.mass_;
             a.resnum_ = i+1;
             a.resname_ = name;

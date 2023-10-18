@@ -42,6 +42,8 @@ ChillPlus::ChillPlus(const CalculationInput& input)
     // register per iter output functions
     registerPerIterOutputFunction("ice_like_atoms", [this](std::ofstream& ofs) -> void {this -> printIceLikeAtoms(ofs);});
     registerPerIterOutputFunction("ice_types", [this](std::ofstream& ofs) -> void {this -> printIceTypeNum(ofs);});
+    registerPerIterOutputFunction("clathrate_like_atoms", 
+                                [this](std::ofstream& ofs) -> void {this -> printClathrateLikeAtoms(ofs);});
 
     // register output file output
     registerOutputFileOutputs("num_ice_like_atoms", [this](void) -> Real {return this -> getNumIceLikeAtoms();});
@@ -49,7 +51,8 @@ ChillPlus::ChillPlus(const CalculationInput& input)
 
     // whether we are finding true ice 
     pack_.Readbool("FindTrueIce", ParameterPack::KeyType::Optional, findtrueice_);
-    if (findtrueice_){
+    pack_.Readbool("FindTrueClathrate", ParameterPack::KeyType::Optional, findtrueclathrate_);
+    if (findtrueice_ || findtrueclathrate_){
         pack_.ReadNumber("sigma", ParameterPack::KeyType::Required, sigma_);
         pack_.ReadNumber("n", ParameterPack::KeyType::Required, n_);
         pack_.ReadArrayNumber("nL", ParameterPack::KeyType::Required, nL_);
@@ -243,6 +246,9 @@ void ChillPlus::calculate(){
     // vector of bool keeping track of whether an atom is ice like
     is_ice_like_.clear();
     is_ice_like_.resize(pos.size(), 0);
+    is_clathrate_like_.clear();
+    is_clathrate_like_.resize(pos.size(),0);
+    clathrate_like_indices_.clear();
     types_.clear();
     types_.resize(pos.size(), ChillPlusTypes::Liquid);
     ice_like_indices_.clear();
@@ -300,6 +306,10 @@ void ChillPlus::calculate(){
                     ice_like_indices_.push_back(i);
                     is_ice_like_[i] = 1;
                 }
+                else if ((type == ChillPlusTypes::Clathrate)){
+                    is_clathrate_like_[i] = 1;
+                    clathrate_like_indices_.push_back(i);
+                }
                 // else it is liquid (clathrate doesn't count)
             }
         }
@@ -309,74 +319,77 @@ void ChillPlus::calculate(){
 
 
     //then calculate wrt surface atom group
-    #pragma omp parallel
+    if (surface_atomgroups_.size() > 0)
     {
-        std::vector<int> local_ind;
-        #pragma omp for
-        for (int i=0;i<pos.size();i++){
-            // at this point, we only check for waters which have 3 neighbors and is identified as water
-            if ((neighbor_indices[i].size() == 3) && (! is_ice_like_[i]) && (IsInsideProbeVolume_[i])){
-                // find the neighbor cell indices 
-                std::vector<int> neighbor_cell_indices = cell_surface_->getNeighborIndex(pos[i]);
+        #pragma omp parallel
+        {
+            std::vector<int> local_ind;
+            #pragma omp for
+            for (int i=0;i<pos.size();i++){
+                // at this point, we only check for waters which have 3 neighbors and is identified as water
+                if ((neighbor_indices[i].size() == 3) && (! is_ice_like_[i]) && (IsInsideProbeVolume_[i])){
+                    // find the neighbor cell indices 
+                    std::vector<int> neighbor_cell_indices = cell_surface_->getNeighborIndex(pos[i]);
 
-                // iterate over the surface atomgroups --> check if there is an water atom within surface_shell_r 
-                bool is_surface=false;
-                for (int j=0;j<surface_atomgroups_.size();j++){
-                    const auto& PosSurface = getAtomGroup(surface_atomgroups_[j]).getAtomPositions();
-                    for (int neighbor_cell_ind : neighbor_cell_indices){
-                        for (int neighbor_ind : surface_cell_list_[j][neighbor_cell_ind]){
-                            Real3 distance;
-                            Real distsq;
-                            simstate_.getSimulationBox().calculateDistance(PosSurface[neighbor_ind], pos[i], distance, distsq);
+                    // iterate over the surface atomgroups --> check if there is an water atom within surface_shell_r 
+                    bool is_surface=false;
+                    for (int j=0;j<surface_atomgroups_.size();j++){
+                        const auto& PosSurface = getAtomGroup(surface_atomgroups_[j]).getAtomPositions();
+                        for (int neighbor_cell_ind : neighbor_cell_indices){
+                            for (int neighbor_ind : surface_cell_list_[j][neighbor_cell_ind]){
+                                Real3 distance;
+                                Real distsq;
+                                simstate_.getSimulationBox().calculateDistance(PosSurface[neighbor_ind], pos[i], distance, distsq);
 
-                            // if the distance to surface is less than the threshold 
-                            if (distsq <= surface_shell_r_squared_){
-                                is_surface=true;
+                                // if the distance to surface is less than the threshold 
+                                if (distsq <= surface_shell_r_squared_){
+                                    is_surface=true;
 
-                                // go to the label EXE
-                                goto EXE;
-                            } 
-                        }
-                    }
-                }
-
-
-                EXE:
-                if (is_surface){
-                    int num_nn_3S=0, num_nn_2S_1E=0, num_nn_3E=0;
-                    // iterate over all the neighbors of the current atom of interest 
-                    for (int k=0;k<neighbor_indices[i].size();k++){
-                        int neighbor_idx = neighbor_indices[i][k];
-
-                        // if this neighbor does not have 4 neighbors, then we skip
-                        if (neighbor_indices[neighbor_idx].size() != 4){
-                            continue;
-                        }
-
-                        if (bonds[neighbor_idx][BondTypes::staggered] >= 3){
-                            num_nn_3S ++;
-                        }
-                        else if ((bonds[neighbor_idx][BondTypes::staggered] >= 2) && (bonds[neighbor_idx][BondTypes::eclipse] == 1)){
-                            num_nn_2S_1E ++;
-                        }
-                        else if (bonds[neighbor_idx][BondTypes::eclipse] >= 3){
-                            num_nn_3E ++;
+                                    // go to the label EXE
+                                    goto EXE;
+                                } 
+                            }
                         }
                     }
 
-                    if ( (num_nn_3S + num_nn_2S_1E) >= 2 ) {
-                        local_ind.push_back(i);
-                        is_ice_like_[i] = 1;
-                        types_[i] = ChillPlusTypes::Surface;
+
+                    EXE:
+                    if (is_surface){
+                        int num_nn_3S=0, num_nn_2S_1E=0, num_nn_3E=0;
+                        // iterate over all the neighbors of the current atom of interest 
+                        for (int k=0;k<neighbor_indices[i].size();k++){
+                            int neighbor_idx = neighbor_indices[i][k];
+
+                            // if this neighbor does not have 4 neighbors, then we skip
+                            if (neighbor_indices[neighbor_idx].size() != 4){
+                                continue;
+                            }
+
+                            if (bonds[neighbor_idx][BondTypes::staggered] >= 3){
+                                num_nn_3S ++;
+                            }
+                            else if ((bonds[neighbor_idx][BondTypes::staggered] >= 2) && (bonds[neighbor_idx][BondTypes::eclipse] == 1)){
+                                num_nn_2S_1E ++;
+                            }
+                            else if (bonds[neighbor_idx][BondTypes::eclipse] >= 3){
+                                num_nn_3E ++;
+                            }
+                        }
+
+                        if ( (num_nn_3S + num_nn_2S_1E) >= 2 ) {
+                            local_ind.push_back(i);
+                            is_ice_like_[i] = 1;
+                            types_[i] = ChillPlusTypes::Surface;
+                        }
                     }
                 }
             }
-        }
 
-        #pragma omp critical
-        {
-            if (local_ind.size() != 0){
-                ice_like_indices_.insert(ice_like_indices_.end(), local_ind.begin(), local_ind.end());
+            #pragma omp critical
+            {
+                if (local_ind.size() != 0){
+                    ice_like_indices_.insert(ice_like_indices_.end(), local_ind.begin(), local_ind.end());
+                }
             }
         }
     }
@@ -396,6 +409,10 @@ void ChillPlus::calculate(){
         CorrectForTrueIce();
     }
 
+    if (findtrueclathrate_){
+        CorrectForTrueClathrate();
+    }
+
     // correct ice like if necessary
     if (surface_correction_){
         CorrectIceLikeAtomsBasedOnSurface();
@@ -411,6 +428,7 @@ void ChillPlus::calculate(){
     // calculate number of ice like atoms
     num_ice_like_atoms_ = ice_like_indices_.size();
     std::cout << "num ice like atoms = " << num_ice_like_atoms_ << '\n';
+    std::cout << "num clathrate like atoms = " << clathrate_like_indices_.size() << "\n";
 }
 
 void ChillPlus::ShiftTriangleWithRef(Real3& A, Real3& B, Real3& C, Real3& ref){
@@ -420,6 +438,95 @@ void ChillPlus::ShiftTriangleWithRef(Real3& A, Real3& B, Real3& C, Real3& ref){
     A = A + shift;
     B = B + shift;
     C = C + shift;
+}
+
+void ChillPlus::CorrectForTrueClathrate(){
+    t.start();
+    // correct for atom group
+    const auto& ag = getAtomGroup(atomgroup_name_);
+    const auto& pos= ag.getAtomPositions();
+
+    // get the ice positions
+    std::vector<Real3> ClathratePos(clathrate_like_indices_.size());
+    for (int i=0;i<clathrate_like_indices_.size();i++){
+        int index = clathrate_like_indices_[i];
+        ASSERT((index < pos.size()), "Index out of range.");
+        Real3 shiftedpos = simstate_.getSimulationBox().shiftIntoBox(pos[index]);
+        ClathratePos[i] = shiftedpos;
+    }
+
+    // obtain the mesh from the instantaneous interface
+    Mesh mesh;
+    density_->CalculateInstantaneousField(ClathratePos, mesh);
+    t.end();
+    std::cout << "Duration of instaneousInterface = " << t.diff() << "\n";
+
+    if (cutMesh_){
+        MeshTools::CutMesh(mesh, volume_);
+    }
+
+    // get the triangles, vertices of the mesh
+    const auto& tri = mesh.gettriangles();
+    const auto& v   = mesh.getvertices();
+    Real3 boxLength = simstate_.getSimulationBox().getSides();
+
+    std::vector<int> newClathrateIndices;
+    t.start();
+    #pragma omp parallel
+    {
+        std::vector<int> localClathrateIndices;
+        #pragma omp for
+        for (int i=0;i<ClathratePos.size();i++){
+            int num_intersect_pos=0;
+            int num_intersect_neg=0;
+            // define the ice position
+            Real3 O = ClathratePos[i];
+            for (auto ti : tri){
+                // declare the A B C of the triangle
+                Real3 A,B,C;
+                A = v[ti[0]].position_, B=v[ti[1]].position_, C=v[ti[2]].position_;
+
+                // shift periodic triangle into whole
+                MeshTools::ShiftPeriodicTriangle(v, ti.triangleindices_, boxLength, A, B, C);
+
+                Real t,u,v,t2;
+                Real3 neg_Ray = Ray_ * (-1.0);
+                if (MeshTools::MTRayTriangleIntersection(A,B,C,O,Ray_, t,u,v)){
+                    if (t > 0){
+                        num_intersect_pos += 1;
+                        continue;
+                    }
+                }
+
+                if (MeshTools::MTRayTriangleIntersection(A,B,C,O,neg_Ray,t,u,v)){
+                    if (t > 0){
+                        num_intersect_neg += 1;
+                    }
+                }
+
+                if ((num_intersect_neg == 1) && (num_intersect_pos==1)){
+                    break;
+                }
+            }
+            if ((num_intersect_neg == 1) && (num_intersect_pos==1)){
+                localClathrateIndices.push_back(clathrate_like_indices_[i]);
+            }
+        }
+
+        #pragma omp critical
+        {
+            newClathrateIndices.insert(newClathrateIndices.end(),
+                        localClathrateIndices.begin(), 
+                        localClathrateIndices.end());
+        }
+    }
+    t.end();
+    std::cout << "Moller Trumbore took " << t.diff() << "\n";
+
+    clathrate_like_indices_.clear();
+    clathrate_like_indices_.insert(clathrate_like_indices_.end(),
+                                   newClathrateIndices.begin(),
+                                   newClathrateIndices.end());
 }
 
 void ChillPlus::CorrectForTrueIce(){
@@ -638,6 +745,17 @@ void ChillPlus::printIceLikeAtoms(std::ofstream& ofs){
     ofs << "\n";
 }
 
+void ChillPlus::printClathrateLikeAtoms(std::ofstream& ofs){
+    int time = simstate_.getTime();
+    ofs << time << " ";
+
+    const auto& ag = getAtomGroup(atomgroup_name_);
+    for (int i=0;i<clathrate_like_indices_.size();i++){
+        ofs << ag.AtomGroupIndices2GlobalIndices(clathrate_like_indices_[i]) + 1 << " ";
+    }
+    ofs << "\n";
+}
+
 void ChillPlus::printIceTypeNum(std::ofstream& ofs){
     int step = simstate_.getStep();
 
@@ -661,8 +779,10 @@ void ChillPlus::update()
 {
     cell_->update();
     cell_surface_->update();
-    cell_ice_corr_->update();
-    cell_surface_corr_->update();
+    if (surface_correction_){
+        cell_ice_corr_->update();
+        cell_surface_corr_->update();
+    }
 
     Ice_Indices_.clear();
     Ice_Indices_.resize(5);

@@ -19,6 +19,8 @@ class IdentifyIceNearSubstrate : public Calculation
         virtual void finishCalculate() override;
         void readFile(const std::string& name);
         void printNumNeighborWater(std::string name);
+        void printNumNeighborWaterPerIter(std::ofstream& ofs);
+        void printAtomsCrossThreshold(std::ofstream& ofs);
 
     private:
         std::string substrate_name_;
@@ -36,6 +38,11 @@ class IdentifyIceNearSubstrate : public Calculation
 
         // number of neighbor waters
         std::vector<Real> neighbor_water_;
+        std::vector<Real> neighbor_water_iter_;
+
+        // threshold
+        Real threshold_=0.0;
+        std::vector<int> cross_threshold_index_;
 
         int step_=0;
 };
