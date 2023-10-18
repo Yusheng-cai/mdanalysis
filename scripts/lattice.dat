@@ -1,0 +1,67 @@
+xdrfile = {
+	path = 5CBNP2_md2.xtc
+}
+
+grofile = {
+    path = 5CBNP2_md.gro
+}
+
+topology = {
+    path = topol.top
+}
+
+residuegroup = {
+	name = lc
+	selection = [ resname 5CB ]
+}
+
+residuegroup = {
+	name = np
+	selection = [ resname NP ]
+}
+
+calculation = {
+    type = QtensorLattice
+    residue = lc
+
+    # reference structure --> used if you want to calculate the angle distribution  
+    #referenceStructure = np
+    #rbin = {
+#	range = [ 2.3 5 ]
+#	numbins = 50
+#    }
+#    numtbin = 30
+    
+    # other stuff
+    LatticeShape = [ 50 50 50 ]
+
+    # Define LC parameters
+    headindex = 1
+    tailindex = 2
+
+    # Whether or not we are performing Coarse graining
+    coarse_grain = true
+    sigma = 0.5
+    n = 3
+    threshold_density = 1.25
+
+    # If we are not performing coarse-graining
+    cutoff = 1.0
+    minDist = 0.3
+    threshold_number = 2.0
+
+    # Are we doing marching Cubes
+    performMC = true
+    isoval = 0.25
+    pbc = true
+    director_rotate_vector = [ 0 0 1 ]
+
+    outputs = [ Order Zenithal_order ply Director ]
+    outputNames = [ orderCG_0.5.out order_ZenithalCG_0.5.out test.ply directorCG_0.5.out ]
+}
+
+
+driver = {
+	startingframe = 0
+	skip = 9
+}

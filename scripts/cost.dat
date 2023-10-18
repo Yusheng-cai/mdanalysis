@@ -1,13 +1,13 @@
 xdrfile = {
-	path = 5CHSAM_295_0.1_pbc.xtc
+	path = NAME.xtc
 }
 
 grofile = {
-    path = 5CHSAM_295_0.1.gro
+    path = NAME.gro
 }
 
 topology = {
-    path = 5CB.itp
+    path = topol.top
 }
 
 probevolume = {

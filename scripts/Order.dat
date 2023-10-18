@@ -1,0 +1,29 @@
+xdrfile = {
+	path = LC.xtc
+}
+
+grofile = {
+    path = test.gro
+}
+
+topology = {
+    path = topol.top
+}
+
+residuegroup = {
+	name = lc
+	selection = [ resname 5CB ]
+}
+
+calculation = {
+    name = qtensor_C
+    type = Qtensor
+    residuegroup = lc
+    headindex = 1
+    tailindex = 2
+}
+
+outputfile = {
+    name = output.out
+    value = [ c.order c.eig2 c.eig3 c.v1x c.v1y v.v1z ]
+}

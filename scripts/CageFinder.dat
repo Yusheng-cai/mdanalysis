@@ -1,0 +1,34 @@
+xdrfile = {
+  path = bias.xtc
+}
+
+atomgroup = {
+	name = water
+	selection = [ atom_index 1-8280:4 , 8641-15272:4 ]
+}
+
+probevolume = {
+	name = pv
+	type = simbox
+}
+
+atomgroup = {
+	name = Me
+	selection = [ atom_index 8281-8640 ]
+}
+
+
+calculation = {
+    name = finder
+    type = CageFinder
+    solvent = water	
+    solute = Me
+    cutoff = 0.5
+    plane_cutoff = 0.1
+    internal_angle_cutoff = 40
+    solute_512_cutoff = 0.6
+    solute_62512_cutoff = 0.8
+    perIteroutputs = [ Cage512 Cage62512 Occupation NonOccupied62512 ]
+    perIteroutputNames = [ Cage512.index Cage62512.index occupy.out nonoccupied_62512.index ]
+}
+
