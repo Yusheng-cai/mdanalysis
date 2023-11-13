@@ -57,6 +57,11 @@ CageFinder::CageFinder(const CalculationInput& input)
     registerPerIterOutputFunction("Cage62512", [this](std::ofstream& ofs)-> void {this -> PrintCage62512(ofs);});
     registerPerIterOutputFunction("Occupation", [this](std::ofstream& ofs) -> void {this -> PrintPerIterOccupation(ofs);});
     registerPerIterOutputFunction("NonOccupied62512", [this](std::ofstream& ofs) -> void {this -> PrintNonOccupied62512(ofs);});
+    registerPerIterOutputFunction("NonOccupied512", [this](std::ofstream& ofs) -> void {this -> PrintNonOccupied512(ofs);});
+    registerPerIterOutputFunction("NonCageWater", [this](std::ofstream& ofs)-> void {this ->PrintNonCageWater(ofs);});
+    registerPerIterOutputFunction("GuestCages512", [this](std::ofstream& ofs)-> void {this -> PrintGuestCages512(ofs);});
+    registerPerIterOutputFunction("GuestCages62512", [this](std::ofstream& ofs) -> void {this -> PrintGuestCages62512(ofs);});
+    registerPerIterOutputFunction("Guest", [this](std::ofstream& ofs) -> void {this -> PrintGuest(ofs);});
 }
 
 void CageFinder::update(){
@@ -69,6 +74,10 @@ void CageFinder::update(){
     occupied_512_ = 0;
     occupied_62512_ = 0;
     Non_occupied_cage62512_.clear();
+    Non_occupied_cage512_.clear();
+    Cage_512_atoms_.clear();
+    Cage_62512_atoms_.clear();
+    guest_indices_.clear();
 }
 
 void CageFinder::PrintPerIterOccupation(std::ofstream& ofs){
@@ -83,7 +92,85 @@ void CageFinder::PrintPerIterOccupation(std::ofstream& ofs){
 }
 
 void CageFinder::PrintNonOccupied512(std::ofstream& ofs){
+    const auto& ag = getAtomGroup(atomgroup_).getAtoms();
+    int step = simstate_.getStep();
 
+    ofs << step << " ";
+
+    std::map<int, bool> map;
+    for (int cage_ind : Non_occupied_cage512_){
+        bool p;
+        auto cage = Cage_512_rings_[cage_ind];
+        for (int i=0;i<cage.size();i++){
+            auto atom_indices = ring5_[cage[i]];
+
+            for (int a : atom_indices){
+                if (! Algorithm::IsInMap(map, a, p)){
+                    ofs << ag[a].index+1 << " ";
+                    Algorithm::InsertInMap(map, a ,true);
+                }
+            }
+        }
+    }
+
+    ofs << "\n";
+
+}
+
+void CageFinder::FindUniqueCageWater(){
+    // reset the vectors
+    UniqueCage62512Water_.clear();
+    UniqueCage512Water_.clear();
+    UniqueCageWater_.clear();
+
+    // start the calculation
+    const auto& ag = getAtomGroup(atomgroup_).getAtoms();
+
+    // iterate over the 62512 rings 
+    for (int i=0;i<Cage_62512_rings_.size();i++){
+        for (int j=0;j<Cage_62512_rings_[i].size();j++){
+            // 6-ring
+            if (j == 0 || j == 7){
+                ASSERT((Cage_62512_rings_[i][j] < ring6_.size()), "Index out of range.");
+                std::vector<int> atom_ids = ring6_[Cage_62512_rings_[i][j]];
+                ASSERT((atom_ids.size() == 7), "Ring 6 Wrong");
+                for (int k=0;k<atom_ids.size()-1;k++){
+                    UniqueCageWater_.push_back(ag[atom_ids[k]].index+1);
+                    UniqueCage62512Water_.push_back(ag[atom_ids[k]].index+1);
+                }
+            }
+            // else it is a 5-ring
+            else{
+                std::vector<int> atom_ids = ring5_[Cage_62512_rings_[i][j]];
+                ASSERT((atom_ids.size() == 6), "Ring 5 Wrong");
+                for (int k=0;k<atom_ids.size()-1;k++){
+                    UniqueCageWater_.push_back(ag[atom_ids[k]].index+1);
+                    UniqueCage62512Water_.push_back(ag[atom_ids[k]].index+1);
+                }
+            }
+        }
+    }
+
+    // find the unique atom indices for 62512
+    Algorithm::unique(UniqueCage62512Water_);
+
+    // do the 5-ring 
+    for (int i=0;i<Cage_512_rings_.size();i++){
+        for (int j=0;j<Cage_512_rings_[i].size();j++){
+            std::vector<int> atom_ids = ring5_[Cage_512_rings_[i][j]];
+            ASSERT((atom_ids.size() == 6), "Wrong");
+            for (int k=0;k<atom_ids.size()-1;k++){
+                UniqueCage512Water_.push_back(ag[atom_ids[k]].index+1);
+                UniqueCageWater_.push_back(ag[atom_ids[k]].index + 1);
+            }
+        }
+    }
+
+    // find the unique atom indices for 512
+    Algorithm::unique(UniqueCage512Water_);
+
+    // find the unique atom indices total
+    Algorithm::unique(UniqueCageWater_);
 }
 
 void CageFinder::calculate(){
@@ -187,8 +274,15 @@ void CageFinder::calculate(){
     RemoveDuplicate(Cage_512_rings_);
     RemoveDuplicate(Cage_62512_rings_);
 
+    // find the unique atoms in a single cage
+    getUniqueAtomsInCages();
+
     FindOccupancy512();
     FindOccupancy62512();
+
+    // find the unique waters in all cages
+    FindUniqueCageWater();
+
 }
 
 void CageFinder::RemoveDuplicate(std::vector<std::vector<int>>& faces){
@@ -244,102 +338,173 @@ void CageFinder::PrintNonOccupied62512(std::ofstream& ofs){
     }
 
     ofs << "\n";
+}
 
+
+void CageFinder::getUniqueAtomsInCages(){
+    // get the unique atoms for 512 and 62512 cages 
+    const auto& solvent = getAtomGroup(atomgroup_).getAtoms();
+    Cage_512_atoms_.resize(Cage_512_rings_.size());
+    Cage_62512_atoms_.resize(Cage_62512_rings_.size());
+
+    // first obtain the unique atoms in a cage 512
+    for (int i=0;i<Cage_512_rings_.size();i++){
+        auto& cage = Cage_512_rings_[i];
+        std::map<int,bool> Seen_atoms;
+        bool a;
+        for (auto& ring : cage){
+            for (int atom_ind : ring5_[ring]){
+                if (! Algorithm::IsInMap(Seen_atoms, atom_ind, a)){
+                    Cage_512_atoms_[i].push_back(atom_ind);
+                }
+            }
+        }
+    }
+
+    // obtain the unique atoms in a cage 62512
+    for (int i=0;i<Cage_62512_rings_.size();i++){
+        auto& cage = Cage_62512_rings_[i];
+        std::map<int,bool> Seen_atoms;
+        bool a;
+        for (int j=0;j<cage.size();j++){
+            std::vector<int> ring;
+            if (j == 0 || j == 7){ring = ring6_[cage[j]];}
+            else{ring = ring5_[cage[j]];}
+
+            for (int atom_ind : ring){
+                if (! Algorithm::IsInMap(Seen_atoms, atom_ind, a)){
+                    Cage_62512_atoms_[i].push_back(atom_ind);
+                }
+            }
+        }
+    }
 }
 
 
 void CageFinder::FindOccupancy512(){
+    const auto& guest  = getAtomGroup(solute_group_).getAtoms();
     const auto& solute = getAtomGroup(solute_group_).getAtomPositions();
+    const auto& solv   = getAtomGroup(atomgroup_).getAtoms();
     const auto& solvent= getAtomGroup(atomgroup_).getAtomPositions();
 
     #pragma omp parallel
     {
         int occupied_512_local = 0;
+        std::map<int,std::vector<int>> localmap;
+        std::vector<int> local_nonooccupied;
+        std::vector<int> local_guest;
         #pragma omp for
-        for (int i=0;i<Cage_512_rings_.size();i++){
-            auto& cage = Cage_512_rings_[i];
+        for (int i=0;i<Cage_512_atoms_.size();i++){
+            bool found_one_inside=false;
             for (int j=0;j<solute.size();j++){
                 bool IsInCage = true;
-                auto solute_p = solute[j];
-                bool a;
-                std::map<int,bool> Seen_atoms;
-                for (auto& ring : cage){
-                    ASSERT((ring < ring5_.size()), "Index out of range");
-                    for (int atom_ind : ring5_[ring]){
-                        if (! Algorithm::IsInMap(Seen_atoms, atom_ind,a)){
-                            Real3 dist;
-                            Real dist_sq;
-                            ASSERT((atom_ind < solvent.size()), "Index out of range");
-                            simstate_.getSimulationBox().calculateDistance(
-                                    solute_p, 
-                                    solvent[atom_ind], dist, dist_sq
-                            );
-                            if (dist_sq > solute_512_cutoffsq_){
-                                IsInCage = false;
-                            }
-                            goto endloop;
-                            Algorithm::InsertInMap(Seen_atoms, atom_ind, true);
-                        }
+                Real3 solute_p = solute[j];
+                for (int atom_ind : Cage_512_atoms_[i]){
+                    Real3 dist;
+                    Real dist_sq;
+                    simstate_.getSimulationBox().calculateDistance(
+                        solute_p, 
+                        solvent[atom_ind], dist, dist_sq
+                    );
+
+                    if (dist_sq > solute_512_cutoffsq_){
+                        IsInCage = false;
+                        goto endloop;
                     }
                 }
-                
+
                 endloop:
                 if (IsInCage){
-                    occupied_512_local += 1;
-                    break;
-                }
-            }
-        }
-
-        #pragma omp critical
-        {
-            occupied_512_ += occupied_512_local;
-        }
-    }    
-}
-
-void CageFinder::FindOccupancy62512(){
-    const auto& solute = getAtomGroup(solute_group_).getAtomPositions();
-    const auto& solvent= getAtomGroup(atomgroup_).getAtomPositions();
-
-    #pragma omp parallel
-    {
-        int occupied_62512_local = 0;
-        std::vector<int> local_nonoccupied;
-        #pragma omp for
-        for (int i=0;i<Cage_62512_rings_.size();i++){
-            auto& cage = Cage_62512_rings_[i];
-            bool found_one_inside = false;
-            for (int j=0;j<solute.size();j++){
-                bool IsInCage = true;
-                auto solute_p = solute[j];
-                std::map<int,bool> Seen_atoms;
-                for (int k=0;k<cage.size();k++){
-                    std::vector<int> ring;
-                    if (k == 0 || k == 7){ring = ring6_[cage[k]];}
-                    else{ring = ring5_[cage[k]];}
-
-                    for (int atom_ind : ring){
-                        Real3 dist;
-                        Real dist_sq;
-                        simstate_.getSimulationBox().calculateDistance(
-                                solute_p, 
-                                solvent[atom_ind], dist, dist_sq
-                        );
-                        if (dist_sq > solute_62512_cutoffsq_){
-                            IsInCage = false;
-                        }
+                    std::vector<int> global_vec;
+                    for (int ind : Cage_512_atoms_[i]){
+                        global_vec.push_back(solv[ind].index);
                     }
-                }
-
-                if (IsInCage){
-                    occupied_62512_local += 1;
+                    local_guest.push_back(guest[j].index);
+                    occupied_512_local += 1;
+                    localmap.insert(std::make_pair(guest[j].index, global_vec));
                     found_one_inside = true;
                     break;
                 }
             }
 
             if (! found_one_inside){
+                local_nonooccupied.push_back(i);
+            }
+        }
+
+        #pragma omp critical
+        {
+            occupied_512_ += occupied_512_local;
+            mapGuestToCage512_.insert(localmap.begin(), localmap.end());
+            Non_occupied_cage512_.insert(Non_occupied_cage512_.end(), 
+                                        local_nonooccupied.begin(), 
+                                        local_nonooccupied.end());
+            guest_indices_.insert(guest_indices_.end(), 
+                                  local_guest.begin(), 
+                                  local_guest.end());
+        }
+    }    
+}
+
+void CageFinder::PrintGuest(std::ofstream& ofs){
+    int num_step = simstate_.getStep();
+
+    ofs << num_step << " ";
+
+    for (int i=0;i<guest_indices_.size();i++){
+        ofs << guest_indices_[i] << " ";
+    }
+    ofs << "\n";
+}
+
+void CageFinder::FindOccupancy62512(){
+    const auto& guest  = getAtomGroup(solute_group_).getAtoms();
+    const auto& solute = getAtomGroup(solute_group_).getAtomPositions();
+    const auto& solv   = getAtomGroup(atomgroup_).getAtoms();
+    const auto& solvent= getAtomGroup(atomgroup_).getAtomPositions();
+
+    #pragma omp parallel
+    {
+        int occupied_62512_local = 0;
+        std::map<int,std::vector<int>> localmap;
+        std::vector<int> local_nonoccupied;
+        std::vector<int> local_guest;
+        #pragma omp for
+        for (int i=0;i<Cage_62512_atoms_.size();i++){
+            bool found_one_inside = false;
+            for (int j=0;j<solute.size();j++){
+                Real3 solute_p = solute[j];
+                bool IsInCage = true;
+                for (int atom_ind : Cage_62512_atoms_[i]){
+                    Real3 dist;
+                    Real dist_sq;
+
+                    simstate_.getSimulationBox().calculateDistance(
+                        solute_p, 
+                        solvent[atom_ind], dist, dist_sq
+                    );
+
+                    if (dist_sq > solute_62512_cutoffsq_){
+                        IsInCage = false;
+                        goto endloop;
+                    }
+                }
+
+                endloop:
+                if(IsInCage){
+                    std::vector<int> global_vec;
+                    for (int ind : Cage_62512_atoms_[i]){
+                        global_vec.push_back(solv[ind].index);
+                    }
+                    occupied_62512_local += 1;
+                    local_guest.push_back(guest[j].index);
+                    localmap.insert(std::make_pair(guest[j].index, global_vec));
+                    found_one_inside = true;
+                    break;
+                }
+            }
+
+            if ( ! found_one_inside){
                 local_nonoccupied.push_back(i);
             }
         }
@@ -347,12 +512,15 @@ void CageFinder::FindOccupancy62512(){
         #pragma omp critical
         {
             occupied_62512_ += occupied_62512_local;
-            Non_occupied_cage62512_.insert(Non_occupied_cage62512_.end(), 
-                                local_nonoccupied.begin(),
-                                local_nonoccupied.end());
+            mapGuestToCage62512_.insert(localmap.begin(), localmap.end());
+            Non_occupied_cage62512_.insert(Non_occupied_cage62512_.end(),
+                                        local_nonoccupied.begin(), 
+                                        local_nonoccupied.end());
+            guest_indices_.insert(guest_indices_.end(),
+                                   local_guest.begin(),
+                                    local_guest.end());
         }
     }
-
 }
 
 
@@ -407,65 +575,51 @@ void CageFinder::CheckConvex(std::vector<std::vector<int>>& Faces){
     Faces = newF;
 }
 
-void CageFinder::PrintCage62512(std::ofstream& ofs){
-    const auto ag = getAtomGroup(atomgroup_).getAtoms();
-    ofs << 0 << " ";
-    std::vector<int> atom_indices;
-    for (int i=0;i<Cage_62512_rings_.size();i++){
-        for (int j=0;j<Cage_62512_rings_[i].size();j++){
-            // 6-ring
-            if (j == 0 || j == 7){
-                ASSERT((Cage_62512_rings_[i][j] < ring6_.size()), "Index out of range.");
-                std::vector<int> atom_ids = ring6_[Cage_62512_rings_[i][j]];
-                ASSERT((atom_ids.size() == 7), "Ring 6 Wrong");
-                for (int k=0;k<atom_ids.size()-1;k++){
-                    atom_indices.push_back(ag[atom_ids[k]].index + 1);
-                }
-            }
-            // else it is a 5-ring
-            else{
-                std::vector<int> atom_ids = ring5_[Cage_62512_rings_[i][j]];
-                ASSERT((atom_ids.size() == 6), "Ring 5 Wrong");
-                for (int k=0;k<atom_ids.size()-1;k++){
-                    atom_indices.push_back(ag[atom_ids[k]].index + 1);
-                }
-            }
+void CageFinder::PrintGuestCages512(std::ofstream& ofs){
+    int timef = simstate_.getFrameNumber();
+    ofs << "# Timeframe " << timef << "\n";
+    for (auto it = mapGuestToCage512_.begin(); it!=mapGuestToCage512_.end(); it++){
+        ofs << it->first << " ";
+        for (int atom_ind : it->second){
+            ofs << atom_ind << " ";
         }
+        ofs << "\n";
     }
-    std::map<int, bool> map_atomindices;
+}
 
-    for (int i=0;i<atom_indices.size();i++){
-        bool a;
-        if (! Algorithm::IsInMap(map_atomindices, atom_indices[i],a)){
-            Algorithm::InsertInMap(map_atomindices, atom_indices[i], true);
-            ofs << atom_indices[i] << " ";
+void CageFinder::PrintGuestCages62512(std::ofstream& ofs){
+    int timef = simstate_.getFrameNumber();
+    ofs << "# Timeframe " << timef << "\n";
+    for (auto it = mapGuestToCage62512_.begin(); it !=mapGuestToCage62512_.end(); it++){
+        ofs << it->first << " "; 
+        for (int atom_ind : it ->second){
+            ofs << atom_ind << " ";
         }
+        ofs << "\n";
+    }
+}
+
+void CageFinder::PrintNonCageWater(std::ofstream& ofs){
+    ofs << 0 << " ";
+    for (int i=0;i<UniqueCageWater_.size();i++){
+        ofs << UniqueCageWater_[i] << " ";
+    }
+    ofs << "\n";
+}
+
+void CageFinder::PrintCage62512(std::ofstream& ofs){
+    ofs << 0 << " ";
+    for (int i=0;i<UniqueCage62512Water_.size();i++){
+        ofs << UniqueCage62512Water_[i] << " ";
     }
     ofs << "\n";
 }
 
 
 void CageFinder::PrintCage512(std::ofstream& ofs){
-    const auto ag = getAtomGroup(atomgroup_).getAtoms();
     ofs << 0 << " ";
-    std::vector<int> atom_indices;
-    for (int i=0;i<Cage_512_rings_.size();i++){
-        for (int j=0;j<Cage_512_rings_[i].size();j++){
-            std::vector<int> atom_ids = ring5_[Cage_512_rings_[i][j]];
-            ASSERT((atom_ids.size() == 6), "Wrong");
-            for (int k=0;k<atom_ids.size()-1;k++){
-                atom_indices.push_back(ag[atom_ids[k]].index + 1);
-            }
-        }
-    }
-    std::map<int, bool> map_atomindices;
-
-    for (int i=0;i<atom_indices.size();i++){
-        bool a;
-        if (! Algorithm::IsInMap(map_atomindices, atom_indices[i],a)){
-            Algorithm::InsertInMap(map_atomindices, atom_indices[i], true);
-            ofs << atom_indices[i] << " ";
-        }
+    for (int i=0;i<UniqueCage512Water_.size();i++){
+        ofs << UniqueCage512Water_[i] << " ";
     }
     ofs << "\n";
 }
