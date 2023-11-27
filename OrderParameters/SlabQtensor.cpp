@@ -57,6 +57,9 @@ SlabQtensor::SlabQtensor(const CalculationInput& input)
     auto& res = getResidueGroup(residueName_);
     ResIndexToBinIndex_.resize(res.size(),0);
     BetaFactors_.resize(res.getAtomSize(),0.0);
+
+    // shift the box 
+    input.pack_.ReadArrayNumber("box_shift", ParameterPack::KeyType::Optional, box_shift_);
 }
 
 void SlabQtensor::printP2zbeta(std::string name)
@@ -137,6 +140,14 @@ void SlabQtensor::binUsingMinMax()
     std::cout << "Min = " << min << ", Max = " << max << "\n";
 }
 
+void SlabQtensor::update(){
+    Matrix curr_box    = simstate_.getSimulationBox().getBox();
+    Real3 curr_center = simstate_.getSimulationBox().getCenter();
+    Real3 update_center = curr_center + box_shift_;
+    shifted_box_.setBoxMatrix(curr_box);
+    shifted_box_.setCenter(update_center);
+}
+
 void SlabQtensor::calculate()
 {
     // get Qtensor Z for this iteration
@@ -152,7 +163,7 @@ void SlabQtensor::calculate()
     // obtain the center of mass of each of the residues
     #pragma omp parallel for 
     for (int i=0;i<res.size();i++){
-        COM_[i] = CalculationTools::getCOM(res[i], simstate_, COMIndices_);
+        COM_[i] = shifted_box_.shiftIntoBox(CalculationTools::getCOM(res[i], simstate_, COMIndices_));
     }
 
     // update the bins using COM min and max 

@@ -28,6 +28,7 @@ class SlabQtensor : public Calculation
 
         virtual void calculate() override;
         virtual void finishCalculate() override;
+        virtual void update();
         void binUsingMinMax();
 
         void printP2z(std::string name);
@@ -92,4 +93,9 @@ class SlabQtensor : public Calculation
         // we only bin the COM above this count
         Real above_=-100000;
         Real below_=100000;
+
+        // shift box 
+        Real3 box_shift_={{0,0,0}};
+
+        SimulationBox shifted_box_;
 };
