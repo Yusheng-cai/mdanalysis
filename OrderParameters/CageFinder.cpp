@@ -58,7 +58,7 @@ CageFinder::CageFinder(const CalculationInput& input)
     registerPerIterOutputFunction("Occupation", [this](std::ofstream& ofs) -> void {this -> PrintPerIterOccupation(ofs);});
     registerPerIterOutputFunction("NonOccupied62512", [this](std::ofstream& ofs) -> void {this -> PrintNonOccupied62512(ofs);});
     registerPerIterOutputFunction("NonOccupied512", [this](std::ofstream& ofs) -> void {this -> PrintNonOccupied512(ofs);});
-    registerPerIterOutputFunction("NonCageWater", [this](std::ofstream& ofs)-> void {this ->PrintNonCageWater(ofs);});
+    registerPerIterOutputFunction("CageWater", [this](std::ofstream& ofs)-> void {this ->PrintCageWater(ofs);});
     registerPerIterOutputFunction("GuestCages512", [this](std::ofstream& ofs)-> void {this -> PrintGuestCages512(ofs);});
     registerPerIterOutputFunction("GuestCages62512", [this](std::ofstream& ofs) -> void {this -> PrintGuestCages62512(ofs);});
     registerPerIterOutputFunction("Guest", [this](std::ofstream& ofs) -> void {this -> PrintGuest(ofs);});
@@ -599,7 +599,7 @@ void CageFinder::PrintGuestCages62512(std::ofstream& ofs){
     }
 }
 
-void CageFinder::PrintNonCageWater(std::ofstream& ofs){
+void CageFinder::PrintCageWater(std::ofstream& ofs){
     ofs << 0 << " ";
     for (int i=0;i<UniqueCageWater_.size();i++){
         ofs << UniqueCageWater_[i] << " ";

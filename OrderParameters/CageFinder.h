@@ -32,7 +32,7 @@ class CageFinder : public Calculation
         void PrintPerIterOccupation(std::ofstream& ofs);
         void PrintNonOccupied512(std::ofstream& ofs);
         void PrintNonOccupied62512(std::ofstream& ofs);
-        void PrintNonCageWater(std::ofstream& ofs);
+        void PrintCageWater(std::ofstream& ofs);
         void PrintGuestCages512(std::ofstream& ofs);
         void PrintGuestCages62512(std::ofstream& ofs);
         void PrintGuest(std::ofstream& ofs);
