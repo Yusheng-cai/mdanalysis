@@ -119,3 +119,30 @@ void SimulationBox::setBoxMatrix(const Matrix& box)
         mhlength_[i] = -hlength_[i];
     }
 }
+
+void SimulationBox::setBoxMatrix(const Real3& sides)
+{
+    // set the simulation matrix
+    box_ = {};
+    for (int i=0;i<3;i++){
+        box_[i][i] = sides[i];
+    }
+
+    // set the center of the box
+    for (int i=0;i<3;i++){
+        center_[i] = sides[i] * 0.5;
+    }
+
+    // set the length/half lengths of the box
+    for (int i=0;i<3;i++){
+        length_[i] = sides[i];
+        hlength_[i] = 0.5*length_[i];
+        mhlength_[i] = -hlength_[i];
+    }
+}
+
+void SimulationBox::setCenter(const Real3& center){
+    for (int i=0;i<3;i++){
+        center_[i] = center[i];
+    }
+}

@@ -17,6 +17,8 @@ class SimulationBox
 
         // setter 
         void setBoxMatrix(const Matrix& box);
+        void setBoxMatrix(const Real3& sides);
+        void setCenter(const Real3& center);
 
         // calculate pbc corrected distance between x1 and x2
         void calculateDistance(const Real3& x1, const Real3& x2, Real3& distance, Real& sq_dist) const;
