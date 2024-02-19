@@ -243,15 +243,20 @@ void ChillPlus::calculate(){
     //  clathrate       4    0    4 
     //  interfacial c   3    any  4 
     //  liquid          N/A  N/A  any
+
     // vector of bool keeping track of whether an atom is ice like
     is_ice_like_.clear();
     is_ice_like_.resize(pos.size(), 0);
+    ice_like_indices_.clear();
+
+    // vector of bool keeping track of whether an atom is clathrate like
     is_clathrate_like_.clear();
     is_clathrate_like_.resize(pos.size(),0);
     clathrate_like_indices_.clear();
+
     types_.clear();
     types_.resize(pos.size(), ChillPlusTypes::Liquid);
-    ice_like_indices_.clear();
+
     // now we perform the chill plus algorithm for identifying ice
     for (int i=0;i<cij.size();i++){
         auto bond = bonds[i];
@@ -306,9 +311,10 @@ void ChillPlus::calculate(){
                     ice_like_indices_.push_back(i);
                     is_ice_like_[i] = 1;
                 }
+                // check if it is a clathrate 
                 else if ((type == ChillPlusTypes::Clathrate)){
-                    is_clathrate_like_[i] = 1;
                     clathrate_like_indices_.push_back(i);
+                    is_clathrate_like_[i] = 1;
                 }
                 // else it is liquid (clathrate doesn't count)
             }
