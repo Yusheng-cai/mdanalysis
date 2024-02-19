@@ -35,7 +35,7 @@ void XdrWrapper::open()
     }
 
     file_ = xdrfile_open(path_.c_str(), mode_.c_str());
-    ASSERT((isOpen()), "The file did not open correctly.");
+    ASSERT((isOpen()), "The file" << path_.c_str() << " did not open correctly.");
 
     // Read Number of Atoms 
     readNumAtoms();
