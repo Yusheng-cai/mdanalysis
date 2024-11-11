@@ -21,6 +21,9 @@ TrueIceFilter::TrueIceFilter(const CalculationInput& input)
     registerPerIterOutputFunction("ice_like_atoms", [this](std::ofstream& ofs) -> void {this -> printIceLikeAtoms(ofs);});
     registerPerIterOutputFunction("added_ice", [this](std::ofstream& ofs) -> void {this -> printAddedIce(ofs);});
 
+    // register output file output
+    registerOutputFileOutputs("num_ice_like_atoms", [this](void) -> Real {return this -> getNumIceLikeAtoms();});
+
     // read surface atom group
     pack_.ReadVectorString("surfaceAtomGroups", ParameterPack::KeyType::Optional, surface_atomgroups_);
     for (auto s : surface_atomgroups_){
@@ -200,6 +203,7 @@ void TrueIceFilter::CorrectIceLikeAtomsBasedOnSurface(){
         water_indices_.insert(water_indices_.end(), new_water_indices.begin(), new_water_indices.end());
     }
 
+    num_ice_like_atoms_ = ice_like_indices_.size();
     ASSERT((water_indices_.size() + ice_like_indices_.size() == total_atoms), "After correction, the total number of atoms changed.");
     std::cout << "After correction = " << ice_like_indices_.size() << "\n";
 }
