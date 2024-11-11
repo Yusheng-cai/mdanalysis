@@ -70,6 +70,9 @@ target_sources(mdaOrderParameters PRIVATE
     "SlabNematicMolecules.cpp"
     "CageFinderAlgorithm.cpp"
     "CageFinder.cpp"
+    "Dimer.cpp"
+    "SlabDimer.cpp"
+    "TrueIceFilter.cpp"
 )
 
 set(mdaOrderParameters_HEADER
@@ -141,6 +144,9 @@ set(mdaOrderParameters_HEADER
     "SlabNematicMolecules.hpp"
     "CageFinderAlgorithm.hpp"
     "CageFinder.h"
+    "Dimer.h"
+    "SlabDimer.hpp"
+    "TrueIceFilter.hpp"
 )
 
 

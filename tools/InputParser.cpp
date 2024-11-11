@@ -146,6 +146,45 @@ void StringTools::ConvertStringToIndices(const std::vector<std::string>& selecti
     SortAndCheckDuplicates(indices);
 }
 
+void StringTools::ParseIndexFile(std::string filename, std::vector<std::vector<int>>& indices){
+    std::ifstream ifs;
+
+    ifs.open(filename);
+    ASSERT(ifs.is_open(), "The file with name " << filename << " is not opened.");
+
+    std::string sentence;
+    std::stringstream ss;
+    std::string comment_symbol = "#";
+
+    // clear the input indices 
+    indices.clear();
+
+    // parse index files
+    while(std::getline(ifs, sentence))
+    {
+        int found = sentence.find_first_of(comment_symbol);
+        if (found == std::string::npos)
+        {
+            ss.str(sentence);
+            int index;
+            std::vector<int> index_for_sentence;
+
+            // The first one is always the time index
+            ss >> index;
+
+            // start reading index into ss 
+            while (ss >> index){
+                index_for_sentence.push_back(index);
+            }
+
+            StringTools::SortAndCheckDuplicates(index_for_sentence);
+            indices.push_back(index_for_sentence);
+
+            ss.clear();
+        }
+    }
+}
+
 void StringTools::SortAndCheckDuplicates(std::vector<int>& indices)
 {
     // sort the indices vector

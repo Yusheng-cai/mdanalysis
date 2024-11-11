@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <tuple>
 #include <map>
+#include <unordered_map>
 #include <numeric>
 #include <vector>
 #include <random>
@@ -73,6 +74,9 @@ namespace Algorithm
     template <typename key, typename val>
     bool IsInMap(std::map<key, val>& map, key& k, val& v);
 
+    template <typename T>
+    bool IsInUnorderedMap(const std::unordered_map<T, bool>& map, const T& number);
+
     template <typename T, typename TIter=decltype(std::begin(std::declval<T>())), typename = decltype(std::end(std::declval<T>()))>
     constexpr auto enumerate(T && iterable);
 
@@ -80,7 +84,25 @@ namespace Algorithm
     void find_cycle(int start, std::vector<int>& path, 
                     const std::vector<std::vector<int>>& neighbor_list, 
                     int cycle_length, std::vector<std::vector<int>>& all_cylcles);
+
+    template<typename T> 
+    std::unordered_map<T,bool> vectorToUnorderedMap(const std::vector<T>& vec);
 };
+
+template <typename T>
+bool Algorithm::IsInUnorderedMap(const std::unordered_map<T, bool>& map, const T& number) {
+    return map.find(number) != map.end();
+}
+
+// Optional: Alternative function using unordered_map for O(1) average lookup time
+template <typename T>
+std::unordered_map<T, bool> Algorithm::vectorToUnorderedMap(const std::vector<T>& vec) {
+    std::unordered_map<T, bool> resultMap;
+    for (const auto& element : vec) {
+        resultMap[element] = true;
+    }
+    return resultMap;
+}
 
 template<typename T>
 std::vector<T> Algorithm::arange(T start, T stop, T step) {

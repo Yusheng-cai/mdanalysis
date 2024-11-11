@@ -57,6 +57,9 @@ namespace StringTools
 
     // function that reads the file extension 
     std::string ReadFileExtension(std::string filename);
+
+    // read index files --> solid_like_atoms.index
+    void ParseIndexFile(std::string filename, std::vector<std::vector<int>>& indices);
 }
 
 
