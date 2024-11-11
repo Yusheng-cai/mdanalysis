@@ -214,7 +214,7 @@ void TrueIceFilter::printIceLikeAtoms(std::ofstream& ofs){
 
     const auto& ag = getAtomGroup(atomgroup_name_);
     for (int i=0;i<ice_like_indices_.size();i++){
-        ofs << ice_like_indices_[i] + 1 << " ";
+        ofs << ice_like_indices_[i] << " ";
     }
     ofs << "\n";
 }
@@ -225,7 +225,7 @@ void TrueIceFilter::printAddedIce(std::ofstream& ofs){
 
     const auto& ag = getAtomGroup(atomgroup_name_);
     for (int i=0;i<addedIce_.size();i++){
-        ofs << addedIce_[i] + 1 << " ";
+        ofs << addedIce_[i] << " ";
     }
     ofs << "\n";
 }
