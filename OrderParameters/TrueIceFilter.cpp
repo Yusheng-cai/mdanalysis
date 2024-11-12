@@ -184,8 +184,8 @@ void TrueIceFilter::CorrectIceLikeAtomsBasedOnSurface(){
                 ASSERT((is_ice_like_[index] == 0), "There must be something wrong.");
                 // change this atom to be ice like
                 is_ice_like_[index] = 1;
-                ice_like_indices_.push_back(ag.AtomGroupIndices2GlobalIndices(index));
-                addedIce_.push_back(ag.AtomGroupIndices2GlobalIndices(index));
+                ice_like_indices_.push_back(ag.AtomGroupIndices2GlobalIndices(index) + 1);
+                addedIce_.push_back(ag.AtomGroupIndices2GlobalIndices(index) + 1);
             }
             else{
                 new_water_indices.push_back(index);
