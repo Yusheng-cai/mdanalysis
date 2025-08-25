@@ -38,7 +38,7 @@ jobs:
         sudo make install   
 
     - name: Install Boost
-        run: |
+      run: |
           sudo apt-get update
           sudo apt-get install -y libboost-all-dev
         
