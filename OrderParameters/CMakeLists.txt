@@ -73,6 +73,7 @@ target_sources(mdaOrderParameters PRIVATE
     "Dimer.cpp"
     "SlabDimer.cpp"
     "TrueIceFilter.cpp"
+    "DipoleDistributionRDF.cpp"
 )
 
 set(mdaOrderParameters_HEADER
@@ -147,6 +148,7 @@ set(mdaOrderParameters_HEADER
     "Dimer.h"
     "SlabDimer.hpp"
     "TrueIceFilter.hpp"
+    "DipoleDistributionRDF.hpp"
 )
 
 

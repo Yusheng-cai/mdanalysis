@@ -294,7 +294,7 @@ bool Algorithm::IsInMap(std::map<key,val>& map, key& k, val& v)
 }
 
 template <typename T,
-          typename TIter = decltype(std::begin(std::declval<T>())),typename = decltype(std::end(std::declval<T>()))>
+          typename TIter, typename>
 constexpr auto Algorithm::enumerate(T && iterable)
 {
     struct iterator
