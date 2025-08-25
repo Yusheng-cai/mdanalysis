@@ -40,6 +40,21 @@ TrueIceFilter::TrueIceFilter(const CalculationInput& input)
 
     cell_ice_corr_ = cellptr(new CellGrid(simstate_, ice_cutoff_));
     cell_surface_corr_ = cellptr(new CellGrid(simstate_, surface_cutoff_));
+
+    // whether we are finding true ice 
+    pack_.Readbool("InterfaceFiltering", ParameterPack::KeyType::Optional, InterfaceFiltering_);
+    if (InterfaceFiltering_){
+        pack_.ReadNumber("sigma", ParameterPack::KeyType::Required, sigma_);
+        pack_.ReadNumber("n", ParameterPack::KeyType::Required, n_);
+        pack_.ReadArrayNumber("nL", ParameterPack::KeyType::Required, nL_);
+        pack_.ReadArrayNumber("Ray", ParameterPack::KeyType::Required, Ray_);
+        pack_.ReadNumber("isoval", ParameterPack::KeyType::Required, isoval_);
+        pack_.Readbool("pbcMesh", ParameterPack::KeyType::Optional, pbcMesh_);
+        cutMesh_ = pack_.ReadArrayNumber("volume", ParameterPack::KeyType::Optional, volume_);
+        LinAlg3x3::normalize(Ray_);
+        DensityFieldInput input = {simstate_, nL_, sigma_, n_, isoval_, pbcMesh_};
+        density_ = densityptr(new DensityField(input));
+    }
 }
 
 void TrueIceFilter::calculate(){
@@ -51,7 +66,8 @@ void TrueIceFilter::calculate(){
     // get the frame number
     int framenum = simstate_.getFrameNumber();
 
-    // here it is in global index
+    // here it is in global index --> ice_like_indices_ is in global index
+    // is_ice_like is in local index
     ice_like_indices_ = ice_like_indices_total_[framenum];
     is_ice_like_.clear();
     is_ice_like_.resize(num_atoms, 0);
@@ -75,7 +91,108 @@ void TrueIceFilter::calculate(){
 
     // correct ice like if necessary
     CorrectIceLikeAtomsBasedOnSurface();
+
+    if (InterfaceFiltering_){
+        InterfaceFiltering();
+    }
 }
+
+void TrueIceFilter::InterfaceFiltering(){
+    t.start();
+    // correct for atom group
+    const auto& ag = getAtomGroup(atomgroup_name_);
+    const auto& pos= ag.getAtomPositions();
+
+    // ice_like_indices is in global index
+
+    // get the ice positions
+    std::vector<Real3> IcePos;
+    for (int i=0;i<is_ice_like_.size();i++){
+        if (is_ice_like_[i]){
+            Real3 shifted_pos = simstate_.getSimulationBox().shiftIntoBox(pos[i]);
+            IcePos.push_back(shifted_pos);
+        }
+    }
+        
+    // obtain the mesh from the instantaneous interface
+    Mesh mesh;
+    density_->CalculateInstantaneousField(IcePos, mesh);
+    t.end();
+    std::cout << "Duration of instaneousInterface = " << t.diff() << "\n";
+
+    if (cutMesh_){
+        MeshTools::CutMesh(mesh, volume_);
+    }
+
+    // get the triangles, vertices of the mesh
+    const auto& tri = mesh.gettriangles();
+    const auto& v   = mesh.getvertices();
+    Real3 boxLength = simstate_.getSimulationBox().getSides();
+
+    // find the max x of the vertices
+    Real max_x = -1e5;
+    for (int i=0;i<v.size();i++){
+        if (v[i].position_[0] > max_x){
+            max_x = v[i].position_[0];
+        }
+    }
+
+    std::vector<int> newIceIndices;
+    for (int i=0;i<IcePos.size();i++){
+        Real3 p = IcePos[i];
+        if (p[0] <= max_x){
+            newIceIndices.push_back(ice_like_indices_[i]);
+        }
+    }
+
+    // std::vector<int> newIceIndices;
+    // t.start();
+    // #pragma omp parallel
+    // {
+    //     std::vector<int> localIceIndices;
+    //     #pragma omp for
+    //     for (int i=0;i<IcePos.size();i++){
+    //         int num_intersect=0;
+    //         // define the ice position
+    //         Real3 O = IcePos[i];
+    //         for (auto ti : tri){
+    //             // declare the A B C of the triangle
+    //             Real3 A,B,C;
+    //             A = v[ti[0]].position_, B=v[ti[1]].position_, C=v[ti[2]].position_;
+
+    //             // shift periodic triangle into whole
+    //             MeshTools::ShiftPeriodicTriangle(v, ti.triangleindices_, boxLength, A, B, C);
+
+    //             Real t,u,v;
+    //             if (MeshTools::MTRayTriangleIntersection(A,B,C,O,Ray_, t,u,v)){
+    //                 if (t > 0){
+    //                     num_intersect += 1;
+
+    //                     // there only needs to be 1 intersect triangle
+    //                     break;
+    //                 }
+    //             }
+    //         }
+    //         if (num_intersect > 0){
+    //             localIceIndices.push_back(ice_like_indices_[i]);
+    //         }
+    //     }
+
+    //     #pragma omp critical
+    //     {
+    //         newIceIndices.insert(newIceIndices.end(), localIceIndices.begin(), localIceIndices.end());
+    //     }
+    // }
+    // t.end();
+    // std::cout << "Moller Trumbore took " << t.diff() << "\n";
+
+    ice_like_indices_.clear();
+    ice_like_indices_.insert(ice_like_indices_.end(), newIceIndices.begin(), newIceIndices.end());
+    num_ice_like_atoms_ = ice_like_indices_.size();
+    std::cout << "After Interface Filtering correction = " << num_ice_like_atoms_ << "\n";
+}
+
+
 
 void TrueIceFilter::CorrectIceLikeAtomsBasedOnSurface(){
     // get all atom positions

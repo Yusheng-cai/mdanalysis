@@ -7,6 +7,7 @@
 #include "tools/CommonOperations.h"
 #include "tools/Constants.h"
 #include "tools/CommonTypes.h"
+#include "DensityField.h"
 
 #include <memory>
 #include <chrono>
@@ -20,6 +21,7 @@ class TrueIceFilter : public Calculation{
     public:
         using cellptr = std::unique_ptr<CellGrid>;
         using INT2    = CommonTypes::index2;
+        using densityptr = std::unique_ptr<DensityField>;
 
         TrueIceFilter(const CalculationInput& input);
 
@@ -31,6 +33,7 @@ class TrueIceFilter : public Calculation{
         Real getNumIceLikeChillPlus() const {return num_ice_like_atoms_before_correction_;}
 
         void CorrectIceLikeAtomsBasedOnSurface();
+        void InterfaceFiltering();
 
         void printIceLikeAtoms(std::ofstream& ofs);
         void printAddedIce(std::ofstream& ofs);
@@ -55,6 +58,16 @@ class TrueIceFilter : public Calculation{
         Real ice_cutoff_sq_;
         int surface_threshold_=1;
         int ice_threshold_=8;
+
+        // whether or not we are finding true ice using the InstantaneousInterface algorithm
+        bool InterfaceFiltering_=false;
+        Real n_, sigma_, isoval_;
+        INT3 nL_;
+        bool pbcMesh_=true;
+        densityptr density_;
+        Real3 volume_={{0,0,0}};
+        bool cutMesh_=false;
+        Real3 Ray_;
 
         // cell list related things 
         cellptr cell_ice_corr_;
